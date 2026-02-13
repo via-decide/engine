@@ -1,563 +1,330 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport"
-content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
-<title>Decide Engine | Universal Logic OS</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
+<title>Decide Engine</title>
 <meta name="theme-color" content="#000000" />
 <link rel="manifest" href="manifest.json" />
 
-<!-- NOTE: If you want true offline PDF, download this file and host locally (jspdf.umd.min.js)
-     and replace the src below with "./vendor/jspdf.umd.min.js" -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
+/* ================= THEME ================= */
+
 :root{
-  --bg:#050505;
-  --glass:rgba(20,20,20,0.85);
-  --border:rgba(255,255,255,0.1);
+  --bg-primary:#050505;
+  --bg-secondary:rgba(20,20,20,0.85);
+  --text-primary:#ffffff;
+  --text-muted:#888;
+  --glass-border:rgba(255,255,255,0.1);
   --accent:#ff671f;
-  --accent-soft:rgba(255,103,31,0.2);
-  --green:#00e676;
+  --success:#00e676;
 }
+
+@media (prefers-color-scheme: light){
+  :root{
+    --bg-primary:#f4f4f4;
+    --bg-secondary:rgba(255,255,255,0.9);
+    --text-primary:#111;
+    --text-muted:#555;
+    --glass-border:rgba(0,0,0,0.08);
+  }
+}
+
 body{
   margin:0;
-  background:radial-gradient(circle at top left,#111,#050505);
-  color:#fff;
+  background:var(--bg-primary);
+  color:var(--text-primary);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   overflow:hidden;
 }
-#app-shell{height:100vh;display:flex;flex-direction:column;}
+
+#app{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+}
+
 .header{
-  padding:20px 30px;
-  border-bottom:1px solid var(--border);
+  padding:20px;
   font-weight:700;
   letter-spacing:1px;
-  background:rgba(0,0,0,0.6);
-  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--glass-border);
+  background:var(--bg-secondary);
 }
-.main-layout{flex:1;display:flex;}
+
+.main{
+  flex:1;
+  display:flex;
+}
+
 .sidebar{
-  width:260px;
-  border-right:1px solid var(--border);
-  background:rgba(0,0,0,0.6);
-  padding:20px;
+  width:240px;
   display:none;
   flex-direction:column;
-  gap:10px;
+  padding:20px;
+  border-right:1px solid var(--glass-border);
+  background:var(--bg-secondary);
+  gap:12px;
 }
+
 .sidebar button{
   background:rgba(255,255,255,0.05);
-  border:1px solid var(--border);
-  color:#fff;
+  border:1px solid var(--glass-border);
+  color:var(--text-primary);
   padding:12px;
   border-radius:10px;
   cursor:pointer;
-  transition:0.2s;
-  text-align:left;
 }
-.sidebar button:hover{background:rgba(255,255,255,0.1);}
-.content{flex:1;padding:40px;overflow-y:auto;}
+
+.content{
+  flex:1;
+  padding:40px;
+  overflow:auto;
+}
+
 .panel{
-  background:var(--glass);
-  border:1px solid var(--border);
+  background:var(--bg-secondary);
+  border:1px solid var(--glass-border);
   border-radius:18px;
   padding:40px;
-  max-width:860px;
+  max-width:700px;
   backdrop-filter:blur(20px);
 }
+
 .btn{
   background:var(--accent);
   border:none;
-  padding:14px 24px;
+  padding:14px 22px;
   border-radius:12px;
-  font-weight:800;
+  font-weight:700;
   cursor:pointer;
   margin-top:12px;
-  transition:0.15s;
 }
-.btn:hover{transform:translateY(-2px);}
-.btn:active{transform:translateY(0px);opacity:0.9;}
+
 .btn-secondary{
   background:rgba(255,255,255,0.08);
-  color:#fff;
-  border:1px solid rgba(255,255,255,0.08);
+  color:var(--text-primary);
 }
-.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;}
-.pill{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:10px 14px;
-  border-radius:999px;
-  border:1px solid var(--border);
-  background:rgba(255,255,255,0.04);
-  cursor:pointer;
-  user-select:none;
-  font-weight:700;
-}
-.pill.active{
-  border-color:rgba(0,230,118,0.55);
-  background:rgba(0,230,118,0.10);
-  color:var(--green);
-}
-hr{border:none;border-top:1px solid rgba(255,255,255,0.12);margin:18px 0;}
-.rank-card{
-  border:1px solid var(--border);
-  border-radius:14px;
-  padding:18px;
-  margin-top:12px;
-  background:rgba(255,255,255,0.03);
-}
-.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}
-.small{opacity:0.85;font-size:0.92rem;line-height:1.5;}
-.toast-msg{
+
+.toast{
   position:fixed;
-  bottom:60px;
+  bottom:50px;
   left:50%;
   transform:translateX(-50%);
   background:#111;
-  padding:12px 20px;
-  border-radius:40px;
-  border:1px solid #333;
+  color:var(--success);
+  padding:10px 20px;
+  border-radius:30px;
   opacity:0;
   transition:0.3s;
-  z-index:9999;
-  pointer-events:none;
 }
-.toast-msg.visible{opacity:1;}
-@media (min-width:1024px){ .sidebar{display:flex;} }
+
+.toast.show{ opacity:1; }
+
+@media(min-width:1024px){
+  .sidebar{ display:flex; }
+}
+
 </style>
 </head>
-
 <body>
-<div id="app-shell">
+
+<div id="app">
   <div class="header">DECIDE ENGINE — Universal Logic OS</div>
-
-  <div class="main-layout">
+  <div class="main">
     <div class="sidebar">
-      <button data-action="home">🏠 Home</button>
-      <button data-action="sync">🔄 Sync DB</button>
-      <button data-action="pdf">📄 Export PDF</button>
+      <button onclick="renderHome()">Home</button>
+      <button onclick="syncProducts()">Sync Products</button>
+      <button onclick="exportPDF()">Export PDF</button>
     </div>
-
     <div class="content">
-      <div id="master-container"></div>
+      <div id="view"></div>
     </div>
   </div>
 </div>
 
-<div id="toast" class="toast-msg"></div>
+<div id="toast" class="toast"></div>
 
 <script>
-/* =========================
-   CONFIG + STATE
-========================= */
-const BACKEND_URL =
-  "https://script.google.com/macros/s/AKfycbycz1pVNID7fwlM3ckBsGC_mAjLkMwGoW-UbXHWxdkqdNtYIdeLWfo6EkRef0cHReUO/exec";
 
-const ENGINE_STATE = {
-  module: null,              // 'phone' | 'audio' | 'laptop'
-  filters: [],               // ['performance','battery','value']
-  sessionID: "SID-" + Math.random().toString(36).substr(2,4).toUpperCase(),
-  ranking: [],
-  winner: null
+/* ================= SUPABASE ================= */
+
+const SUPABASE_URL = "https://adzkzeghlgzpbageszqh.supabase.co";
+const SUPABASE_KEY = "sb_publishable_SvFpgjJXowEo0JliWh0OVA_6U-8T2VA";
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ================= STATE ================= */
+
+const State = {
+  device_id: getDeviceID(),
+  session_id: "SID-" + crypto.randomUUID().slice(0,8),
+  module:null,
+  filter:null,
+  winner:null
 };
 
-let DATABASE = { phone:{}, audio:{}, laptop:{} };
+let PRODUCTS = [];
 
-/* =========================
-   SERVICE WORKER (safe)
-========================= */
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    try { await navigator.serviceWorker.register("./sw.js"); } catch {}
-  });
-}
+/* ================= DEVICE ID ================= */
 
-/* =========================
-   ONLINE / OFFLINE
-========================= */
-window.addEventListener("offline", () => showToast("YOU ARE OFFLINE"));
-window.addEventListener("online", () => { showToast("BACK ONLINE"); syncDatabase(); });
-
-/* =========================
-   DOM HELPERS
-========================= */
-const $ = (sel, root=document) => root.querySelector(sel);
-
-function mount(html){
-  $("#master-container").innerHTML = html;
-}
-
-function esc(s){
-  return String(s ?? "")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-/* =========================
-   TOAST
-========================= */
-function showToast(msg){
-  const t = $("#toast");
-  t.textContent = msg;
-  t.classList.add("visible");
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(()=>t.classList.remove("visible"), 2000);
-}
-
-/* =========================
-   DATABASE
-========================= */
-async function syncDatabase(){
-  if(!navigator.onLine){
-    showToast("OFFLINE MODE");
-    return;
+function getDeviceID(){
+  let id = localStorage.getItem("decide_device_id");
+  if(!id){
+    id = crypto.randomUUID();
+    localStorage.setItem("decide_device_id", id);
   }
+  return id;
+}
+
+/* ================= ANALYTICS ================= */
+
+async function track(event, payload={}){
   try{
-    const r = await fetch(`${BACKEND_URL}?type=local`, { cache: "no-store" });
-    const data = await r.json();
-
-    DATABASE = { phone:{}, audio:{}, laptop:{} };
-
-    data.forEach(p=>{
-      const name = p.Name || p.name || p.Title || "Unknown";
-      const cat = p.category;
-
-      if(cat === "smartphones") DATABASE.phone[name] = normalizeItem(p, name);
-      if(cat === "earbuds")     DATABASE.audio[name] = normalizeItem(p, name);
-      if(cat === "laptops")     DATABASE.laptop[name] = normalizeItem(p, name);
+    await db.from("analytics_events").insert({
+      device_id: State.device_id,
+      session_id: State.session_id,
+      event_name:event,
+      payload
     });
+  }catch(e){}
+}
 
-    showToast("SYSTEM LIVE ✅");
-  } catch(e){
-    console.log(e);
-    showToast("OFFLINE MODE");
+/* ================= PRODUCTS ================= */
+
+async function syncProducts(){
+  const { data, error } = await db.from("products").select("*");
+  if(error){
+    showToast("Offline mode");
+    return;
   }
+  PRODUCTS = data || [];
+  localStorage.setItem("cached_products", JSON.stringify(PRODUCTS));
+  showToast("Products synced");
+  track("sync_products");
 }
 
-function normalizeItem(raw, name){
-  // Normalize numeric fields so scoring is consistent.
-  const price = toNum(raw.price ?? raw.Price ?? 0);
-  return {
-    Name: name,
-    price,
-    perf:  toNum(raw.performance ?? raw.perf ?? raw.perfScore ?? 5),
-    bat:   toNum(raw.battery ?? raw.bat ?? raw.batteryScore ?? 5),
-    val:   toNum(raw.value ?? raw.val ?? raw.valueScore ?? 5)
-  };
+/* ================= SCORING ================= */
+
+function calculateScore(item){
+  const price = Number(item.price)||1;
+  const perf = Number(item.perf)||5;
+  const bat  = Number(item.bat)||5;
+  const val  = Number(item.cam)||5;
+
+  let weightPerf=1, weightBat=1, weightVal=1;
+  if(State.filter==="performance") weightPerf=2;
+  if(State.filter==="battery") weightBat=2;
+  if(State.filter==="value") weightVal=2;
+
+  const base = perf*weightPerf + bat*weightBat + val*weightVal;
+  const efficiency = base/price*1000;
+  const finalScore = (base*0.7)+(efficiency*0.3);
+
+  return finalScore;
 }
 
-function toNum(x){
-  if(typeof x === "string") x = x.replace(/,/g,"");
-  const n = Number(x);
-  return Number.isFinite(n) ? n : 0;
-}
+/* ================= UI ================= */
 
-/* =========================
-   RENDER: HOME / MODULE / RESULTS
-========================= */
 function renderHome(){
-  ENGINE_STATE.module = null;
-  ENGINE_STATE.filters = [];
-  ENGINE_STATE.ranking = [];
-  ENGINE_STATE.winner = null;
-
-  mount(`
+  document.getElementById("view").innerHTML = `
     <div class="panel">
-      <h1 style="margin:0 0 10px 0;">DECIDE ENGINE</h1>
-      <div class="small">Session: <span class="mono">${ENGINE_STATE.sessionID}</span></div>
-      <div class="row" style="margin-top:14px;">
-        <button class="btn" data-action="module" data-module="phone">📱 Phones</button>
-        <button class="btn" data-action="module" data-module="audio">🎧 Audio</button>
-        <button class="btn" data-action="module" data-module="laptop">💻 Laptops</button>
-      </div>
-
-      <hr>
-
-      <div class="small">
-        Tip: Pick a module → select priorities → run engine → export PDF.
-      </div>
-
-      <div class="row">
-        <button class="btn btn-secondary" data-action="sync">🔄 Sync DB</button>
-        <button class="btn btn-secondary" data-action="pdf">📄 Export PDF</button>
-      </div>
+      <h1>Choose Module</h1>
+      <button class="btn" onclick="chooseModule('smartphones')">📱 Phones</button>
+      <button class="btn" onclick="chooseModule('earbuds')">🎧 Audio</button>
+      <button class="btn" onclick="chooseModule('laptops')">💻 Laptops</button>
     </div>
-  `);
+  `;
+  track("view_home");
 }
 
-function renderModule(module){
-  ENGINE_STATE.module = module;
-  ENGINE_STATE.filters = [];
-  ENGINE_STATE.ranking = [];
-  ENGINE_STATE.winner = null;
-
-  const title =
-    module === "phone" ? "📱 Phones" :
-    module === "audio" ? "🎧 Audio" :
-    "💻 Laptops";
-
-  mount(`
+function chooseModule(module){
+  State.module = module;
+  State.filter = null;
+  track("module_selected",{module});
+  document.getElementById("view").innerHTML = `
     <div class="panel">
-      <h1 style="margin:0 0 10px 0;">${title}</h1>
-      <div class="small">Select one or more priorities, then run the engine.</div>
-
-      <div class="row" style="margin-top:14px;">
-        <div class="pill" data-action="toggleFilter" data-filter="performance">⚡ Performance</div>
-        <div class="pill" data-action="toggleFilter" data-filter="battery">🔋 Battery</div>
-        <div class="pill" data-action="toggleFilter" data-filter="value">💎 Value</div>
-      </div>
-
-      <hr>
-
-      <div class="small">
-        Active: <span class="mono" id="active-filters">NONE</span>
-      </div>
-
-      <div class="row">
-        <button class="btn" data-action="run">Run Engine →</button>
-        <button class="btn btn-secondary" data-action="home">Back</button>
-      </div>
+      <h1>Select Priority</h1>
+      <button class="btn-secondary btn" onclick="setFilter('performance')">Performance</button>
+      <button class="btn-secondary btn" onclick="setFilter('battery')">Battery</button>
+      <button class="btn-secondary btn" onclick="setFilter('value')">Value</button>
+      <button class="btn" onclick="decide()">Start Decision →</button>
     </div>
-  `);
-
-  updateFilterUI();
+  `;
 }
 
-function updateFilterUI(){
-  const pills = $$(".pill");
-  pills.forEach(p=>{
-    const f = p.dataset.filter;
-    p.classList.toggle("active", ENGINE_STATE.filters.includes(f));
-  });
-  const af = $("#active-filters");
-  if(af) af.textContent = ENGINE_STATE.filters.length ? ENGINE_STATE.filters.join(", ").toUpperCase() : "NONE";
+function setFilter(f){
+  State.filter=f;
+  showToast("Priority: "+f);
+  track("filter_selected",{filter:f});
 }
 
-function $$(sel, root=document){ return [...root.querySelectorAll(sel)]; }
+function decide(){
+  if(!State.filter){ showToast("Select priority"); return; }
 
-function renderRanking(){
-  const top = ENGINE_STATE.ranking;
+  const list = PRODUCTS.filter(p=>p.category===State.module);
+  if(!list.length){ showToast("No data"); return; }
 
-  let cards = top.map((it, idx)=>`
-    <div class="rank-card">
-      <div class="mono" style="opacity:0.8;">RANK #${idx+1}</div>
-      <h2 style="margin:6px 0 8px 0;">${esc(it.Name)}</h2>
-      <div class="small">
-        <div><b>Final Score:</b> <span class="mono">${it.finalScore}</span></div>
-        <div><b>Price:</b> ₹${esc(it.price)}</div>
-        <div style="margin-top:10px;">
-          Perf: <span class="mono">${it.breakdown.perf}</span> ·
-          Bat: <span class="mono">${it.breakdown.bat}</span> ·
-          Val: <span class="mono">${it.breakdown.val}</span> ·
-          Eff: <span class="mono">${it.breakdown.efficiency}</span>
-        </div>
-      </div>
-    </div>
-  `).join("");
+  const scored = list.map(p=>({...p,score:calculateScore(p)}))
+                     .sort((a,b)=>b.score-a.score);
 
-  mount(`
+  State.winner = scored[0];
+
+  track("verdict_generated",{winner:State.winner.name});
+
+  renderResult();
+}
+
+function renderResult(){
+  const w = State.winner;
+  document.getElementById("view").innerHTML = `
     <div class="panel">
-      <h1 style="margin:0 0 10px 0;">🏆 Results</h1>
-      <div class="small">
-        Module: <span class="mono">${esc(ENGINE_STATE.module)}</span> ·
-        Priorities: <span class="mono">${ENGINE_STATE.filters.join(", ") || "none"}</span>
-      </div>
-
-      ${cards || `<div class="small" style="margin-top:12px;">No ranking available.</div>`}
-
-      <hr>
-
-      <div class="row">
-        <button class="btn" data-action="pdf">📄 Export PDF</button>
-        <button class="btn btn-secondary" data-action="module" data-module="${esc(ENGINE_STATE.module)}">Change Priorities</button>
-        <button class="btn btn-secondary" data-action="home">Home</button>
-      </div>
+      <h1>🏆 ${w.name}</h1>
+      <p>Price: ₹${w.price}</p>
+      <p><strong>Score:</strong> ${w.score.toFixed(2)}</p>
+      <button class="btn" onclick="exportPDF()">Download PDF</button>
+      <button class="btn-secondary btn" onclick="renderHome()">Home</button>
     </div>
-  `);
+  `;
 }
 
-/* =========================
-   ENGINE (REAL SCORING)
-========================= */
-function runEngine(){
-  if(!ENGINE_STATE.module){
-    showToast("Select a module first");
-    return;
-  }
-  if(!ENGINE_STATE.filters.length){
-    showToast("Select at least one priority");
-    return;
-  }
-
-  const db = DATABASE[ENGINE_STATE.module];
-  const items = Object.values(db);
-
-  if(!items.length){
-    showToast("No data loaded (Sync DB)");
-    return;
-  }
-
-  const ranked = items.map(item => ({ ...item, ...scoreItem(item) }));
-  ranked.sort((a,b)=> b.finalScore - a.finalScore || (a.price||0) - (b.price||0));
-
-  ENGINE_STATE.ranking = ranked.slice(0,3);
-  ENGINE_STATE.winner  = ENGINE_STATE.ranking[0] || null;
-
-  renderRanking();
-}
-
-function scoreItem(item){
-  const price = Math.max(1, Number(item.price) || 1);
-  const perf  = clamp01_10(Number(item.perf) || 5);
-  const bat   = clamp01_10(Number(item.bat)  || 5);
-  const val   = clamp01_10(Number(item.val)  || 5);
-
-  // Priority weights: selected -> 2, otherwise -> 1
-  const w = { performance:1, battery:1, value:1 };
-  ENGINE_STATE.filters.forEach(f => { if(w[f] != null) w[f] = 2; });
-
-  const base =
-    (perf * w.performance) +
-    (bat  * w.battery) +
-    (val  * w.value);
-
-  // Efficiency rewards high base at lower price.
-  const efficiency = (base / price) * 1000;
-
-  // Final score blend:
-  // - Base dominates (quality)
-  // - Efficiency helps (value)
-  const final = (base * 0.72) + (efficiency * 0.28);
-
-  return {
-    finalScore: Number(final.toFixed(2)),
-    breakdown: {
-      perf, bat, val,
-      base: Number(base.toFixed(2)),
-      efficiency: Number(efficiency.toFixed(2))
-    }
-  };
-}
-
-function clamp01_10(n){
-  if(!Number.isFinite(n)) return 5;
-  return Math.min(10, Math.max(0, n));
-}
-
-/* =========================
-   PDF (FIXED + GUARDED)
-========================= */
-function generateDecisionReport(){
-  if(!ENGINE_STATE.ranking.length){
-    showToast("Run engine first");
-    return;
-  }
-
-  // Guard: CDN might be unavailable offline unless cached in SW.
-  if(!window.jspdf || !window.jspdf.jsPDF){
-    showToast("PDF library unavailable (offline). Cache or host jsPDF locally.");
-    return;
-  }
-
+function exportPDF(){
+  if(!State.winner){ showToast("No result"); return; }
   const { jsPDF } = window.jspdf;
-  const doc = new jsPDF({ unit:"pt", format:"a4" });
-
-  const left = 48;
-  let y = 56;
-
-  doc.setFont("helvetica","bold");
-  doc.setFontSize(18);
-  doc.text("DECIDE ENGINE REPORT", left, y);
-
-  y += 22;
-  doc.setFont("helvetica","normal");
-  doc.setFontSize(10);
-  doc.text(`Session: ${ENGINE_STATE.sessionID}`, left, y);
-  y += 14;
-  doc.text(`Module: ${ENGINE_STATE.module}`, left, y);
-  y += 14;
-  doc.text(`Priorities: ${ENGINE_STATE.filters.join(", ")}`, left, y);
-
-  y += 18;
-  doc.setDrawColor(200);
-  doc.line(left, y, 560, y);
-  y += 20;
-
-  ENGINE_STATE.ranking.forEach((it, idx)=>{
-    doc.setFont("helvetica","bold");
-    doc.setFontSize(12);
-    doc.text(`#${idx+1} ${String(it.Name)}`, left, y);
-    y += 14;
-
-    doc.setFont("helvetica","normal");
-    doc.setFontSize(10);
-    doc.text(`Final Score: ${it.finalScore}    Price: ₹${it.price}`, left, y);
-    y += 12;
-
-    doc.text(
-      `Perf: ${it.breakdown.perf}  Bat: ${it.breakdown.bat}  Val: ${it.breakdown.val}  Base: ${it.breakdown.base}  Eff: ${it.breakdown.efficiency}`,
-      left, y
-    );
-    y += 18;
-
-    // Page break safety
-    if(y > 760){
-      doc.addPage();
-      y = 56;
-    }
-  });
-
-  doc.save(`Decide_Report_${ENGINE_STATE.sessionID}.pdf`);
-  showToast("PDF DOWNLOADING...");
+  const doc = new jsPDF();
+  doc.text("DECIDE ENGINE REPORT",20,20);
+  doc.text("Session: "+State.session_id,20,30);
+  doc.text("Winner: "+State.winner.name,20,40);
+  doc.text("Score: "+State.winner.score.toFixed(2),20,50);
+  doc.save("decision_report.pdf");
+  track("pdf_exported");
 }
 
-/* =========================
-   EVENT DELEGATION (FIXES BUTTON ISSUES)
-========================= */
-document.addEventListener("click", (e)=>{
-  const el = e.target.closest("[data-action]");
-  if(!el) return;
+/* ================= TOAST ================= */
 
-  const action = el.dataset.action;
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.innerText=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2000);
+}
 
-  if(action === "home") return renderHome();
-  if(action === "sync") return syncDatabase();
-  if(action === "pdf")  return generateDecisionReport();
+/* ================= PWA ================= */
 
-  if(action === "module") {
-    const m = el.dataset.module;
-    return renderModule(m);
-  }
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("sw.js");
+}
 
-  if(action === "toggleFilter") {
-    const f = el.dataset.filter;
-    if(!f) return;
+/* ================= INIT ================= */
 
-    if(ENGINE_STATE.filters.includes(f)){
-      ENGINE_STATE.filters = ENGINE_STATE.filters.filter(x=>x!==f);
-    } else {
-      ENGINE_STATE.filters.push(f);
-    }
-    updateFilterUI();
-    return;
-  }
+const cached = localStorage.getItem("cached_products");
+if(cached) PRODUCTS = JSON.parse(cached);
 
-  if(action === "run") return runEngine();
-});
-
-/* =========================
-   BOOT
-========================= */
 renderHome();
-syncDatabase();
+syncProducts();
 
 </script>
 </body>
