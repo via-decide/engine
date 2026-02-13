@@ -369,6 +369,40 @@ font-size:1rem;
 
 <script>
 /* ===============================
+   SAMPLE DATA - FALLBACK
+================================= */
+
+const SAMPLE_DATA = [
+  // SMARTPHONES
+  {category:"smartphones",name:"iPhone 15 Pro",price:134900,cam:95,gam:90,bat:85},
+  {category:"smartphones",name:"Samsung Galaxy S24 Ultra",price:129999,cam:98,gam:92,bat:88},
+  {category:"smartphones",name:"Google Pixel 8 Pro",price:106999,cam:96,gam:85,bat:82},
+  {category:"smartphones",name:"OnePlus 12",price:64999,cam:88,gam:94,bat:90},
+  {category:"smartphones",name:"Xiaomi 14 Pro",price:79999,cam:90,gam:88,bat:87},
+  {category:"smartphones",name:"Nothing Phone 2",price:44999,cam:82,gam:80,bat:78},
+  {category:"smartphones",name:"Realme GT 5",price:39999,cam:78,gam:85,bat:86},
+  {category:"smartphones",name:"iQOO 12",price:52999,cam:80,gam:96,bat:84},
+  
+  // EARBUDS
+  {category:"earbuds",name:"AirPods Pro 2",price:26900,snd:92,anc:95,mic:90},
+  {category:"earbuds",name:"Sony WF-1000XM5",price:24990,snd:95,anc:98,mic:88},
+  {category:"earbuds",name:"Samsung Galaxy Buds 2 Pro",price:17999,snd:88,anc:90,mic:85},
+  {category:"earbuds",name:"Bose QuietComfort Earbuds II",price:22999,snd:90,anc:96,mic:87},
+  {category:"earbuds",name:"Nothing Ear 2",price:8999,snd:82,anc:80,mic:78},
+  {category:"earbuds",name:"OnePlus Buds Pro 2",price:11999,snd:85,anc:85,mic:82},
+  {category:"earbuds",name:"Boat Airdopes 800",price:3999,snd:70,anc:65,mic:68},
+  
+  // LAPTOPS
+  {category:"laptops",name:"MacBook Air M3",price:114900,perf:92,port:88,scr:95},
+  {category:"laptops",name:"Dell XPS 13",price:139990,perf:88,port:85,scr:92},
+  {category:"laptops",name:"HP Spectre x360",price:149999,perf:85,port:90,scr:90},
+  {category:"laptops",name:"Lenovo ThinkPad X1 Carbon",price:159999,perf:90,port:92,scr:88},
+  {category:"laptops",name:"ASUS ROG Zephyrus G14",price:164990,perf:96,port:78,scr:94},
+  {category:"laptops",name:"Acer Swift 3",price:54990,perf:75,port:82,scr:80},
+  {category:"laptops",name:"MSI Prestige 14",price:89990,perf:82,port:85,scr:86}
+];
+
+/* ===============================
    SUPABASE CONFIG
 ================================= */
 
@@ -376,7 +410,12 @@ const SUPABASE_URL = "https://adzkzeghlgzpbageszqh.supabase.co";
 const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemt6ZWdobGd6cGJhZ2VzenFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg4NDM4MzMsImV4cCI6MjA1NDQxOTgzM30.6ViFpPL8Rc_Nl5yxrGz8wuZdYEcRjMgDdEY4xLwPfpY";
 const AMZN_TAG = "decideos-21";
 
-const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let sbClient = null;
+try {
+  sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+} catch(e) {
+  console.log("Supabase init error:", e);
+}
 
 /* ===============================
    DEVICE + SESSION
@@ -392,7 +431,8 @@ let ENGINE_STATE = {
 currentDomain:null,
 active_filters:[],
 sessionID:"SID-"+Math.random().toString(36).substr(2,4).toUpperCase(),
-winner:null
+winner:null,
+dbSource:"sample" // "sample", "cache", or "live"
 };
 
 /* ===============================
@@ -414,7 +454,7 @@ if(ANALYTICS_QUEUE.length>=10) flushAnalytics();
 }
 
 async function flushAnalytics(){
-if(!ANALYTICS_QUEUE.length) return;
+if(!ANALYTICS_QUEUE.length || !sbClient) return;
 const payload=[...ANALYTICS_QUEUE];
 ANALYTICS_QUEUE=[];
 try{
@@ -437,10 +477,79 @@ earbuds:{},
 laptops:{}
 };
 
-async function syncDatabase(){
+function loadSampleData(){
+DB={smartphones:{},earbuds:{},laptops:{}};
+SAMPLE_DATA.forEach(p=>{
+if(!DB[p.category]) DB[p.category]={};
+DB[p.category][p.name]={
+name:p.name,
+price:p.price,
+attr:{
+cam:p.cam||0,
+gam:p.gam||0,
+bat:p.bat||0,
+snd:p.snd||0,
+anc:p.anc||0,
+mic:p.mic||0,
+perf:p.perf||0,
+port:p.port||0,
+scr:p.scr||0
+}
+};
+});
+ENGINE_STATE.dbSource = "sample";
+}
+
+function loadFromCache(){
+const cache=localStorage.getItem("product_cache");
+if(!cache) return false;
 try{
+const data=JSON.parse(cache);
+DB={smartphones:{},earbuds:{},laptops:{}};
+data.forEach(p=>{
+if(!DB[p.category]) DB[p.category]={};
+DB[p.category][p.name]={
+name:p.name,
+price:p.price,
+attr:{
+cam:p.cam||0,
+gam:p.gam||0,
+bat:p.bat||0,
+snd:p.snd||0,
+anc:p.anc||0,
+mic:p.mic||0,
+perf:p.perf||0,
+port:p.port||0,
+scr:p.scr||0
+}
+};
+});
+ENGINE_STATE.dbSource = "cache";
+return true;
+}catch(e){
+return false;
+}
+}
+
+async function syncDatabase(){
+if(!sbClient){
+showToast("Supabase not available - using sample data");
+loadSampleData();
+renderLobby();
+return;
+}
+
+try{
+showToast("Syncing database...");
 const {data,error}=await sbClient.from("products").select("*");
 if(error) throw error;
+
+if(!data || data.length === 0){
+showToast("No data in database - using sample data");
+loadSampleData();
+renderLobby();
+return;
+}
 
 DB={smartphones:{},earbuds:{},laptops:{}};
 
@@ -465,38 +574,18 @@ scr:p.scr||0
 
 localStorage.setItem("product_cache",JSON.stringify(data));
 localStorage.setItem("db_last_sync",Date.now());
-showToast("SYSTEM LIVE ✅");
+ENGINE_STATE.dbSource = "live";
+showToast("DATABASE LIVE ✅");
 renderLobby();
 }
 catch(e){
 console.log("Sync error:",e);
-const cache=localStorage.getItem("product_cache");
-if(cache){
-const data=JSON.parse(cache);
-DB={smartphones:{},earbuds:{},laptops:{}};
-data.forEach(p=>{
-if(!DB[p.category]) DB[p.category]={};
-DB[p.category][p.name]={
-name:p.name,
-price:p.price,
-attr:{
-cam:p.cam||0,
-gam:p.gam||0,
-bat:p.bat||0,
-snd:p.snd||0,
-anc:p.anc||0,
-mic:p.mic||0,
-perf:p.perf||0,
-port:p.port||0,
-scr:p.scr||0
+showToast("Sync failed - trying cache");
+if(!loadFromCache()){
+showToast("Using sample data");
+loadSampleData();
 }
-};
-});
-showToast("OFFLINE MODE");
 renderLobby();
-}else{
-showToast("NO DATA AVAILABLE");
-}
 }
 }
 
@@ -505,6 +594,10 @@ showToast("NO DATA AVAILABLE");
 ================================= */
 
 function renderLobby(){
+const dbStatus = ENGINE_STATE.dbSource === "live" ? "LIVE DB" : 
+                 ENGINE_STATE.dbSource === "cache" ? "CACHED" : "SAMPLE";
+const dbStatusClass = ENGINE_STATE.dbSource === "live" ? "status-live" : "status-neutral";
+
 const app=document.getElementById("app");
 app.innerHTML=`
 <div class="header">
@@ -519,7 +612,7 @@ DECIDE OS v100.0
 <div class="module-card" onclick="loadDomain('smartphones')">
 <div class="module-icon">📱</div>
 <div class="module-title">DECIDE: PHONES</div>
-<div class="module-status status-live">LIVE DB</div>
+<div class="module-status ${dbStatusClass}">${dbStatus}</div>
 </div>
 
 <div class="module-card" onclick="loadDomain('earbuds')">
@@ -557,7 +650,7 @@ DECIDE OS v100.0
 ▶ WATCH REVIEW
 </button>
 
-<div class="session-id">ID: ${ENGINE_STATE.sessionID}</div>
+<div class="session-id">ID: ${ENGINE_STATE.sessionID} | ${dbStatus}</div>
 `;
 }
 
@@ -595,9 +688,12 @@ ${filterLabels[f]}
 </div>
 `).join("");
 
+const productCount = Object.keys(DB[domain] || {}).length;
+
 app.innerHTML=`
 <div class="filter-container">
 <div class="filter-title">${domain.toUpperCase()}</div>
+<p style="text-align:center;color:#888;margin-bottom:20px">${productCount} products available</p>
 <div class="filter-grid">${buttons}</div>
 <button class="action-btn" onclick="buildVerdict()">DECIDE →</button>
 <button class="secondary-btn" onclick="renderLobby()">← BACK</button>
@@ -649,7 +745,7 @@ return scored[0];
 function buildVerdict(){
 const winner=calculateWinner();
 if(!winner){ 
-showToast("NO DATA - SYNC DATABASE FIRST"); 
+showToast("NO DATA AVAILABLE"); 
 return; 
 }
 
@@ -713,7 +809,15 @@ window.close();
 
 function openTools(){
 trackEvent("open_tools");
-alert("TOOLS MODULE\n\n• GitHub: github.com/via-decide/engine\n• Support: Contact Admin\n• Version: 100.0");
+const msg = `TOOLS MODULE\n\n` +
+            `• GitHub: github.com/via-decide/engine\n` +
+            `• Database: ${ENGINE_STATE.dbSource.toUpperCase()}\n` +
+            `• Products: ${Object.values(DB).reduce((acc,cat)=>acc+Object.keys(cat).length,0)}\n` +
+            `• Version: 100.0\n\n` +
+            `Click OK to sync database`;
+if(confirm(msg)){
+syncDatabase();
+}
 }
 
 function openYouTube(){
@@ -733,35 +837,19 @@ setTimeout(()=>t.classList.remove("show"),2500);
 ================================= */
 
 (async function init(){
-// Try to load from cache first
-const cache=localStorage.getItem("product_cache");
-if(cache){
-const data=JSON.parse(cache);
-DB={smartphones:{},earbuds:{},laptops:{}};
-data.forEach(p=>{
-if(!DB[p.category]) DB[p.category]={};
-DB[p.category][p.name]={
-name:p.name,
-price:p.price,
-attr:{
-cam:p.cam||0,
-gam:p.gam||0,
-bat:p.bat||0,
-snd:p.snd||0,
-anc:p.anc||0,
-mic:p.mic||0,
-perf:p.perf||0,
-port:p.port||0,
-scr:p.scr||0
-}
-};
-});
-}
-
+// Load sample data first (instant)
+loadSampleData();
 renderLobby();
 
-// Then sync in background
+// Try to load cache
+if(loadFromCache()){
+renderLobby();
+}
+
+// Then try to sync with Supabase in background
+setTimeout(()=>{
 syncDatabase();
+}, 1000);
 })();
 </script>
 
