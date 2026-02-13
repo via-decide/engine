@@ -1,14 +1,17 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-<title>Decide Engine | Universal Logic OS</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decide Engine</title>
 <meta name="theme-color" content="#000000">
 <link rel="manifest" href="manifest.json">
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- PDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 :root{
@@ -18,271 +21,261 @@
 --glass-border:rgba(255,255,255,0.12);
 --text-main:#fff;
 --accent-go:#00e676;
---font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
-
-html,body{
-margin:0;padding:0;height:100%;width:100%;
-background:radial-gradient(circle at top left,#111,#050505);
-color:var(--text-main);
-font-family:var(--font-ui);
+body{
+margin:0;
+background:var(--brand-dark);
+color:#fff;
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 overflow:hidden;
 }
-
-#master-container{height:100%;width:100%;position:relative;overflow:hidden}
-
-.main-slide{
-position:absolute;
-top:0;left:0;
-width:100%;height:100%;
-display:flex;flex-direction:column;
-transition:0.5s;
+#master-container{
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
 }
-
-.main-slide.active{z-index:10}
-.main-slide.hidden{opacity:0;pointer-events:none}
-
-.lobby-grid{
+.grid{
 display:grid;
 grid-template-columns:1fr 1fr;
 gap:14px;
-padding:80px 20px;
-overflow-y:auto;
+width:90%;
+max-width:600px;
 }
-
-.grid-btn{
-background:rgba(255,255,255,0.03);
-border:1px solid var(--glass-border);
-border-radius:18px;
-padding:28px;
-text-align:center;
-font-weight:700;
-cursor:pointer;
-}
-
-.grid-btn:active{transform:scale(0.96)}
-
-.full-width-btn{
-grid-column:span 2;
+.grid button{
 padding:20px;
-}
-
-.header-bar{
-position:absolute;
-top:20px;left:20px;right:20px;
-display:flex;justify-content:space-between;align-items:center;
-}
-
-.header-title{
-background:rgba(255,103,31,0.1);
-padding:6px 12px;
-border-radius:6px;
-font-size:0.75rem;
-color:var(--brand-orange);
+border-radius:18px;
+background:var(--glass-surface);
+border:1px solid var(--glass-border);
+color:#fff;
 font-weight:700;
-letter-spacing:2px;
-}
-
-.exit-btn{
-border:1px solid rgba(255,255,255,0.2);
-border-radius:20px;
-padding:8px 16px;
 cursor:pointer;
-background:rgba(0,0,0,0.5);
 }
-
+.winner{
+text-align:center;
+}
+.btn{
+padding:14px;
+border-radius:14px;
+background:var(--brand-orange);
+border:none;
+font-weight:800;
+cursor:pointer;
+width:100%;
+}
 .toast{
 position:fixed;
-bottom:80px;
+bottom:40px;
 left:50%;
 transform:translateX(-50%);
 background:#111;
-padding:10px 18px;
+padding:10px 20px;
 border-radius:30px;
-border:1px solid #333;
-opacity:0;
-transition:0.3s;
+display:none;
 }
-
-.toast.visible{opacity:1}
+.toast.show{display:block;}
 </style>
 </head>
 
 <body>
-
 <div id="master-container"></div>
 <div id="toast" class="toast"></div>
 
 <script>
-/* ========================= CONFIG ========================= */
 
-const AMAZON_TAG = "decideos-21";
+/* =========================
+   SUPABASE CONFIG
+========================= */
+
 const SUPABASE_URL = "https://adzkzeghlgzpbageszqh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SvFpgjJXowEo0JliWh0OVA_6U-8T2VA";
+const AMZN_TAG = "decideos-21";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ========================= STATE ========================= */
+/* =========================
+   DEVICE ID
+========================= */
 
 let DEVICE_ID = localStorage.getItem("decide_device_id");
 if(!DEVICE_ID){
 DEVICE_ID = crypto.randomUUID();
-localStorage.setItem("decide_device_id",DEVICE_ID);
+localStorage.setItem("decide_device_id", DEVICE_ID);
 }
 
-let SESSION_ID = "SID-"+Math.random().toString(36).substring(2,7).toUpperCase();
+let ENGINE_STATE = {
+currentDomain:null,
+active_filters:[],
+sessionID:"SID-"+Math.random().toString(36).substr(2,4).toUpperCase(),
+winner:null
+};
 
-let PRODUCTS = [];
 let ANALYTICS_QUEUE = [];
 
-/* ========================= ANALYTICS (BATCHED) ========================= */
+/* =========================
+   ANALYTICS
+========================= */
 
-function track(event_type, meta={}){
+function trackEvent(type,meta={}){
 ANALYTICS_QUEUE.push({
 device_id:DEVICE_ID,
-session_id:SESSION_ID,
-event_type,
-module:meta.module||null,
+session_id:ENGINE_STATE.sessionID,
+event_type:type,
+module:ENGINE_STATE.currentDomain,
+product:meta.product||null,
 filter:meta.filter||null,
-product:meta.product||null
+created_at:new Date().toISOString()
 });
-
 if(ANALYTICS_QUEUE.length>=10) flushAnalytics();
 }
 
 async function flushAnalytics(){
 if(!ANALYTICS_QUEUE.length) return;
-const payload = [...ANALYTICS_QUEUE];
+await supabase.from("analytics_events").insert(ANALYTICS_QUEUE);
 ANALYTICS_QUEUE=[];
-await supabase.from("analytics_events").insert(payload);
 }
 
-setInterval(flushAnalytics,10000);
+setInterval(flushAnalytics,8000);
 window.addEventListener("beforeunload",flushAnalytics);
 
-/* ========================= DATA ========================= */
+/* =========================
+   DATABASE
+========================= */
 
-async function loadProducts(){
+let DB={};
+
+async function syncDatabase(){
 try{
-const {data,error} = await supabase.from("products").select("*");
-if(data){
-PRODUCTS = data;
-localStorage.setItem("products_cache",JSON.stringify(data));
-showToast("LIVE DB");
-}
+const {data,error}=await supabase.from("products").select("*");
+if(error) throw error;
+DB=data;
+localStorage.setItem("product_cache",JSON.stringify(data));
+showToast("SYSTEM LIVE");
 }catch(e){
-const cache = localStorage.getItem("products_cache");
+const cache=localStorage.getItem("product_cache");
 if(cache){
-PRODUCTS = JSON.parse(cache);
+DB=JSON.parse(cache);
 showToast("OFFLINE MODE");
 }
 }
 }
 
-/* ========================= UI ========================= */
+/* =========================
+   UI
+========================= */
+
+function renderLobby(){
+ENGINE_STATE.currentDomain=null;
+document.getElementById("master-container").innerHTML=`
+<div class="grid">
+<button onclick="loadDomain('smartphones')">📱 Phones</button>
+<button onclick="loadDomain('earbuds')">🎧 Audio</button>
+<button onclick="loadDomain('laptops')">💻 Laptops</button>
+</div>`;
+}
+
+function loadDomain(domain){
+ENGINE_STATE.currentDomain=domain;
+ENGINE_STATE.active_filters=[];
+trackEvent("open_module");
+renderFilters();
+}
+
+function renderFilters(){
+document.getElementById("master-container").innerHTML=`
+<div class="grid">
+<button onclick="setFilter('cam')">Camera</button>
+<button onclick="setFilter('gam')">Gaming</button>
+<button onclick="setFilter('bat')">Battery</button>
+<button onclick="startHunt()">Start Hunt →</button>
+</div>`;
+}
+
+function setFilter(f){
+ENGINE_STATE.active_filters.push(f);
+trackEvent("select_filter",{filter:f});
+showToast("Filter Added");
+}
+
+/* =========================
+   SCORING ENGINE
+========================= */
+
+function calculateVerdict(){
+const items=DB.filter(x=>x.category===ENGINE_STATE.currentDomain);
+const keys=ENGINE_STATE.active_filters;
+const scored=items.map(p=>{
+let score=0;
+keys.forEach(k=>score+=p[k]||0);
+return {...p,score};
+});
+scored.sort((a,b)=>b.score-a.score||a.price-b.price);
+return scored[0];
+}
+
+function startHunt(){
+if(!ENGINE_STATE.active_filters.length) return showToast("Select filter");
+const winner=calculateVerdict();
+ENGINE_STATE.winner=winner;
+trackEvent("verdict",{product:winner.name});
+renderWinner(winner);
+}
+
+function renderWinner(w){
+const amzn=`https://www.amazon.in/s?k=${encodeURIComponent(w.name)}&tag=${AMZN_TAG}`;
+const yt=`https://www.youtube.com/results?search_query=${encodeURIComponent(w.name+" review")}`;
+document.getElementById("master-container").innerHTML=`
+<div class="winner">
+<h1>${w.name}</h1>
+<h3>₹${w.price}</h3>
+<br>
+<button class="btn" onclick="window.open('${amzn}','_blank')">Check Price</button>
+<br><br>
+<button class="btn" onclick="window.open('${yt}','_blank')">Watch Review</button>
+<br><br>
+<button class="btn" onclick="generatePDF()">Export PDF</button>
+<br><br>
+<button class="btn" onclick="renderLobby()">Home</button>
+</div>`;
+}
+
+/* =========================
+   PDF
+========================= */
+
+function generatePDF(){
+const w=ENGINE_STATE.winner;
+if(!w) return;
+const {jsPDF}=window.jspdf;
+const doc=new jsPDF();
+doc.text("DECIDE ENGINE REPORT",20,20);
+doc.text("Winner: "+w.name,20,40);
+doc.text("Price: ₹"+w.price,20,50);
+doc.save("report.pdf");
+trackEvent("pdf_export",{product:w.name});
+}
+
+/* =========================
+   TOAST
+========================= */
 
 function showToast(msg){
 const t=document.getElementById("toast");
 t.innerText=msg;
-t.classList.add("visible");
-setTimeout(()=>t.classList.remove("visible"),2000);
+t.classList.add("show");
+setTimeout(()=>t.classList.remove("show"),2000);
 }
 
-function renderLobby(){
-track("view_lobby");
+/* =========================
+   INIT
+========================= */
 
-const c=document.getElementById("master-container");
-c.innerHTML=`
-<div class="main-slide active">
-<div class="header-bar">
-<div class="header-title">DECIDE OS v100.0 ●</div>
-<div class="exit-btn" onclick="renderLobby()">EXIT</div>
-</div>
-
-<div class="lobby-grid">
-<div class="grid-btn" onclick="openModule('smartphones')">📱<br><br>DECIDE: PHONES</div>
-<div class="grid-btn" onclick="openModule('earbuds')">🎧<br><br>DECIDE: AUDIO</div>
-<div class="grid-btn" onclick="openModule('laptops')">💻<br><br>DECIDE: LAPTOPS</div>
-<div class="grid-btn" onclick="openYouTube()">▶ WATCH REVIEW</div>
-</div>
-</div>
-`;
-}
-
-function openYouTube(){
-track("youtube_click");
-location.href="https://youtube.com";
-}
-
-function openModule(cat){
-track("open_module",{module:cat});
-
-const filtered = PRODUCTS.filter(p=>p.category===cat);
-if(!filtered.length){
-showToast("NO DATA");
-return;
-}
-
-const winner = scoreProducts(filtered);
-renderResult(winner,cat);
-}
-
-function scoreProducts(list){
-return list.sort((a,b)=>{
-const scoreA = a.cam+a.gam+a.bat+a.snd+a.anc+a.mic+a.perf+a.port+a.scr;
-const scoreB = b.cam+b.gam+b.bat+b.snd+b.anc+b.mic+b.perf+b.port+b.scr;
-return scoreB-scoreA;
-})[0];
-}
-
-function renderResult(p,cat){
-track("view_result",{module:cat,product:p.name});
-
-const c=document.getElementById("master-container");
-c.innerHTML=`
-<div class="main-slide active">
-<div class="header-bar">
-<div class="header-title">VERDICT</div>
-<div class="exit-btn" onclick="renderLobby()">HOME</div>
-</div>
-
-<div style="padding:100px 30px">
-<h1>${p.name}</h1>
-<p>₹${p.price}</p>
-
-<button onclick="openAmazon('${p.name}')">CHECK PRICE</button>
-<button onclick="generatePDF('${p.name}',${p.price})">EXPORT PDF</button>
-</div>
-</div>
-`;
-}
-
-function openAmazon(name){
-track("amazon_click",{product:name});
-location.href=`https://www.amazon.in/s?k=${encodeURIComponent(name)}&tag=${AMAZON_TAG}`;
-}
-
-function generatePDF(name,price){
-track("pdf_export",{product:name});
-const {jsPDF}=window.jspdf;
-const doc=new jsPDF();
-doc.text("DECIDE ENGINE REPORT",20,20);
-doc.text("Session: "+SESSION_ID,20,30);
-doc.text("Winner: "+name,20,45);
-doc.text("Price: ₹"+price,20,55);
-doc.save("decision.pdf");
-}
-
-/* ========================= PWA ========================= */
+syncDatabase();
+renderLobby();
 
 if("serviceWorker" in navigator){
 navigator.serviceWorker.register("sw.js");
 }
-
-/* ========================= INIT ========================= */
-
-loadProducts();
-renderLobby();
 
 </script>
 </body>
