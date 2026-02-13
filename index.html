@@ -669,10 +669,8 @@ grid-template-columns:1fr;
    SUPABASE CONFIG
 ================================= */
 
-const SUPABASE_URL = "hhttps://zdarsygrpqbbcafrqcjt.supabase.co";
-const SUPABASE_KEY = "sb_publishable_n-5v5RBHbp73ci_aebELJQ_s0udlFKz";
-
-"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemt6ZWdobGd6cGJhZ2VzenFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg4NDM4MzMsImV4cCI6MjA1NDQxOTgzM30.6ViFpPL8Rc_Nl5yxrGz8wuZdYEcRjMgDdEY4xLwPfpY";
+const SUPABASE_URL = "https://adzkzeghlgzpbageszqh.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemt6ZWdobGd6cGJhZ2VzenFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg4NDM4MzMsImV4cCI6MjA1NDQxOTgzM30.6ViFpPL8Rc_Nl5yxrGz8wuZdYEcRjMgDdEY4xLwPfpY";
 
 const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -1418,29 +1416,24 @@ setTimeout(()=>t.classList.remove("show"),2500);
    INIT
 ================================= */
 
-async function init(){
-   // Load order history
-   ENGINE_STATE.orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
+(async function init(){
+// Load order history
+ENGINE_STATE.orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
 
-   // Try to load from cache first
-   const cache = localStorage.getItem("product_cache");
-   if(cache){
-      const data = JSON.parse(cache);
-      loadDataToMemory(data);
-   } else {
-      loadDataToMemory(SAMPLE_DATA);
-   }
-
-   renderLobby();
-
-   // Sync in background
-   syncDatabase();
+// Try to load from cache first
+const cache=localStorage.getItem("product_cache");
+if(cache){
+const data=JSON.parse(cache);
+loadDataToMemory(data);
+}else{
+loadDataToMemory(SAMPLE_DATA);
 }
 
-document.addEventListener("DOMContentLoaded", function(){
-   init();
-});
+renderLobby();
 
+// Then sync in background
+syncDatabase();
+})();
 </script>
 
 </body>
