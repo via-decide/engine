@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8,14 +9,11 @@ content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no
 <meta name="theme-color" content="#000000" />
 <link rel="manifest" href="manifest.json" />
 
+<!-- NOTE: If you want true offline PDF, download this file and host locally (jspdf.umd.min.js)
+     and replace the src below with "./vendor/jspdf.umd.min.js" -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-
-/* =========================
-   CORE UI SYSTEM
-========================= */
-
 :root{
   --bg:#050505;
   --glass:rgba(20,20,20,0.85);
@@ -24,7 +22,6 @@ content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no
   --accent-soft:rgba(255,103,31,0.2);
   --green:#00e676;
 }
-
 body{
   margin:0;
   background:radial-gradient(circle at top left,#111,#050505);
@@ -32,14 +29,12 @@ body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
   overflow:hidden;
 }
-
-/* Layout */
-
 #app-shell{height:100vh;display:flex;flex-direction:column;}
 .header{
   padding:20px 30px;
   border-bottom:1px solid var(--border);
   font-weight:700;
+  letter-spacing:1px;
   background:rgba(0,0,0,0.6);
   backdrop-filter:blur(12px);
 }
@@ -60,47 +55,64 @@ body{
   padding:12px;
   border-radius:10px;
   cursor:pointer;
+  transition:0.2s;
+  text-align:left;
 }
 .sidebar button:hover{background:rgba(255,255,255,0.1);}
-
 .content{flex:1;padding:40px;overflow-y:auto;}
-
 .panel{
   background:var(--glass);
   border:1px solid var(--border);
   border-radius:18px;
   padding:40px;
-  max-width:800px;
+  max-width:860px;
   backdrop-filter:blur(20px);
 }
-
-/* Buttons */
-
 .btn{
   background:var(--accent);
   border:none;
   padding:14px 24px;
   border-radius:12px;
-  font-weight:700;
+  font-weight:800;
   cursor:pointer;
   margin-top:12px;
+  transition:0.15s;
 }
+.btn:hover{transform:translateY(-2px);}
+.btn:active{transform:translateY(0px);opacity:0.9;}
 .btn-secondary{
   background:rgba(255,255,255,0.08);
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.08);
 }
-
-/* Ranking Card */
-
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:10px;}
+.pill{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  padding:10px 14px;
+  border-radius:999px;
+  border:1px solid var(--border);
+  background:rgba(255,255,255,0.04);
+  cursor:pointer;
+  user-select:none;
+  font-weight:700;
+}
+.pill.active{
+  border-color:rgba(0,230,118,0.55);
+  background:rgba(0,230,118,0.10);
+  color:var(--green);
+}
+hr{border:none;border-top:1px solid rgba(255,255,255,0.12);margin:18px 0;}
 .rank-card{
   border:1px solid var(--border);
   border-radius:14px;
-  padding:20px;
-  margin-top:15px;
+  padding:18px;
+  margin-top:12px;
   background:rgba(255,255,255,0.03);
 }
-
-/* Toast */
-
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;}
+.small{opacity:0.85;font-size:0.92rem;line-height:1.5;}
 .toast-msg{
   position:fixed;
   bottom:60px;
@@ -112,264 +124,441 @@ body{
   border:1px solid #333;
   opacity:0;
   transition:0.3s;
+  z-index:9999;
+  pointer-events:none;
 }
 .toast-msg.visible{opacity:1;}
-
-@media (min-width:1024px){
-  .sidebar{display:flex;}
-}
-
+@media (min-width:1024px){ .sidebar{display:flex;} }
 </style>
 </head>
-<body>
 
+<body>
 <div id="app-shell">
   <div class="header">DECIDE ENGINE — Universal Logic OS</div>
 
   <div class="main-layout">
-
     <div class="sidebar">
-      <button onclick="renderHome()">Home</button>
-      <button onclick="syncDatabase()">Sync DB</button>
-      <button onclick="generateDecisionReport()">Export PDF</button>
+      <button data-action="home">🏠 Home</button>
+      <button data-action="sync">🔄 Sync DB</button>
+      <button data-action="pdf">📄 Export PDF</button>
     </div>
 
     <div class="content">
       <div id="master-container"></div>
     </div>
-
   </div>
 </div>
 
 <div id="toast" class="toast-msg"></div>
 
 <script>
-
 /* =========================
    CONFIG + STATE
 ========================= */
+const BACKEND_URL =
+  "https://script.google.com/macros/s/AKfycbycz1pVNID7fwlM3ckBsGC_mAjLkMwGoW-UbXHWxdkqdNtYIdeLWfo6EkRef0cHReUO/exec";
 
-const BACKEND_URL="https://script.google.com/macros/s/AKfycbycz1pVNID7fwlM3ckBsGC_mAjLkMwGoW-UbXHWxdkqdNtYIdeLWfo6EkRef0cHReUO/exec";
-
-let ENGINE_STATE={
-  module:null,
-  filters:[],
-  sessionID:"SID-"+Math.random().toString(36).substr(2,4).toUpperCase(),
-  ranking:[],
-  winner:null
+const ENGINE_STATE = {
+  module: null,              // 'phone' | 'audio' | 'laptop'
+  filters: [],               // ['performance','battery','value']
+  sessionID: "SID-" + Math.random().toString(36).substr(2,4).toUpperCase(),
+  ranking: [],
+  winner: null
 };
 
-let DATABASE={
-  phone:{},
-  audio:{},
-  laptop:{}
-};
+let DATABASE = { phone:{}, audio:{}, laptop:{} };
+
+/* =========================
+   SERVICE WORKER (safe)
+========================= */
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", async () => {
+    try { await navigator.serviceWorker.register("./sw.js"); } catch {}
+  });
+}
+
+/* =========================
+   ONLINE / OFFLINE
+========================= */
+window.addEventListener("offline", () => showToast("YOU ARE OFFLINE"));
+window.addEventListener("online", () => { showToast("BACK ONLINE"); syncDatabase(); });
+
+/* =========================
+   DOM HELPERS
+========================= */
+const $ = (sel, root=document) => root.querySelector(sel);
+
+function mount(html){
+  $("#master-container").innerHTML = html;
+}
+
+function esc(s){
+  return String(s ?? "")
+    .replaceAll("&","&amp;")
+    .replaceAll("<","&lt;")
+    .replaceAll(">","&gt;")
+    .replaceAll('"',"&quot;")
+    .replaceAll("'","&#039;");
+}
+
+/* =========================
+   TOAST
+========================= */
+function showToast(msg){
+  const t = $("#toast");
+  t.textContent = msg;
+  t.classList.add("visible");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(()=>t.classList.remove("visible"), 2000);
+}
 
 /* =========================
    DATABASE
 ========================= */
-
 async function syncDatabase(){
   if(!navigator.onLine){
     showToast("OFFLINE MODE");
     return;
   }
-
   try{
-    const r=await fetch(`${BACKEND_URL}?type=local`);
-    const data=await r.json();
+    const r = await fetch(`${BACKEND_URL}?type=local`, { cache: "no-store" });
+    const data = await r.json();
 
-    DATABASE={phone:{},audio:{},laptop:{}};
+    DATABASE = { phone:{}, audio:{}, laptop:{} };
 
     data.forEach(p=>{
-      if(p.category==="smartphones") DATABASE.phone[p.Name]=p;
-      if(p.category==="earbuds") DATABASE.audio[p.Name]=p;
-      if(p.category==="laptops") DATABASE.laptop[p.Name]=p;
+      const name = p.Name || p.name || p.Title || "Unknown";
+      const cat = p.category;
+
+      if(cat === "smartphones") DATABASE.phone[name] = normalizeItem(p, name);
+      if(cat === "earbuds")     DATABASE.audio[name] = normalizeItem(p, name);
+      if(cat === "laptops")     DATABASE.laptop[name] = normalizeItem(p, name);
     });
 
     showToast("SYSTEM LIVE ✅");
-  }catch{
+  } catch(e){
+    console.log(e);
     showToast("OFFLINE MODE");
   }
 }
 
-/* =========================
-   HOME
-========================= */
+function normalizeItem(raw, name){
+  // Normalize numeric fields so scoring is consistent.
+  const price = toNum(raw.price ?? raw.Price ?? 0);
+  return {
+    Name: name,
+    price,
+    perf:  toNum(raw.performance ?? raw.perf ?? raw.perfScore ?? 5),
+    bat:   toNum(raw.battery ?? raw.bat ?? raw.batteryScore ?? 5),
+    val:   toNum(raw.value ?? raw.val ?? raw.valueScore ?? 5)
+  };
+}
 
+function toNum(x){
+  if(typeof x === "string") x = x.replace(/,/g,"");
+  const n = Number(x);
+  return Number.isFinite(n) ? n : 0;
+}
+
+/* =========================
+   RENDER: HOME / MODULE / RESULTS
+========================= */
 function renderHome(){
-  ENGINE_STATE.filters=[];
-  ENGINE_STATE.module=null;
-  ENGINE_STATE.ranking=[];
+  ENGINE_STATE.module = null;
+  ENGINE_STATE.filters = [];
+  ENGINE_STATE.ranking = [];
+  ENGINE_STATE.winner = null;
 
-  document.getElementById("master-container").innerHTML=`
+  mount(`
     <div class="panel">
-      <h1>DECIDE ENGINE</h1>
-      <p>Session: ${ENGINE_STATE.sessionID}</p>
+      <h1 style="margin:0 0 10px 0;">DECIDE ENGINE</h1>
+      <div class="small">Session: <span class="mono">${ENGINE_STATE.sessionID}</span></div>
+      <div class="row" style="margin-top:14px;">
+        <button class="btn" data-action="module" data-module="phone">📱 Phones</button>
+        <button class="btn" data-action="module" data-module="audio">🎧 Audio</button>
+        <button class="btn" data-action="module" data-module="laptop">💻 Laptops</button>
+      </div>
 
-      <button class="btn" onclick="selectModule('phone')">📱 Phones</button>
-      <button class="btn" onclick="selectModule('audio')">🎧 Audio</button>
-      <button class="btn" onclick="selectModule('laptop')">💻 Laptops</button>
+      <hr>
+
+      <div class="small">
+        Tip: Pick a module → select priorities → run engine → export PDF.
+      </div>
+
+      <div class="row">
+        <button class="btn btn-secondary" data-action="sync">🔄 Sync DB</button>
+        <button class="btn btn-secondary" data-action="pdf">📄 Export PDF</button>
+      </div>
     </div>
-  `;
+  `);
+}
+
+function renderModule(module){
+  ENGINE_STATE.module = module;
+  ENGINE_STATE.filters = [];
+  ENGINE_STATE.ranking = [];
+  ENGINE_STATE.winner = null;
+
+  const title =
+    module === "phone" ? "📱 Phones" :
+    module === "audio" ? "🎧 Audio" :
+    "💻 Laptops";
+
+  mount(`
+    <div class="panel">
+      <h1 style="margin:0 0 10px 0;">${title}</h1>
+      <div class="small">Select one or more priorities, then run the engine.</div>
+
+      <div class="row" style="margin-top:14px;">
+        <div class="pill" data-action="toggleFilter" data-filter="performance">⚡ Performance</div>
+        <div class="pill" data-action="toggleFilter" data-filter="battery">🔋 Battery</div>
+        <div class="pill" data-action="toggleFilter" data-filter="value">💎 Value</div>
+      </div>
+
+      <hr>
+
+      <div class="small">
+        Active: <span class="mono" id="active-filters">NONE</span>
+      </div>
+
+      <div class="row">
+        <button class="btn" data-action="run">Run Engine →</button>
+        <button class="btn btn-secondary" data-action="home">Back</button>
+      </div>
+    </div>
+  `);
+
+  updateFilterUI();
+}
+
+function updateFilterUI(){
+  const pills = $$(".pill");
+  pills.forEach(p=>{
+    const f = p.dataset.filter;
+    p.classList.toggle("active", ENGINE_STATE.filters.includes(f));
+  });
+  const af = $("#active-filters");
+  if(af) af.textContent = ENGINE_STATE.filters.length ? ENGINE_STATE.filters.join(", ").toUpperCase() : "NONE";
+}
+
+function $$(sel, root=document){ return [...root.querySelectorAll(sel)]; }
+
+function renderRanking(){
+  const top = ENGINE_STATE.ranking;
+
+  let cards = top.map((it, idx)=>`
+    <div class="rank-card">
+      <div class="mono" style="opacity:0.8;">RANK #${idx+1}</div>
+      <h2 style="margin:6px 0 8px 0;">${esc(it.Name)}</h2>
+      <div class="small">
+        <div><b>Final Score:</b> <span class="mono">${it.finalScore}</span></div>
+        <div><b>Price:</b> ₹${esc(it.price)}</div>
+        <div style="margin-top:10px;">
+          Perf: <span class="mono">${it.breakdown.perf}</span> ·
+          Bat: <span class="mono">${it.breakdown.bat}</span> ·
+          Val: <span class="mono">${it.breakdown.val}</span> ·
+          Eff: <span class="mono">${it.breakdown.efficiency}</span>
+        </div>
+      </div>
+    </div>
+  `).join("");
+
+  mount(`
+    <div class="panel">
+      <h1 style="margin:0 0 10px 0;">🏆 Results</h1>
+      <div class="small">
+        Module: <span class="mono">${esc(ENGINE_STATE.module)}</span> ·
+        Priorities: <span class="mono">${ENGINE_STATE.filters.join(", ") || "none"}</span>
+      </div>
+
+      ${cards || `<div class="small" style="margin-top:12px;">No ranking available.</div>`}
+
+      <hr>
+
+      <div class="row">
+        <button class="btn" data-action="pdf">📄 Export PDF</button>
+        <button class="btn btn-secondary" data-action="module" data-module="${esc(ENGINE_STATE.module)}">Change Priorities</button>
+        <button class="btn btn-secondary" data-action="home">Home</button>
+      </div>
+    </div>
+  `);
 }
 
 /* =========================
-   MODULE FLOW
+   ENGINE (REAL SCORING)
 ========================= */
-
-function selectModule(m){
-  ENGINE_STATE.module=m;
-  ENGINE_STATE.filters=[];
-
-  document.getElementById("master-container").innerHTML=`
-    <div class="panel">
-      <h1>Select Priorities</h1>
-
-      <button class="btn-secondary btn" onclick="toggleFilter('performance')">Performance</button>
-      <button class="btn-secondary btn" onclick="toggleFilter('battery')">Battery</button>
-      <button class="btn-secondary btn" onclick="toggleFilter('value')">Value</button>
-
-      <br>
-      <button class="btn" onclick="startDecision()">Run Engine →</button>
-      <button class="btn-secondary btn" onclick="renderHome()">Back</button>
-    </div>
-  `;
-}
-
-function toggleFilter(f){
-  if(ENGINE_STATE.filters.includes(f)){
-    ENGINE_STATE.filters=ENGINE_STATE.filters.filter(x=>x!==f);
-  }else{
-    ENGINE_STATE.filters.push(f);
+function runEngine(){
+  if(!ENGINE_STATE.module){
+    showToast("Select a module first");
+    return;
   }
-  showToast("Active: "+ENGINE_STATE.filters.join(", "));
-}
-
-/* =========================
-   SCORING ENGINE
-========================= */
-
-function startDecision(){
-
   if(!ENGINE_STATE.filters.length){
     showToast("Select at least one priority");
     return;
   }
 
-  const db=DATABASE[ENGINE_STATE.module];
-  const items=Object.values(db);
+  const db = DATABASE[ENGINE_STATE.module];
+  const items = Object.values(db);
 
   if(!items.length){
-    showToast("No data loaded");
+    showToast("No data loaded (Sync DB)");
     return;
   }
 
-  const ranked=items.map(item=>{
-    return {...item,...scoreItem(item)};
-  });
+  const ranked = items.map(item => ({ ...item, ...scoreItem(item) }));
+  ranked.sort((a,b)=> b.finalScore - a.finalScore || (a.price||0) - (b.price||0));
 
-  ranked.sort((a,b)=>b.finalScore-a.finalScore || a.price-b.price);
-
-  ENGINE_STATE.ranking=ranked.slice(0,3);
-  ENGINE_STATE.winner=ENGINE_STATE.ranking[0];
+  ENGINE_STATE.ranking = ranked.slice(0,3);
+  ENGINE_STATE.winner  = ENGINE_STATE.ranking[0] || null;
 
   renderRanking();
 }
 
 function scoreItem(item){
+  const price = Math.max(1, Number(item.price) || 1);
+  const perf  = clamp01_10(Number(item.perf) || 5);
+  const bat   = clamp01_10(Number(item.bat)  || 5);
+  const val   = clamp01_10(Number(item.val)  || 5);
 
-  const price=Number(item.price)||1;
+  // Priority weights: selected -> 2, otherwise -> 1
+  const w = { performance:1, battery:1, value:1 };
+  ENGINE_STATE.filters.forEach(f => { if(w[f] != null) w[f] = 2; });
 
-  const perf=Number(item.performance||item.perf||5);
-  const bat=Number(item.battery||item.bat||5);
-  const val=Number(item.value||item.val||5);
+  const base =
+    (perf * w.performance) +
+    (bat  * w.battery) +
+    (val  * w.value);
 
-  let weight={performance:1,battery:1,value:1};
+  // Efficiency rewards high base at lower price.
+  const efficiency = (base / price) * 1000;
 
-  ENGINE_STATE.filters.forEach(f=>weight[f]=2);
+  // Final score blend:
+  // - Base dominates (quality)
+  // - Efficiency helps (value)
+  const final = (base * 0.72) + (efficiency * 0.28);
 
-  const base=(perf*weight.performance)+(bat*weight.battery)+(val*weight.value);
-
-  const efficiency=(base/price)*1000;
-
-  const finalScore=(base*0.7)+(efficiency*0.3);
-
-  return{
-    finalScore:Number(finalScore.toFixed(2)),
-    breakdown:{perf,bat,val,efficiency:Number(efficiency.toFixed(2))}
+  return {
+    finalScore: Number(final.toFixed(2)),
+    breakdown: {
+      perf, bat, val,
+      base: Number(base.toFixed(2)),
+      efficiency: Number(efficiency.toFixed(2))
+    }
   };
 }
 
-/* =========================
-   RENDER RANKING
-========================= */
-
-function renderRanking(){
-
-  let html=`<div class="panel">
-  <h1>Top 3 Ranking</h1>`;
-
-  ENGINE_STATE.ranking.forEach((item,i)=>{
-    html+=`
-      <div class="rank-card">
-        <h2>#${i+1} ${item.Name}</h2>
-        <p>Score: ${item.finalScore}</p>
-        <p>Price: ₹${item.price}</p>
-      </div>
-    `;
-  });
-
-  html+=`
-    <button class="btn" onclick="generateDecisionReport()">Export PDF</button>
-    <button class="btn-secondary btn" onclick="renderHome()">Home</button>
-  </div>`;
-
-  document.getElementById("master-container").innerHTML=html;
+function clamp01_10(n){
+  if(!Number.isFinite(n)) return 5;
+  return Math.min(10, Math.max(0, n));
 }
 
 /* =========================
-   PDF
+   PDF (FIXED + GUARDED)
 ========================= */
-
 function generateDecisionReport(){
-  if(!ENGINE_STATE.winner){
-    showToast("No result");
+  if(!ENGINE_STATE.ranking.length){
+    showToast("Run engine first");
     return;
   }
 
-  const { jsPDF }=window.jspdf;
-  const doc=new jsPDF();
+  // Guard: CDN might be unavailable offline unless cached in SW.
+  if(!window.jspdf || !window.jspdf.jsPDF){
+    showToast("PDF library unavailable (offline). Cache or host jsPDF locally.");
+    return;
+  }
 
-  doc.text("DECIDE ENGINE REPORT",20,20);
-  doc.text("Session: "+ENGINE_STATE.sessionID,20,30);
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit:"pt", format:"a4" });
 
-  ENGINE_STATE.ranking.forEach((item,i)=>{
-    doc.text(`#${i+1} ${item.Name} - ${item.finalScore}`,20,50+(i*10));
+  const left = 48;
+  let y = 56;
+
+  doc.setFont("helvetica","bold");
+  doc.setFontSize(18);
+  doc.text("DECIDE ENGINE REPORT", left, y);
+
+  y += 22;
+  doc.setFont("helvetica","normal");
+  doc.setFontSize(10);
+  doc.text(`Session: ${ENGINE_STATE.sessionID}`, left, y);
+  y += 14;
+  doc.text(`Module: ${ENGINE_STATE.module}`, left, y);
+  y += 14;
+  doc.text(`Priorities: ${ENGINE_STATE.filters.join(", ")}`, left, y);
+
+  y += 18;
+  doc.setDrawColor(200);
+  doc.line(left, y, 560, y);
+  y += 20;
+
+  ENGINE_STATE.ranking.forEach((it, idx)=>{
+    doc.setFont("helvetica","bold");
+    doc.setFontSize(12);
+    doc.text(`#${idx+1} ${String(it.Name)}`, left, y);
+    y += 14;
+
+    doc.setFont("helvetica","normal");
+    doc.setFontSize(10);
+    doc.text(`Final Score: ${it.finalScore}    Price: ₹${it.price}`, left, y);
+    y += 12;
+
+    doc.text(
+      `Perf: ${it.breakdown.perf}  Bat: ${it.breakdown.bat}  Val: ${it.breakdown.val}  Base: ${it.breakdown.base}  Eff: ${it.breakdown.efficiency}`,
+      left, y
+    );
+    y += 18;
+
+    // Page break safety
+    if(y > 760){
+      doc.addPage();
+      y = 56;
+    }
   });
 
-  doc.save("decision_report.pdf");
+  doc.save(`Decide_Report_${ENGINE_STATE.sessionID}.pdf`);
+  showToast("PDF DOWNLOADING...");
 }
 
 /* =========================
-   UTIL
+   EVENT DELEGATION (FIXES BUTTON ISSUES)
 ========================= */
+document.addEventListener("click", (e)=>{
+  const el = e.target.closest("[data-action]");
+  if(!el) return;
 
-function showToast(msg){
-  const t=document.getElementById("toast");
-  t.innerText=msg;
-  t.classList.add("visible");
-  setTimeout(()=>t.classList.remove("visible"),2000);
-}
+  const action = el.dataset.action;
+
+  if(action === "home") return renderHome();
+  if(action === "sync") return syncDatabase();
+  if(action === "pdf")  return generateDecisionReport();
+
+  if(action === "module") {
+    const m = el.dataset.module;
+    return renderModule(m);
+  }
+
+  if(action === "toggleFilter") {
+    const f = el.dataset.filter;
+    if(!f) return;
+
+    if(ENGINE_STATE.filters.includes(f)){
+      ENGINE_STATE.filters = ENGINE_STATE.filters.filter(x=>x!==f);
+    } else {
+      ENGINE_STATE.filters.push(f);
+    }
+    updateFilterUI();
+    return;
+  }
+
+  if(action === "run") return runEngine();
+});
 
 /* =========================
    BOOT
 ========================= */
-
 renderHome();
 syncDatabase();
 
 </script>
-
 </body>
 </html>
