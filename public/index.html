@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport"
-  content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
 <title>Decide Engine | Universal Logic OS</title>
 <meta name="theme-color" content="#000000" />
 <link rel="manifest" href="manifest.json" />
@@ -13,129 +13,118 @@
 <style>
 
 /* =========================
-   BASE
+   CORE UI SYSTEM
 ========================= */
 
-body {
-  margin: 0;
-  background: radial-gradient(circle at top left,#111,#050505);
-  color: #fff;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  overflow: hidden;
+:root{
+  --bg:#050505;
+  --glass:rgba(20,20,20,0.85);
+  --border:rgba(255,255,255,0.1);
+  --accent:#ff671f;
+  --accent-soft:rgba(255,103,31,0.2);
+  --green:#00e676;
 }
 
-#app-shell {
-  height: 100vh;
-  width: 100vw;
-  display: flex;
-  flex-direction: column;
+body{
+  margin:0;
+  background:radial-gradient(circle at top left,#111,#050505);
+  color:#fff;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  overflow:hidden;
 }
 
-.header {
-  padding: 20px 30px;
-  border-bottom: 1px solid rgba(255,255,255,0.08);
-  font-weight: 700;
-  letter-spacing: 1px;
-  background: rgba(0,0,0,0.6);
-  backdrop-filter: blur(10px);
+/* Layout */
+
+#app-shell{height:100vh;display:flex;flex-direction:column;}
+.header{
+  padding:20px 30px;
+  border-bottom:1px solid var(--border);
+  font-weight:700;
+  background:rgba(0,0,0,0.6);
+  backdrop-filter:blur(12px);
+}
+.main-layout{flex:1;display:flex;}
+.sidebar{
+  width:260px;
+  border-right:1px solid var(--border);
+  background:rgba(0,0,0,0.6);
+  padding:20px;
+  display:none;
+  flex-direction:column;
+  gap:10px;
+}
+.sidebar button{
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--border);
+  color:#fff;
+  padding:12px;
+  border-radius:10px;
+  cursor:pointer;
+}
+.sidebar button:hover{background:rgba(255,255,255,0.1);}
+
+.content{flex:1;padding:40px;overflow-y:auto;}
+
+.panel{
+  background:var(--glass);
+  border:1px solid var(--border);
+  border-radius:18px;
+  padding:40px;
+  max-width:800px;
+  backdrop-filter:blur(20px);
 }
 
-.main-layout {
-  flex: 1;
-  display: flex;
+/* Buttons */
+
+.btn{
+  background:var(--accent);
+  border:none;
+  padding:14px 24px;
+  border-radius:12px;
+  font-weight:700;
+  cursor:pointer;
+  margin-top:12px;
+}
+.btn-secondary{
+  background:rgba(255,255,255,0.08);
 }
 
-.sidebar {
-  width: 240px;
-  border-right: 1px solid rgba(255,255,255,0.08);
-  background: rgba(0,0,0,0.6);
-  padding: 20px;
-  display: none;
-  flex-direction: column;
-  gap: 12px;
+/* Ranking Card */
+
+.rank-card{
+  border:1px solid var(--border);
+  border-radius:14px;
+  padding:20px;
+  margin-top:15px;
+  background:rgba(255,255,255,0.03);
 }
 
-.sidebar button {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.1);
-  color: white;
-  padding: 12px;
-  border-radius: 10px;
-  cursor: pointer;
-  transition: 0.2s;
-}
+/* Toast */
 
-.sidebar button:hover {
-  background: rgba(255,255,255,0.12);
+.toast-msg{
+  position:fixed;
+  bottom:60px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111;
+  padding:12px 20px;
+  border-radius:40px;
+  border:1px solid #333;
+  opacity:0;
+  transition:0.3s;
 }
-
-.content {
-  flex: 1;
-  padding: 40px;
-  overflow-y: auto;
-}
-
-.panel {
-  background: rgba(20,20,20,0.85);
-  border: 1px solid rgba(255,255,255,0.1);
-  border-radius: 18px;
-  padding: 40px;
-  max-width: 700px;
-  backdrop-filter: blur(20px);
-}
-
-.btn {
-  background: #ff671f;
-  border: none;
-  padding: 14px 24px;
-  border-radius: 12px;
-  font-weight: 700;
-  cursor: pointer;
-  margin-top: 15px;
-  transition: 0.2s;
-}
-
-.btn:hover {
-  transform: translateY(-2px);
-}
-
-.btn-secondary {
-  background: rgba(255,255,255,0.08);
-  color: white;
-}
-
-.toast-msg {
-  position: fixed;
-  bottom: 60px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #111;
-  padding: 12px 20px;
-  border-radius: 40px;
-  border: 1px solid #333;
-  font-size: 0.8rem;
-  opacity: 0;
-  transition: opacity 0.3s;
-  z-index: 9999;
-}
-
-.toast-msg.visible {
-  opacity: 1;
-}
+.toast-msg.visible{opacity:1;}
 
 @media (min-width:1024px){
-  .sidebar { display: flex; }
+  .sidebar{display:flex;}
 }
 
 </style>
 </head>
-
 <body>
 
 <div id="app-shell">
-  <div class="header">
-    DECIDE ENGINE — Universal Logic OS
-  </div>
+  <div class="header">DECIDE ENGINE — Universal Logic OS</div>
 
   <div class="main-layout">
 
@@ -157,48 +146,24 @@ body {
 <script>
 
 /* =========================
-   CONFIG
+   CONFIG + STATE
 ========================= */
 
-const BACKEND_URL =
-"https://script.google.com/macros/s/AKfycbycz1pVNID7fwlM3ckBsGC_mAjLkMwGoW-UbXHWxdkqdNtYIdeLWfo6EkRef0cHReUO/exec";
+const BACKEND_URL="https://script.google.com/macros/s/AKfycbycz1pVNID7fwlM3ckBsGC_mAjLkMwGoW-UbXHWxdkqdNtYIdeLWfo6EkRef0cHReUO/exec";
 
-/* =========================
-   STATE
-========================= */
-
-let ENGINE_STATE = {
-  currentModule: null,
-  activeFilter: null,
-  sessionID: "SID-" + Math.random().toString(36).substr(2,4).toUpperCase(),
-  winner: null
+let ENGINE_STATE={
+  module:null,
+  filters:[],
+  sessionID:"SID-"+Math.random().toString(36).substr(2,4).toUpperCase(),
+  ranking:[],
+  winner:null
 };
 
-let PHONE_DB = {};
-let AUDIO_DB = {};
-let LAPTOP_DB = {};
-
-/* =========================
-   SERVICE WORKER
-========================= */
-
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", async () => {
-    try {
-      await navigator.serviceWorker.register("./sw.js");
-    } catch(e){}
-  });
-}
-
-/* =========================
-   ONLINE/OFFLINE
-========================= */
-
-window.addEventListener("offline", () => showToast("YOU ARE OFFLINE"));
-window.addEventListener("online", () => {
-  showToast("BACK ONLINE");
-  syncDatabase();
-});
+let DATABASE={
+  phone:{},
+  audio:{},
+  laptop:{}
+};
 
 /* =========================
    DATABASE
@@ -211,21 +176,19 @@ async function syncDatabase(){
   }
 
   try{
-    const r = await fetch(`${BACKEND_URL}?type=local`);
-    const d = await r.json();
+    const r=await fetch(`${BACKEND_URL}?type=local`);
+    const data=await r.json();
 
-    PHONE_DB = {};
-    AUDIO_DB = {};
-    LAPTOP_DB = {};
+    DATABASE={phone:{},audio:{},laptop:{}};
 
-    d.forEach(p=>{
-      if(p.category==="smartphones") PHONE_DB[p.Name]=p;
-      if(p.category==="earbuds") AUDIO_DB[p.Name]=p;
-      if(p.category==="laptops") LAPTOP_DB[p.Name]=p;
+    data.forEach(p=>{
+      if(p.category==="smartphones") DATABASE.phone[p.Name]=p;
+      if(p.category==="earbuds") DATABASE.audio[p.Name]=p;
+      if(p.category==="laptops") DATABASE.laptop[p.Name]=p;
     });
 
     showToast("SYSTEM LIVE ✅");
-  }catch(e){
+  }catch{
     showToast("OFFLINE MODE");
   }
 }
@@ -235,15 +198,18 @@ async function syncDatabase(){
 ========================= */
 
 function renderHome(){
-  const c = document.getElementById("master-container");
-  c.innerHTML = `
+  ENGINE_STATE.filters=[];
+  ENGINE_STATE.module=null;
+  ENGINE_STATE.ranking=[];
+
+  document.getElementById("master-container").innerHTML=`
     <div class="panel">
       <h1>DECIDE ENGINE</h1>
       <p>Session: ${ENGINE_STATE.sessionID}</p>
 
       <button class="btn" onclick="selectModule('phone')">📱 Phones</button>
       <button class="btn" onclick="selectModule('audio')">🎧 Audio</button>
-      <button class="btn" onclick="selectModule('laptop')">💻 Laptop</button>
+      <button class="btn" onclick="selectModule('laptop')">💻 Laptops</button>
     </div>
   `;
 }
@@ -252,30 +218,32 @@ function renderHome(){
    MODULE FLOW
 ========================= */
 
-function selectModule(module){
-  ENGINE_STATE.currentModule = module;
-  ENGINE_STATE.activeFilter = null;
+function selectModule(m){
+  ENGINE_STATE.module=m;
+  ENGINE_STATE.filters=[];
 
-  const c = document.getElementById("master-container");
-
-  c.innerHTML = `
+  document.getElementById("master-container").innerHTML=`
     <div class="panel">
-      <h1>Select Priority</h1>
+      <h1>Select Priorities</h1>
 
-      <button class="btn btn-secondary" onclick="setFilter('performance')">Performance</button>
-      <button class="btn btn-secondary" onclick="setFilter('battery')">Battery</button>
-      <button class="btn btn-secondary" onclick="setFilter('value')">Value</button>
+      <button class="btn-secondary btn" onclick="toggleFilter('performance')">Performance</button>
+      <button class="btn-secondary btn" onclick="toggleFilter('battery')">Battery</button>
+      <button class="btn-secondary btn" onclick="toggleFilter('value')">Value</button>
 
       <br>
-      <button class="btn" onclick="startDecision()">Start Decision →</button>
-      <button class="btn btn-secondary" onclick="renderHome()">Back</button>
+      <button class="btn" onclick="startDecision()">Run Engine →</button>
+      <button class="btn-secondary btn" onclick="renderHome()">Back</button>
     </div>
   `;
 }
 
-function setFilter(filter){
-  ENGINE_STATE.activeFilter = filter;
-  showToast("Priority: "+filter.toUpperCase());
+function toggleFilter(f){
+  if(ENGINE_STATE.filters.includes(f)){
+    ENGINE_STATE.filters=ENGINE_STATE.filters.filter(x=>x!==f);
+  }else{
+    ENGINE_STATE.filters.push(f);
+  }
+  showToast("Active: "+ENGINE_STATE.filters.join(", "));
 }
 
 /* =========================
@@ -284,84 +252,80 @@ function setFilter(filter){
 
 function startDecision(){
 
-  if(!ENGINE_STATE.activeFilter){
-    showToast("Select priority first");
+  if(!ENGINE_STATE.filters.length){
+    showToast("Select at least one priority");
     return;
   }
 
-  let DB;
-  if(ENGINE_STATE.currentModule==="phone") DB = PHONE_DB;
-  if(ENGINE_STATE.currentModule==="audio") DB = AUDIO_DB;
-  if(ENGINE_STATE.currentModule==="laptop") DB = LAPTOP_DB;
+  const db=DATABASE[ENGINE_STATE.module];
+  const items=Object.values(db);
 
-  const items = Object.values(DB);
   if(!items.length){
     showToast("No data loaded");
     return;
   }
 
-  const scored = items.map(item=>{
-    const scoreData = calculateScore(item);
-    return {...item, ...scoreData};
+  const ranked=items.map(item=>{
+    return {...item,...scoreItem(item)};
   });
 
-  scored.sort((a,b)=> b.finalScore - a.finalScore || a.price - b.price);
+  ranked.sort((a,b)=>b.finalScore-a.finalScore || a.price-b.price);
 
-  ENGINE_STATE.winner = scored[0];
+  ENGINE_STATE.ranking=ranked.slice(0,3);
+  ENGINE_STATE.winner=ENGINE_STATE.ranking[0];
 
-  renderResult(ENGINE_STATE.winner);
+  renderRanking();
 }
 
-function calculateScore(item){
+function scoreItem(item){
 
-  const price = Number(item.price)||1;
+  const price=Number(item.price)||1;
 
-  const perf = Number(item.performance||item.perf||5);
-  const bat  = Number(item.battery||item.bat||5);
-  const val  = Number(item.value||item.val||5);
+  const perf=Number(item.performance||item.perf||5);
+  const bat=Number(item.battery||item.bat||5);
+  const val=Number(item.value||item.val||5);
 
-  let wPerf=1, wBat=1, wVal=1;
+  let weight={performance:1,battery:1,value:1};
 
-  if(ENGINE_STATE.activeFilter==="performance") wPerf=2;
-  if(ENGINE_STATE.activeFilter==="battery") wBat=2;
-  if(ENGINE_STATE.activeFilter==="value") wVal=2;
+  ENGINE_STATE.filters.forEach(f=>weight[f]=2);
 
-  const base = (perf*wPerf)+(bat*wBat)+(val*wVal);
-  const efficiency = base/price*1000;
+  const base=(perf*weight.performance)+(bat*weight.battery)+(val*weight.value);
 
-  const finalScore = (base*0.7)+(efficiency*0.3);
+  const efficiency=(base/price)*1000;
 
-  return {
+  const finalScore=(base*0.7)+(efficiency*0.3);
+
+  return{
     finalScore:Number(finalScore.toFixed(2)),
     breakdown:{perf,bat,val,efficiency:Number(efficiency.toFixed(2))}
   };
 }
 
 /* =========================
-   RESULT
+   RENDER RANKING
 ========================= */
 
-function renderResult(w){
-  const c=document.getElementById("master-container");
+function renderRanking(){
 
-  c.innerHTML=`
-    <div class="panel">
-      <h1>🏆 Verdict</h1>
-      <h2>${w.Name}</h2>
-      <p>Price: ₹${w.price}</p>
-      <p><strong>Final Score:</strong> ${w.finalScore}</p>
+  let html=`<div class="panel">
+  <h1>Top 3 Ranking</h1>`;
 
-      <hr>
+  ENGINE_STATE.ranking.forEach((item,i)=>{
+    html+=`
+      <div class="rank-card">
+        <h2>#${i+1} ${item.Name}</h2>
+        <p>Score: ${item.finalScore}</p>
+        <p>Price: ₹${item.price}</p>
+      </div>
+    `;
+  });
 
-      <p>Performance: ${w.breakdown.perf}</p>
-      <p>Battery: ${w.breakdown.bat}</p>
-      <p>Value: ${w.breakdown.val}</p>
-      <p>Efficiency: ${w.breakdown.efficiency}</p>
+  html+=`
+    <button class="btn" onclick="generateDecisionReport()">Export PDF</button>
+    <button class="btn-secondary btn" onclick="renderHome()">Home</button>
+  </div>`;
 
-      <button class="btn" onclick="generateDecisionReport()">Download PDF</button>
-      <button class="btn btn-secondary" onclick="renderHome()">Home</button>
-    </div>
-  `;
+  document.getElementById("master-container").innerHTML=html;
 }
 
 /* =========================
@@ -374,20 +338,21 @@ function generateDecisionReport(){
     return;
   }
 
-  const w=ENGINE_STATE.winner;
   const { jsPDF }=window.jspdf;
   const doc=new jsPDF();
 
   doc.text("DECIDE ENGINE REPORT",20,20);
   doc.text("Session: "+ENGINE_STATE.sessionID,20,30);
-  doc.text("Winner: "+w.Name,20,45);
-  doc.text("Score: "+w.finalScore,20,55);
+
+  ENGINE_STATE.ranking.forEach((item,i)=>{
+    doc.text(`#${i+1} ${item.Name} - ${item.finalScore}`,20,50+(i*10));
+  });
 
   doc.save("decision_report.pdf");
 }
 
 /* =========================
-   TOAST
+   UTIL
 ========================= */
 
 function showToast(msg){
