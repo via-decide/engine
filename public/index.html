@@ -1,989 +1,218 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+  <meta name="viewport"
+    content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
   <title>Decide Engine | Universal Logic OS</title>
   <meta name="theme-color" content="#000000" />
   <link rel="manifest" href="manifest.json" />
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
-  <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
 
   <style>
-    :root{
-      --brand-orange:#ff671f;
-      --brand-dark:#050505;
-      --glass-surface:rgba(20,20,20,0.9);
-      --glass-border:rgba(255,255,255,0.12);
-      --text-main:#fff;
-      --accent-go:#00e676;
-      --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-      --ease-elastic:cubic-bezier(0.19,1,0.22,1);
-      --safe-top:env(safe-area-inset-top,20px);
-      --safe-bottom:env(safe-area-inset-bottom,20px)
-    }
-    html,body{
-      margin:0;padding:0;height:100dvh;width:100vw;
-      background-color:var(--brand-dark);color:var(--text-main);
-      font-family:var(--font-ui);
-      overflow:hidden;touch-action:none;
-      -webkit-font-smoothing:antialiased
-    }
-    *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}
-    input{user-select:text;-webkit-user-select:text}
-
-    .aurora-bg{
-      position:fixed;top:-50%;left:-50%;width:200%;height:200%;
-      background:radial-gradient(circle at 50% 50%,#1a1a2e 0%,#000000 70%);
-      z-index:-1;animation:drift 25s infinite alternate ease-in-out;opacity:0.8;pointer-events:none
-    }
-    @keyframes drift{0%{transform:translate3d(0,0,0) scale(1)}100%{transform:translate3d(-20px,-20px,0) scale(1.05)}}
-
-    #master-container{height:100%;width:100%;position:relative;overflow:hidden}
-    .main-slide{
-      height:100%;width:100%;position:absolute;top:0;left:0;
-      display:flex;flex-direction:column;
-      transition:transform 0.5s var(--ease-elastic),opacity 0.4s ease;
-      background:transparent
-    }
-    .main-slide.prev{transform:translateY(-100%) scale(0.96);opacity:0;pointer-events:none}
-    .main-slide.active{transform:translateY(0) scale(1);opacity:1;z-index:10;pointer-events:auto}
-    .main-slide.next{transform:translateY(100%) scale(0.96);opacity:0;z-index:20;pointer-events:none}
-
-    .slide-header{
-      padding:0 20px;height:calc(60px + var(--safe-top));padding-top:var(--safe-top);
-      display:flex;align-items:center;justify-content:space-between;
-      position:absolute;top:0;left:0;right:0;z-index:100;
-      background:linear-gradient(180deg,rgba(0,0,0,0.8) 0%,rgba(0,0,0,0) 100%);
-      pointer-events:none
-    }
-    .slide-header>*{pointer-events:auto}
-    .header-title{
-      font-family:'Courier New',monospace;font-size:0.75rem;color:var(--brand-orange);
-      letter-spacing:2px;font-weight:700;background:rgba(255,103,31,0.1);
-      padding:6px 12px;border-radius:6px;border:1px solid rgba(255,103,31,0.2);
-      display:flex;align-items:center;gap:8px
-    }
-    .status-dot{width:6px;height:6px;background:var(--accent-go);border-radius:50%;box-shadow:0 0 6px var(--accent-go)}
-
-    .lobby-grid{
-      display:grid;grid-template-columns:1fr 1fr;gap:12px;
-      padding:0 20px 100px 20px;margin-top:0;align-content:start;
-      padding-top:calc(80px + var(--safe-top));
-      height:100%;overflow-y:auto
-    }
-    .selection-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:20px;flex-grow:1;align-content:center}
-    .lobby-container{
-      height:100%;display:flex;flex-direction:column;
-      padding:0 20px;padding-top:calc(70px + var(--safe-top));
-      padding-bottom:calc(20px + var(--safe-bottom));overflow-y:auto
+    body {
+      margin: 0;
+      background: #050505;
+      color: #fff;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
     }
 
-    .grid-btn{
-      background:rgba(255,255,255,0.03);border:1px solid var(--glass-border);
-      border-radius:18px;padding:20px;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;gap:10px;aspect-ratio:1.1;
-      transition:all 0.2s;cursor:pointer;backdrop-filter:blur(10px);
-      font-size:0.8rem;font-weight:700;letter-spacing:0.5px
+    #master-container {
+      height: 100vh;
+      width: 100vw;
+      position: relative;
     }
-    .grid-btn:active{transform:scale(0.96);background:rgba(255,255,255,0.08)}
-    .grid-icon{font-size:1.8rem;margin-bottom:4px}
-    .grid-status{font-family:'Courier New',monospace;font-size:0.6rem;color:var(--accent-go);opacity:0.8;letter-spacing:1px;margin-top:2px}
-    .full-width-btn{grid-column:span 2;aspect-ratio:auto;padding:18px;flex-direction:row;gap:15px}
 
-    .cuisine-btn{
-      background:var(--glass-surface);border:1px solid var(--glass-border);color:#888;
-      border-radius:18px;padding:20px 10px;display:flex;flex-direction:column;
-      align-items:center;justify-content:center;gap:12px;font-size:0.75rem;
-      font-weight:700;letter-spacing:1px;text-align:center;transition:all 0.2s;min-height:110px
+    .toast-msg {
+      position: fixed;
+      bottom: 60px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #111;
+      padding: 12px 20px;
+      border-radius: 40px;
+      border: 1px solid #333;
+      font-size: 0.8rem;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 9999;
     }
-    .cuisine-btn:active{transform:scale(0.96)}
-    .cuisine-btn.selected{
-      background:rgba(0,230,118,0.1);color:var(--accent-go);
-      border-color:var(--accent-go);box-shadow:0 0 15px rgba(0,230,118,0.15)
-    }
-    .cuisine-btn span{font-size:1.8rem}
 
-    .action-area{margin-top:auto;padding-top:20px;width:100%}
-    .btn{
-      background:rgba(255,255,255,0.05);color:#fff;border:1px solid rgba(255,255,255,0.1);
-      padding:18px;border-radius:14px;font-weight:700;cursor:pointer;width:100%;
-      text-transform:uppercase;letter-spacing:1px;font-size:0.9rem
-    }
-    .btn-primary{background:var(--brand-orange);color:#000;border:none;font-weight:800}
-    .btn:active{opacity:0.8;transform:scale(0.98)}
-
-    .carousel-viewport{position:absolute;top:80px;bottom:0;left:0;right:0;display:flex;justify-content:center;overflow:hidden}
-    .sub-slide{
-      position:absolute;top:20px;bottom:calc(60px + var(--safe-bottom));left:16px;right:16px;
-      max-width:500px;margin:0 auto;background:rgba(20,20,20,0.9);
-      backdrop-filter:blur(25px);-webkit-backdrop-filter:blur(25px);
-      border:1px solid var(--glass-border);border-radius:28px;
-      display:flex;flex-direction:column;justify-content:center;padding:24px;
-      opacity:0;pointer-events:none;transform:translateY(30px) scale(0.95);
-      transition:transform 0.5s var(--ease-elastic),opacity 0.4s ease;
-      box-shadow:0 20px 50px rgba(0,0,0,0.6)
-    }
-    .sub-slide.opt-active{opacity:1;pointer-events:auto;transform:translateY(0) scale(1);z-index:30}
-    .sub-slide.opt-hidden{opacity:0;pointer-events:none;transform:translateY(-30px) scale(0.95)}
-
-    h1{
-      font-size:clamp(1.8rem,5vw,2.4rem);font-weight:800;margin:5px 0 10px 0;line-height:1.1;
-      background:linear-gradient(to bottom right,#fff,#aaa);
-      -webkit-background-clip:text;-webkit-text-fill-color:transparent
-    }
-    .role-label{
-      font-family:'Courier New',monospace;font-size:0.65rem;color:var(--brand-orange);
-      margin-bottom:10px;display:flex;align-items:center;gap:8px;font-weight:700;
-      letter-spacing:1px;text-transform:uppercase
-    }
-    .role-label::before{content:'';width:6px;height:6px;background:var(--brand-orange);border-radius:50%}
-    .dna-badge{
-      background:rgba(0,230,118,0.1);color:var(--accent-go);
-      border:1px solid rgba(0,230,118,0.25);
-      font-family:'Courier New',monospace;font-size:0.7rem;padding:6px 10px;border-radius:6px;
-      margin-top:5px;display:inline-block;letter-spacing:0.5px
-    }
-    .price-text{font-size:1.2rem;color:#888;margin-top:15px;font-weight:400}
-    .nav-hint{
-      margin-top:auto;border-top:1px solid rgba(255,255,255,0.1);padding-top:20px;
-      display:flex;justify-content:space-between;align-items:center;
-      font-family:'Courier New',monospace;font-size:0.7rem;color:#666
-    }
-    .skip-btn-clickable{
-      cursor:pointer;padding:8px 16px;background:rgba(255,255,255,0.05);
-      border-radius:20px;font-weight:700;color:#aaa;border:1px solid rgba(255,255,255,0.1)
-    }
-    .amzn-btn{color:#FF9900;border-color:rgba(255,153,0,0.3);background:rgba(255,153,0,0.05)}
-    .toast-msg{
-      position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
-      background:rgba(10,10,10,0.95);color:var(--accent-go);border:1px solid #333;
-      padding:12px 24px;border-radius:50px;opacity:0;transition:opacity 0.3s;
-      font-family:'Courier New',monospace;font-size:0.75rem;font-weight:700;
-      pointer-events:none;z-index:9999;white-space:nowrap;backdrop-filter:blur(10px)
-    }
-    .toast-msg.visible{opacity:1;transform:translateX(-50%) translateY(-20px)}
-    .exit-btn{
-      padding:8px 16px;border:1px solid rgba(255,255,255,0.2);border-radius:20px;
-      background:rgba(0,0,0,0.5);color:#fff;font-size:0.7rem;font-weight:700;
-      cursor:pointer;backdrop-filter:blur(10px);text-transform:uppercase
-    }
-    .search-wrapper{position:relative;margin-bottom:20px;width:100%}
-    #search-input{width:100%;padding:20px;border-radius:16px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.3);color:#fff;font-size:1.1rem;text-align:center}
-
-    .wiki-summary{font-size:1rem;line-height:1.6;color:#ddd;max-height:320px;overflow-y:auto;padding-right:5px}
-    .redacted{background:#333;color:#333;border-radius:4px;padding:0 4px;user-select:none}
-    .answer-reveal{display:none;margin-top:15px;color:var(--accent-go);font-weight:800;font-size:1.2rem}
-    .sub-slide.revealed .answer-reveal{display:block;animation:fadeIn 0.5s}
-    .sub-slide.revealed .redacted{background:transparent;color:var(--accent-go);transition:all 0.5s}
-    @keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-
-    .winner-container{height:100%;display:flex;flex-direction:column;justify-content:center;padding:30px;text-align:left;max-width:600px;margin:0 auto}
-    .winner-title{font-size:2.8rem;font-weight:900;line-height:1.1;margin-bottom:10px;color:#fff}
-    .winner-reason{color:#ccc;border-left:2px solid var(--brand-orange);padding-left:15px;margin-bottom:20px;line-height:1.4;font-size:0.95rem}
-    .winner-price{font-size:1.5rem;color:#888;font-family:'Courier New',monospace;margin-bottom:30px}
-    #install-btn-container{display:none}
-
-    @media (min-width:768px){
-      .lobby-grid{grid-template-columns:repeat(3,1fr);max-width:900px;margin:0 auto;align-content:center}
-      .selection-grid{grid-template-columns:repeat(2,1fr);max-width:500px;margin:40px auto}
-      .full-width-btn{grid-column:span 3}
-      .slide-header{padding:0 40px}
-      .sub-slide{bottom:100px}
-      .nav-hint span{display:none}
-      .nav-hint::after{content:'USE ARROW KEYS OR SCROLL';color:#666;font-size:0.6rem;display:block;width:100%;text-align:center}
+    .toast-msg.visible {
+      opacity: 1;
     }
   </style>
 </head>
+
 <body>
-  <div class="aurora-bg"></div>
-  <div id="master-container"></div>
-  <div id="toast" class="toast-msg"></div>
+
+<div id="master-container"></div>
+<div id="toast" class="toast-msg"></div>
 
 <script>
+
 /* =========================
    CONFIG
 ========================= */
-const BACKEND_URL = "https://script.google.com/macros/s/AKfycbycz1pVNID7fwlM3ckBsGC_mAjLkMwGoW-UbXHWxdkqdNtYIdeLWfo6EkRef0cHReUO/exec";
-const AMZN_TAG = "decideos-21";
+
+const BACKEND_URL =
+  "https://script.google.com/macros/s/AKfycbycz1pVNID7fwlM3ckBsGC_mAjLkMwGoW-UbXHWxdkqdNtYIdeLWfo6EkRef0cHReUO/exec";
 
 /* =========================
    STATE
 ========================= */
+
 let ENGINE_STATE = {
   currentDomain: null,
-  items_detected: {},
   active_filters: [],
-  session_weights: {},
-  researchPath: [],
-  triviaMode: false,
-  sessionID: "SID-" + Math.random().toString(36).substr(2,4).toUpperCase(),
-  winner: null,
-  analytics: { route: "home", entry: "home" }
+  sessionID: "SID-" + Math.random().toString(36).substr(2, 4).toUpperCase(),
+  winner: null
 };
 
-let PHONE_DB = {}, AUDIO_DB = {}, LAPTOP_DB = {};
-let slideElements = [], currentIdx = 0;
+let PHONE_DB = {};
+let slideElements = [];
+let currentIdx = 0;
 
 /* =========================
-   PWA Install + SW
+   PWA INSTALL + SW
 ========================= */
+
 let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
+
+window.addEventListener("beforeinstallprompt", (e) => {
   e.preventDefault();
   deferredPrompt = e;
-  const btn = document.getElementById('install-btn-container');
-  if (btn) btn.style.display = 'flex';
 });
-async function triggerInstall(){
-  if(deferredPrompt){
+
+async function triggerInstall() {
+  if (deferredPrompt) {
     deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
+    await deferredPrompt.userChoice;
     deferredPrompt = null;
-    if(outcome === 'accepted') document.getElementById('install-btn-container').style.display = 'none';
-  } else {
-    showToast("Tap Share -> Add to Home Screen");
   }
 }
+
+/* ---------- PRODUCTION SW REGISTRATION ---------- */
+
 if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(()=>{}));
+  window.addEventListener("load", async () => {
+    try {
+      const reg = await navigator.serviceWorker.register("./sw.js");
+
+      if (reg.waiting) {
+        reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+
+      reg.addEventListener("updatefound", () => {
+        const newWorker = reg.installing;
+        if (!newWorker) return;
+
+        newWorker.addEventListener("statechange", () => {
+          if (
+            newWorker.state === "installed" &&
+            navigator.serviceWorker.controller
+          ) {
+            showToast("UPDATE AVAILABLE — REFRESH");
+          }
+        });
+      });
+
+      console.log("Service Worker ready");
+    } catch (err) {
+      console.log("SW registration failed:", err);
+    }
+  });
 }
 
 /* =========================
-   ROUTER (hash-based)
-   Supported:
-     #/            home
-     #/research    module only
-     #/trivia      module only
-     #/dining      module only
-     #/research?q=quantum
+   ONLINE / OFFLINE EVENTS
 ========================= */
-function parseHashRoute(){
-  const raw = (location.hash || "#/").slice(1); // remove '#'
-  const [pathPart, queryPart] = raw.split("?");
-  const path = (pathPart || "/").trim();
-  const params = new URLSearchParams(queryPart || "");
-  return { path, params };
-}
-function navigateTo(hash){
-  if (!hash.startsWith("#")) hash = "#" + hash;
-  location.hash = hash;
-}
-function routeToUI(){
-  const { path, params } = parseHashRoute();
-  const clean = (path === "" ? "/" : path);
 
-  ENGINE_STATE.analytics.route = clean;
+window.addEventListener("offline", () => {
+  showToast("YOU ARE OFFLINE");
+});
 
-  // Module-only routes (professional links)
-  if (clean === "/research") {
-    ENGINE_STATE.analytics.entry = "direct";
-    renderResearchOnly(params);
+window.addEventListener("online", () => {
+  showToast("BACK ONLINE");
+  syncDatabase();
+});
+
+/* =========================
+   DATABASE SYNC (PATCHED)
+========================= */
+
+async function syncDatabase() {
+
+  if (!navigator.onLine) {
+    showToast("OFFLINE MODE");
     return;
   }
-  if (clean === "/trivia") {
-    ENGINE_STATE.analytics.entry = "direct";
-    renderTriviaOnly(params);
-    return;
-  }
-  if (clean === "/dining") {
-    ENGINE_STATE.analytics.entry = "direct";
-    renderDiningOnly(params);
-    return;
-  }
 
-  // Default home
-  ENGINE_STATE.analytics.entry = "home";
-  renderLobby();
-}
-window.addEventListener("hashchange", routeToUI);
-
-/* =========================
-   STATIC DNA (keep yours)
-========================= */
-const SMARTPHONE_DNA = [
-  { name: "Samsung Galaxy S26 Ultra", dominance: "Productivity King", tech_edge: "S-Pen + AI" },
-  { name: "iPhone 17 Pro", dominance: "Video Standard", tech_edge: "A19 Pro" },
-  { name: "OnePlus 14", dominance: "Battery King", tech_edge: "Si/C Battery" },
-  { name: "Pixel 10 Pro", dominance: "Smartest Assistant", tech_edge: "Ambient AI" },
-  { name: "iQOO 14 Legend", dominance: "Fastest Charge", tech_edge: "150W Flash" }
-];
-const AUDIO_DNA = [
-  { name: "Sony WF-1000XM6", dominance: "Silence King", tech_edge: "Dual V2 Processor" },
-  { name: "AirPods Pro 3", dominance: "Ecosystem King", tech_edge: "H3 Chip" }
-];
-const LAPTOP_DNA = [
-  { name: "MacBook Air M3", dominance: "Student Default", tech_edge: "Apple Silicon" },
-  { name: "Zephyrus G14", dominance: "Portable Gaming", tech_edge: "OLED Nebula" }
-];
-
-/* =========================
-   MODULES
-========================= */
-const MODULES = {
-  smartphones: {
-    label: "PHONES",
-    database: PHONE_DB,
-    init: () => renderEcosystemGate(),
-    categories: [{label:"CAMERA", type:"cam"}, {label:"GAMING", type:"gam"}, {label:"BATTERY", type:"bat"}, {label:"VALUE", type:"val"}]
-  },
-  earbuds: {
-    label: "AUDIO",
-    database: AUDIO_DB,
-    init: () => { ENGINE_STATE.active_filters=[]; renderSubLobby('earbuds'); },
-    categories: [{label:"SOUND", type:"snd"}, {label:"SILENCE", type:"anc"}, {label:"MIC", type:"mic"}]
-  },
-  laptops: {
-    label: "LAPTOPS",
-    database: LAPTOP_DB,
-    init: () => { ENGINE_STATE.active_filters=[]; renderSubLobby('laptops'); },
-    categories: [{label:"WORK", type:"perf"}, {label:"TRAVEL", type:"port"}, {label:"CREATOR", type:"scr"}]
-  }
-};
-
-/* =========================
-   DATA SYNC
-========================= */
-async function syncDatabase(){
-  try{
+  try {
     const r = await fetch(`${BACKEND_URL}?type=local`);
     const d = await r.json();
-    PHONE_DB = {}; AUDIO_DB = {}; LAPTOP_DB = {};
-    d.forEach(i => {
-      const pName = i.Name || i.name || i.Title || "Unknown Product";
-      const pPrice = i.price || i.Price || 0;
-      const cleanPrice = typeof pPrice === 'string' ? Number(pPrice.replace(/,/g,'')) : Number(pPrice);
 
-      const e = {
-        name: pName,
-        attr: {
-          cam:Number(i.cam)||0, gam:Number(i.gam)||0, bat:Number(i.bat)||0, val:Number(i.val)||0,
-          snd:Number(i.snd)||0, anc:Number(i.anc)||0, mic:Number(i.mic)||0,
-          perf:Number(i.perf)||0, port:Number(i.port)||0, scr:Number(i.scr)||0
-        },
-        price: cleanPrice
-      };
-
-      if(i.category==='smartphones'){ e.dna = SMARTPHONE_DNA.find(x=>pName.includes(x.name)); PHONE_DB[pName]=e; }
-      if(i.category==='earbuds'){ e.dna = AUDIO_DNA.find(x=>pName.includes(x.name)); AUDIO_DB[pName]=e; }
-      if(i.category==='laptops'){ e.dna = LAPTOP_DNA.find(x=>pName.includes(x.name)); LAPTOP_DB[pName]=e; }
+    PHONE_DB = {};
+    d.forEach(item => {
+      PHONE_DB[item.Name] = item;
     });
 
-    MODULES.smartphones.database = PHONE_DB;
-    MODULES.earbuds.database = AUDIO_DB;
-    MODULES.laptops.database = LAPTOP_DB;
-
     showToast("SYSTEM LIVE ✅");
-  } catch(e){
+
+  } catch (e) {
     console.log(e);
     showToast("OFFLINE MODE");
   }
 }
 
 /* =========================
-   MONETIZATION HELPERS
+   UI CORE
 ========================= */
-function getAmazonBookLink(query){ return `https://www.amazon.in/s?k=${encodeURIComponent(query + " books")}&tag=${AMZN_TAG}&linkCode=ll2`; }
-function getAmazonProductLink(query){ return `https://www.amazon.in/s?k=${encodeURIComponent(query)}&tag=${AMZN_TAG}&linkCode=ll2`; }
-function getYoutubeLink(query){ return `https://www.youtube.com/results?search_query=${encodeURIComponent(query + " review")}`; }
 
-/* =========================
-   SHAREABLE LINKS (professional deep links)
-========================= */
-function shareLinkForModule(module, extraParams = {}){
-  const base = location.origin + location.pathname;
-  const p = new URLSearchParams(extraParams);
-  const q = p.toString();
-  return `${base}#/${module}${q ? "?" + q : ""}`;
+function renderHome() {
+  const c = document.getElementById("master-container");
+  c.innerHTML = `
+    <div style="padding:40px">
+      <h1>DECIDE ENGINE</h1>
+      <button onclick="syncDatabase()">LOAD PHONES</button>
+      <button onclick="generateDecisionReport()">CREATE REPORT</button>
+    </div>
+  `;
 }
-async function copyToClipboard(text){
-  try {
-    await navigator.clipboard.writeText(text);
-    showToast("LINK COPIED");
-  } catch {
-    // fallback: prompt
-    window.prompt("Copy link:", text);
-  }
+
+function showToast(message) {
+  const t = document.getElementById("toast");
+  t.innerText = message;
+  t.classList.add("visible");
+  setTimeout(() => t.classList.remove("visible"), 2000);
 }
 
 /* =========================
-   RENDER: HOME (core-focused)
+   PDF REPORT
 ========================= */
-function renderLobby(){
-  const c = document.getElementById('master-container');
-  c.innerHTML = "";
-  slideElements = []; currentIdx = 0;
 
-  const s = document.createElement('section');
-  s.className = "main-slide active";
-  s.innerHTML = `
-    <div class="slide-header">
-      <span class="header-title">DECIDE OS v100.0 <div class="status-dot"></div></span>
-    </div>
-
-    <div class="lobby-grid">
-      <div class="grid-btn" onclick="loadDomain('smartphones')">
-        <div class="grid-icon">📱</div>DECIDE: PHONES
-        <div class="grid-status">LIVE DB</div>
-      </div>
-
-      <div class="grid-btn" onclick="loadDomain('earbuds')">
-        <div class="grid-icon">🎧</div>DECIDE: AUDIO
-        <div class="grid-status">NEUTRAL</div>
-      </div>
-
-      <div class="grid-btn" onclick="loadDomain('laptops')">
-        <div class="grid-icon">💻</div>DECIDE: LAPTOPS
-        <div class="grid-status">BETA</div>
-      </div>
-
-      <div class="grid-btn" onclick="navigateTo('#/track')">
-        <div class="grid-icon">📦</div>TRACK
-        <div class="grid-status">SOON</div>
-      </div>
-
-      <div class="grid-btn" onclick="navigateTo('#/buy')">
-        <div class="grid-icon">🧾</div>BUY
-        <div class="grid-status">SOON</div>
-      </div>
-
-      <div class="grid-btn" onclick="openToolsMenu()">
-        <div class="grid-icon">🧰</div>TOOLS
-        <div class="grid-status">LINKS</div>
-      </div>
-
-      <div class="full-width-btn grid-btn" onclick="window.open('https://youtube.com', '_blank')">▶ WATCH REVIEW</div>
-      <div id="install-btn-container" class="full-width-btn grid-btn" onclick="triggerInstall()" style="color:var(--accent-go); border-color:var(--accent-go);">⬇ INSTALL APP</div>
-
-      <div style="grid-column:span 2;text-align:center;opacity:0.3;font-size:0.6rem;margin-top:20px;">ID: ${ENGINE_STATE.sessionID}</div>
-    </div>
-  `;
-
-  c.appendChild(s);
-  slideElements.push(s);
-  addGlobalExit();
-}
-
-function openToolsMenu(){
-  // Simple “Tools” sheet as a slide, not the main lobby
-  const c = document.getElementById('master-container');
-  const s = document.createElement('section');
-  s.className = "main-slide next";
-  s.innerHTML = `
-    <div class="slide-header"><span class="header-title">TOOLS</span></div>
-    <div class="lobby-container">
-      <h1 style="text-align:center;margin-top:20px;">SHAREABLE</h1>
-      <div class="selection-grid">
-        <button class="cuisine-btn" onclick="navigateTo('#/research')"><span>🧠</span>RESEARCH</button>
-        <button class="cuisine-btn" onclick="navigateTo('#/trivia')"><span>🧩</span>TRIVIA</button>
-        <button class="cuisine-btn" onclick="navigateTo('#/dining')"><span>🍔</span>DINING</button>
-        <button class="cuisine-btn" onclick="copyToClipboard(shareLinkForModule('research'))"><span>🔗</span>SHARE RESEARCH</button>
-      </div>
-      <div class="action-area">
-        <button class="btn btn-primary" onclick="goToSlide(currentIdx-1)">BACK</button>
-      </div>
-    </div>
-  `;
-  c.appendChild(s);
-  slideElements.push(s);
-  goToSlide(slideElements.length-1);
-}
-
-/* =========================
-   DECIDE FLOW (your existing logic)
-========================= */
-function renderEcosystemGate(){
-  const s = document.createElement('section');
-  s.className = "main-slide next";
-  s.innerHTML = `
-    <div class="slide-header"><span class="header-title">PHILOSOPHY</span></div>
-    <div class="lobby-container">
-      <h1 style="text-align:center;margin-top:20px;">DRIVER?</h1>
-      <div class="selection-grid">
-        <button class="cuisine-btn" onclick="selectEcosystem('specs')"><span style="font-size:2rem">🚀</span>SPECS</button>
-        <button class="cuisine-btn" onclick="selectEcosystem('peace')"><span style="font-size:2rem">🛡️</span>PEACE</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('master-container').appendChild(s);
-  slideElements.push(s);
-  goToSlide(slideElements.length-1);
-}
-
-function renderSubLobby(d){
-  const s = document.createElement('section');
-  s.className = "main-slide next";
-  let h = "";
-  MODULES[d].categories.forEach((c,i)=> {
-    let icon="⚡";
-    if(c.label.includes("CAMERA")) icon="📸";
-    if(c.label.includes("BATTERY")) icon="🔋";
-    if(c.label.includes("GAMING")) icon="🎮";
-    if(c.label.includes("SOUND")) icon="🎵";
-    if(c.label.includes("SILENCE")) icon="🔇";
-    if(c.label.includes("MIC")) icon="🎙️";
-    if(c.label.includes("WORK")) icon="🧠";
-    if(c.label.includes("TRAVEL")) icon="🧳";
-    if(c.label.includes("CREATOR")) icon="🎬";
-    h += `<button class="cuisine-btn" id="filter-btn-${i}" onclick="toggleFilter('${c.label}',${i})"><span style="font-size:1.8rem">${icon}</span>${c.label}</button>`;
-  });
-  s.innerHTML = `
-    <div class="slide-header"><span class="header-title">FILTER</span></div>
-    <div class="lobby-container">
-      <h1 style="text-align:center;margin-top:20px;">PRIORITY</h1>
-      <div class="selection-grid">${h}</div>
-      <div class="action-area">
-        <button class="btn btn-primary" onclick="startHunt()">START HUNT →</button>
-      </div>
-    </div>
-  `;
-  document.getElementById('master-container').appendChild(s);
-  slideElements.push(s);
-  goToSlide(slideElements.length-1);
-}
-
-function calculateVerdict(db){
-  const filters = ENGINE_STATE.active_filters;
-  const list = Object.values(db);
-  if (!list.length) return null;
-  if(filters.length === 0) return list[0];
-
-  const activeKeys = [];
-  MODULES[ENGINE_STATE.currentDomain].categories.forEach(c => {
-    if(filters.includes(c.label)) activeKeys.push(c.type);
-  });
-
-  let candidates = list.map(p => {
-    let score = 0;
-    activeKeys.forEach(k => score += (p.attr[k] || 0));
-    return { ...p, score };
-  });
-  candidates.sort((a,b) => b.score - a.score || a.price - b.price);
-  return candidates[0];
-}
-
-function buildDeck(){
-  const c = document.getElementById('master-container');
-  const db = MODULES[ENGINE_STATE.currentDomain].database;
-  const cats = MODULES[ENGINE_STATE.currentDomain].categories.filter(x => ENGINE_STATE.active_filters.includes(x.label));
-  const prioritiesToRender = cats.length > 0 ? cats : [{label:"GENERAL", type:"val"}];
-
-  prioritiesToRender.forEach(cat => {
-    const e = document.createElement('section');
-    e.className = "main-slide next";
-    const cands = Object.values(db)
-      .sort((a,b)=>(b.attr[cat.type]||0)-(a.attr[cat.type]||0))
-      .slice(0,3);
-
-    let h = cands.map((x,i)=>`
-      <div class="sub-slide ${i===0?'opt-active':'opt-hidden'}" data-val="${x.name}">
-        <div class="role-label">${cat.label} #${i+1}</div>
-        <h1>${x.name || "Unknown"}</h1>
-        <div class="dna-badge">${x.dna ? x.dna.tech_edge : "High Performance"}</div>
-        <div class="price-text">₹${x.price}</div>
-        <div class="nav-hint">
-          <span class="skip-btn-clickable" onclick="manualSkip(this)">NEXT</span>
-          <span style="color:var(--accent-go)">SELECT ↑</span>
-        </div>
-      </div>
-    `).join('');
-
-    e.innerHTML = `<div class="slide-header"><span class="header-title">${cat.label}</span></div><div class="carousel-viewport">${h}</div>`;
-    c.appendChild(e);
-    slideElements.push(e);
-  });
-
-  const winner = calculateVerdict(db);
-  ENGINE_STATE.winner = winner;
-
-  const f = document.createElement('section');
-  f.className = "main-slide next";
-
-  const amznLink = getAmazonProductLink(winner ? winner.name : "technology");
-  const ytLink = getYoutubeLink(winner ? winner.name : "technology");
-
-  f.innerHTML = `
-    <div class="winner-container">
-      <div class="role-label" style="color:var(--accent-go)">VERDICT SECURED</div>
-      <div class="winner-title">${winner ? winner.name : "Selection"}</div>
-      <div class="winner-reason">${winner && winner.dna ? winner.dna.dominance : "Optimized based on your priorities."}</div>
-      <div class="winner-price">₹${winner ? winner.price : "N/A"}</div>
-
-      <div style="display:grid;gap:10px;width:100%;">
-        <button class="btn btn-primary" onclick="window.open('${amznLink}','_blank')">CHECK PRICE ↗</button>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
-          <button class="btn" onclick="window.open('${ytLink}','_blank')">▶ REVIEW</button>
-          <button class="btn" onclick="generateDecisionReport()">📄 REPORT</button>
-        </div>
-        <button class="skip-btn-clickable" onclick="navigateTo('#/')"
-          style="margin-top:10px;text-align:center;">HOME</button>
-      </div>
-    </div>
-  `;
-  c.appendChild(f);
-  slideElements.push(f);
-  goToSlide(slideElements.length-1);
-}
-
-/* =========================
-   RESEARCH (module-only + share links)
-========================= */
-function renderResearchOnly(params){
-  // Module-only entry: no lobby
-  const c = document.getElementById('master-container');
-  c.innerHTML = ""; slideElements=[]; currentIdx=0;
-
-  const q = (params && params.get("q")) ? params.get("q") : "";
-
-  const s = document.createElement('section');
-  s.className = "main-slide active";
-  s.innerHTML = `
-    <div class="slide-header">
-      <span class="header-title">RESEARCH NODE</span>
-    </div>
-    <div class="lobby-container">
-      <h1>TOPIC?</h1>
-      <div class="search-wrapper">
-        <input type="text" id="search-input" placeholder="e.g. Quantum Physics..." value="${escapeHtml(q)}">
-      </div>
-      <button class="btn btn-primary" onclick="executeSearch()">ANALYZE →</button>
-
-      <div style="margin-top:14px;display:grid;gap:10px;">
-        <button class="btn" onclick="copyToClipboard(shareLinkForModule('research',{q: document.getElementById('search-input').value || ''}))">🔗 SHARE THIS TOPIC</button>
-        <button class="btn" onclick="navigateTo('#/')">← BACK TO HOME</button>
-      </div>
-    </div>
-  `;
-  c.appendChild(s);
-  slideElements.push(s);
-  addGlobalExit();
-
-  if (q && q.trim().length) {
-    // auto-run if deep linked with q
-    setTimeout(()=>executeSearch(), 150);
-  }
-}
-async function executeSearch(){
-  const el = document.getElementById('search-input');
-  const q = el ? el.value.trim() : "";
-  if(!q) return showToast("ENTER TOPIC");
-  showToast("CONNECTING...");
-  try{
-    const r = await fetch(`https://en.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(q)}`);
-    const d = await r.json();
-    if(d && d.title){
-      buildResearchDeck({title:d.title, summary:d.extract || "No summary available."});
-      // update hash to be shareable
-      navigateTo(`#/research?q=${encodeURIComponent(d.title)}`);
-    } else {
-      showToast("NO DATA");
-    }
-  }catch(e){
-    showToast("WIKI ERROR");
-  }
-}
-function buildResearchDeck(node){
-  const s = document.createElement('section');
-  s.className = "main-slide next";
-  const bookLink = getAmazonBookLink(node.title);
-  const share = shareLinkForModule("research", { q: node.title });
-
-  s.innerHTML = `
-    <div class="slide-header"><span class="header-title">KNOWLEDGE GRAPH</span></div>
-    <div class="carousel-viewport">
-      <div class="sub-slide opt-active">
-        <h1>${escapeHtml(node.title)}</h1>
-        <div class="wiki-summary">${escapeHtml(node.summary)}</div>
-        <div style="margin-top:18px;display:grid;gap:10px;">
-          <button class="skip-btn-clickable amzn-btn" onclick="window.open('${bookLink}','_blank')">📚 BOOKS</button>
-          <button class="skip-btn-clickable" onclick="copyToClipboard('${share}')">🔗 SHARE LINK</button>
-          <button class="skip-btn-clickable" onclick="navigateTo('#/research')">NEW TOPIC</button>
-          <button class="skip-btn-clickable" onclick="navigateTo('#/')">EXIT</button>
-        </div>
-      </div>
-    </div>
-  `;
-  document.getElementById('master-container').appendChild(s);
-  slideElements.push(s);
-  goToSlide(slideElements.length-1);
-}
-
-/* =========================
-   TRIVIA (module-only + share link)
-========================= */
-function renderTriviaOnly(){
-  const c = document.getElementById('master-container');
-  c.innerHTML = ""; slideElements=[]; currentIdx=0;
-
-  const s = document.createElement('section');
-  s.className = "main-slide active";
-  s.innerHTML = `
-    <div class="slide-header"><span class="header-title">QUIZ</span></div>
-    <div class="lobby-container">
-      <h1>TRIVIA</h1>
-      <div class="selection-grid">
-        <button class="cuisine-btn" onclick="fetchWikiTrivia()">🎲<br>RANDOM KNOWLEDGE</button>
-        <button class="cuisine-btn" onclick="copyToClipboard(shareLinkForModule('trivia'))">🔗<br>SHARE LINK</button>
-      </div>
-      <div class="action-area">
-        <button class="btn btn-primary" onclick="navigateTo('#/')">← BACK TO HOME</button>
-      </div>
-    </div>
-  `;
-  c.appendChild(s);
-  slideElements.push(s);
-  addGlobalExit();
-}
-async function fetchWikiTrivia(){
-  showToast("SEARCHING ARCHIVES...");
-  ENGINE_STATE.triviaMode = true;
-  try{
-    const r = await fetch('https://en.wikipedia.org/w/api.php?action=query&generator=random&grnnamespace=0&prop=extracts&exintro&explaintext&format=json&origin=*');
-    const d = await r.json();
-    const pages = d.query && d.query.pages ? d.query.pages : null;
-    if(!pages) return showToast("WIKI ERROR");
-
-    const page = pages[Object.keys(pages)[0]];
-    const title = page.title || "Unknown";
-    const summary = page.extract || "";
-
-    const redacted = summary.replace(new RegExp(title,'gi'),'<span class="redacted">[HIDDEN]</span>');
-    const bookLink = getAmazonBookLink(title);
-    const share = shareLinkForModule("trivia");
-
-    const s = document.createElement('section');
-    s.className = "main-slide next";
-    s.innerHTML = `
-      <div class="slide-header"><span class="header-title">GUESS THE TOPIC</span></div>
-      <div class="carousel-viewport">
-        <div class="sub-slide opt-active" id="trivia-card">
-          <div class="role-label">QUESTION</div>
-          <div class="wiki-summary" style="font-size:1.1rem;color:#fff;">${redacted.substring(0,300)}...</div>
-          <div class="answer-reveal">ANSWER: ${escapeHtml(title)}</div>
-          <div class="nav-hint" style="flex-wrap:wrap;gap:10px;">
-            <span class="skip-btn-clickable" onclick="document.getElementById('trivia-card').classList.add('revealed')">REVEAL</span>
-            <span class="skip-btn-clickable amzn-btn" onclick="window.open('${bookLink}','_blank')">📚 READ MORE</span>
-            <span class="skip-btn-clickable" onclick="copyToClipboard('${share}')">🔗 SHARE</span>
-            <span class="skip-btn-clickable" onclick="fetchWikiTrivia()">NEXT →</span>
-          </div>
-        </div>
-      </div>
-    `;
-    document.getElementById('master-container').appendChild(s);
-    slideElements.push(s);
-    goToSlide(slideElements.length-1);
-  } catch(e){
-    console.log(e);
-    showToast("WIKI ERROR");
-  }
-}
-
-/* =========================
-   DINING (module-only + share link)
-========================= */
-function renderDiningOnly(){
-  const c = document.getElementById('master-container');
-  c.innerHTML = ""; slideElements=[]; currentIdx=0;
-
-  const s = document.createElement('section');
-  s.className = "main-slide active";
-  s.innerHTML = `
-    <div class="slide-header"><span class="header-title">DINING</span></div>
-    <div class="lobby-container">
-      <h1>MOOD?</h1>
-      <div class="selection-grid">
-        <button class="cuisine-btn" onclick="decideFood('Comfort')">🍕<br>COMFORT</button>
-        <button class="cuisine-btn" onclick="decideFood('Healthy')">🥗<br>HEALTHY</button>
-        <button class="cuisine-btn" onclick="copyToClipboard(shareLinkForModule('dining'))">🔗<br>SHARE LINK</button>
-        <button class="cuisine-btn" onclick="navigateTo('#/')">🏠<br>HOME</button>
-      </div>
-    </div>
-  `;
-  c.appendChild(s);
-  slideElements.push(s);
-  addGlobalExit();
-}
-function decideFood(mood){
-  const opts = { Comfort:['Pizza','Burger'], Healthy:['Salad','Sushi'] };
-  const list = opts[mood] || ['Pizza'];
-  const pick = list[Math.floor(Math.random()*list.length)];
-
-  const s = document.createElement('section');
-  s.className = "main-slide next";
-  s.innerHTML = `
-    <div class="slide-header"><span class="header-title">VERDICT</span></div>
-    <div class="carousel-viewport">
-      <div class="sub-slide opt-active">
-        <h1>${escapeHtml(pick)}</h1>
-        <div class="nav-hint" style="flex-wrap:wrap;gap:10px;">
-          <span class="skip-btn-clickable" onclick="renderDiningOnly()">AGAIN</span>
-          <span class="skip-btn-clickable" onclick="copyToClipboard('${shareLinkForModule('dining')}')">🔗 SHARE</span>
-          <span class="skip-btn-clickable" onclick="navigateTo('#/')">EXIT</span>
-        </div>
-      </div>
-    </div>
-  `;
-  document.getElementById('master-container').appendChild(s);
-  slideElements.push(s);
-  goToSlide(slideElements.length-1);
-}
-
-/* =========================
-   UTIL + NAV
-========================= */
-function loadDomain(k){
-  if(MODULES[k].database && Object.keys(MODULES[k].database).length===0) syncDatabase();
-  proceedLoad(k);
-}
-function proceedLoad(k){
-  ENGINE_STATE.currentDomain = k;
-  ENGINE_STATE.triviaMode = false;
-  MODULES[k].init();
-}
-function selectEcosystem(t){
-  ENGINE_STATE.ecosystem = t;
-  ENGINE_STATE.active_filters = [];
-  renderSubLobby('smartphones');
-}
-function toggleFilter(l,i){
-  const b = document.getElementById(`filter-btn-${i}`);
-  if(ENGINE_STATE.active_filters.includes(l)){
-    ENGINE_STATE.active_filters = ENGINE_STATE.active_filters.filter(x=>x!==l);
-    b && b.classList.remove('selected');
-  } else {
-    ENGINE_STATE.active_filters.push(l);
-    b && b.classList.add('selected');
-  }
-}
-function startHunt(){
-  if(!ENGINE_STATE.active_filters.length) return showToast("SELECT 1");
-  buildDeck();
-}
-function addGlobalExit(){
-  if(!document.getElementById('global-exit')){
-    const b=document.createElement('button');
-    b.id='global-exit';b.className='exit-btn';b.innerText='EXIT';
-    b.onclick=()=>navigateTo('#/');
-    b.style.position='fixed';b.style.top='20px';b.style.right='20px';b.style.zIndex='5000';
-    document.body.appendChild(b);
-  }
-}
-function goToSlide(i){
-  if(i<0||i>=slideElements.length) return;
-  if(slideElements[currentIdx]){
-    slideElements[currentIdx].classList.replace('active', i>currentIdx ? 'prev' : 'next');
-  }
-  currentIdx=i;
-  slideElements[currentIdx].className="main-slide active";
-}
-function showToast(m){
-  const t=document.getElementById('toast');
-  t.innerText=m;
-  t.classList.add('visible');
-  setTimeout(()=>t.classList.remove('visible'), 2000);
-}
-function manualSkip(btn){
-  const v = btn.closest('.carousel-viewport');
-  if(!v) return;
-  const a = v.querySelector('.sub-slide.opt-active');
-  if(!a) return;
-  const all = [...v.querySelectorAll('.sub-slide')];
-  const n = (all.indexOf(a)+1) % all.length;
-  a.classList.replace('opt-active','opt-hidden');
-  all[n].classList.replace('opt-hidden','opt-active');
-}
-function escapeHtml(s){
-  return String(s||"")
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
-    .replaceAll("'","&#039;");
-}
-
-/* =========================
-   PDF REPORT (your existing)
-========================= */
-function generateDecisionReport(){
-  const w = ENGINE_STATE.winner;
-  if(!w) return showToast("NO WINNER");
+function generateDecisionReport() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  doc.setFillColor(20,20,20);
-  doc.rect(0,0,210,297,'F');
-
-  doc.setTextColor(255,103,31);
-  doc.setFontSize(22);
-  doc.text("DECIDE ENGINE AUDIT",14,20);
-
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(10);
-  doc.text(`SESSION ID: ${ENGINE_STATE.sessionID}`,14,28);
-  doc.line(14,32,196,32);
-
-  doc.setFontSize(14);
-  doc.setTextColor(0,230,118);
-  doc.text("1. THE VERDICT",14,45);
-
-  doc.setTextColor(255,255,255);
-  doc.setFontSize(12);
-  doc.text(`Winner: ${w.name}`,14,53);
-  doc.text(`Price: Rs. ${w.price}`,14,60);
-
-  let y=70;
-  if(w.dna){
-    doc.text(`Logic: ${w.dna.dominance}`,14,y);
-    y+=10;
-  }
-
-  const rows = [];
-  const wSpecs = w.attr || {};
-  for(let k in wSpecs){ rows.push([k.toUpperCase(), `${wSpecs[k]}/10`]); }
-
-  doc.autoTable({
-    startY: y,
-    head: [["Attribute","Score"]],
-    body: rows,
-    theme: 'grid',
-    headStyles: { fillColor: [255,103,31] },
-    styles: { textColor: 255, fillColor: [30,30,30] }
-  });
+  doc.setFontSize(20);
+  doc.text("DECIDE ENGINE REPORT", 20, 20);
+  doc.text(`Session ID: ${ENGINE_STATE.sessionID}`, 20, 35);
 
   doc.save(`Audit_${ENGINE_STATE.sessionID}.pdf`);
-  showToast("DOWNLOADING...");
-}
-
-/* =========================
-   SWIPE SYSTEM
-========================= */
-let tsY=0, tsX=0;
-function initSwipeSystem(){
-  document.addEventListener('touchstart',e=>{
-    tsY=e.touches[0].clientY; tsX=e.touches[0].clientX;
-  },{passive:true});
-
-  document.addEventListener('touchend',e=>{
-    const v = e.target.closest('.main-slide.active .carousel-viewport');
-    if(!v) return;
-    const dy = e.changedTouches[0].clientY - tsY;
-    const a = v.querySelector('.sub-slide.opt-active');
-    if(dy < -60){
-      if(a && a.dataset.val){ goToSlide(currentIdx+1); }
-    } else if(dy > 60){
-      goToSlide(currentIdx-1);
-    }
-  });
 }
 
 /* =========================
    BOOT
 ========================= */
+
+renderHome();
 syncDatabase();
-initSwipeSystem();
-routeToUI(); // render based on current hash
+
 </script>
 </body>
-</html>     
+</html>
