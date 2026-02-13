@@ -5,16 +5,53 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Decide Engine</title>
 
-  <!-- Styles -->
+  <link rel="manifest" href="/manifest.json" />
   <link rel="stylesheet" href="/assets/styles.css" />
 </head>
-
 <body>
 
-  <div id="app">Loading Decide Engine...</div>
+  <div id="app">Loading...</div>
 
-  <!-- Main JS -->
-  <script type="module" src="/src/main.js"></script>
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const app = document.getElementById("app");
+
+      app.innerHTML = `
+        <div class="container">
+          <h1>DECIDE ENGINE</h1>
+
+          <button id="phonesBtn">📱 Load Phones</button>
+          <button id="videoBtn">🎬 Create Video Job</button>
+
+          <pre id="output"></pre>
+        </div>
+      `;
+
+      document.getElementById("phonesBtn").onclick = loadPhones;
+      document.getElementById("videoBtn").onclick = createVideo;
+    });
+
+    async function loadPhones() {
+      const res = await fetch("/api/products?category=smartphones");
+      const data = await res.json();
+      document.getElementById("output").textContent =
+        JSON.stringify(data, null, 2);
+    }
+
+    async function createVideo() {
+      const res = await fetch("/api/video-jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          topic: "Test Phone Review"
+        })
+      });
+
+      const data = await res.json();
+      document.getElementById("output").textContent =
+        JSON.stringify(data, null, 2);
+    }
+  </script>
 
 </body>
 </html>
