@@ -1,0 +1,7 @@
+name = "decide-os-pages"
+compatibility_date = "2026-02-13"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "decide_os"
+database_id = "REPLACE_WITH_YOUR_D1_ID"
