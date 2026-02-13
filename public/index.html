@@ -1,42 +1,211 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Decide Engine</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
+<title>Decide Engine | Universal Logic OS</title>
 
-    <!-- CSS -->
-    <link rel="stylesheet" href="styles.css" />
+<style>
+:root{
+  --brand-orange:#ff671f;
+  --brand-dark:#050505;
+  --glass-surface:rgba(20,20,20,0.9);
+  --glass-border:rgba(255,255,255,0.12);
+  --text-main:#fff;
+  --accent-go:#00e676;
+  --font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+body{
+  margin:0;
+  background:#000;
+  color:#fff;
+  font-family:var(--font-ui);
+  overflow:hidden;
+}
+.main-slide{
+  height:100vh;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+}
+.grid-btn{
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  padding:20px;
+  margin:10px;
+  cursor:pointer;
+  width:220px;
+  text-align:center;
+}
+.cuisine-btn{
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--glass-border);
+  border-radius:16px;
+  padding:15px;
+  margin:10px;
+  cursor:pointer;
+}
+.selected{
+  border-color:var(--accent-go);
+  color:var(--accent-go);
+}
+.btn{
+  background:var(--brand-orange);
+  border:none;
+  padding:15px 30px;
+  border-radius:12px;
+  margin:10px;
+  cursor:pointer;
+  font-weight:bold;
+}
+.toast{
+  position:fixed;
+  bottom:40px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#111;
+  padding:12px 20px;
+  border-radius:30px;
+  display:none;
+}
+</style>
 </head>
 <body>
 
-    <div class="app">
-        <header>
-            <h1>⚙️ Decide Engine</h1>
+<div id="app"></div>
+<div id="toast" class="toast"></div>
 
-            <div class="actions">
-                <button id="loadPhonesBtn" class="primary">
-                    📱 Load Phones
-                </button>
+<script>
 
-                <button id="createJobBtn" class="secondary" disabled>
-                    🎬 Create Video Job
-                </button>
-            </div>
-        </header>
+/* =========================
+   STATE
+========================= */
+let PHONE_DB = {
+  "Samsung Galaxy S26 Ultra": { price: 129999 },
+  "iPhone 17 Pro": { price: 139999 },
+  "Pixel 10 Pro": { price: 99999 }
+};
 
-        <section class="phones-section">
-            <h2>Available Phones</h2>
-            <div id="phonesList" class="phones-list"></div>
-        </section>
+let VIDEO_SELECTED = [];
+let VIDEO_JOBS = [];
 
-        <section class="jobs-section">
-            <h2>Video Jobs</h2>
-            <div id="jobsList" class="jobs-list"></div>
-        </section>
+/* =========================
+   ROUTER
+========================= */
+function route(){
+  const hash = location.hash || "#/";
+  if(hash === "#/videojobs") renderVideoJobs();
+  else renderLobby();
+}
+window.addEventListener("hashchange", route);
+
+/* =========================
+   LOBBY
+========================= */
+function renderLobby(){
+  document.getElementById("app").innerHTML = `
+    <div class="main-slide">
+      <h1>DECIDE OS</h1>
+      <div class="grid-btn" onclick="location.hash='#/videojobs'">
+        🎬 VIDEO JOBS
+      </div>
     </div>
+  `;
+}
 
-    <!-- JavaScript (ALWAYS before closing body tag) -->
-    <script src="app.js"></script>
+/* =========================
+   VIDEO JOB ENGINE
+========================= */
+function renderVideoJobs(){
+  const phones = Object.keys(PHONE_DB);
+
+  let phoneBtns = phones.map((p,i)=>`
+    <div class="cuisine-btn" id="phone-${i}" onclick="togglePhone('${p}',${i})">
+      📱 ${p}
+    </div>
+  `).join("");
+
+  document.getElementById("app").innerHTML = `
+    <div class="main-slide">
+      <h1>VIDEO ENGINE</h1>
+      ${phoneBtns}
+      <button class="btn" onclick="createJob()">CREATE JOB</button>
+      <button class="btn" onclick="location.hash='#/'">HOME</button>
+    </div>
+  `;
+}
+
+function togglePhone(name,i){
+  const el = document.getElementById("phone-"+i);
+  if(VIDEO_SELECTED.includes(name)){
+    VIDEO_SELECTED = VIDEO_SELECTED.filter(x=>x!==name);
+    el.classList.remove("selected");
+  } else {
+    VIDEO_SELECTED.push(name);
+    el.classList.add("selected");
+  }
+}
+
+function createJob(){
+  if(!VIDEO_SELECTED.length){
+    showToast("SELECT PHONES");
+    return;
+  }
+
+  const job = {
+    id: "JOB-"+Math.random().toString(36).substr(2,4).toUpperCase(),
+    phones: [...VIDEO_SELECTED],
+    status: "QUEUED"
+  };
+
+  VIDEO_JOBS.push(job);
+  VIDEO_SELECTED = [];
+
+  showJobStatus(job);
+  simulateJob(job);
+}
+
+function showJobStatus(job){
+  document.getElementById("app").innerHTML = `
+    <div class="main-slide">
+      <h1>${job.id}</h1>
+      <p id="jobStatus">${job.status}</p>
+      <button class="btn" onclick="location.hash='#/videojobs'">NEW JOB</button>
+      <button class="btn" onclick="location.hash='#/'">HOME</button>
+    </div>
+  `;
+}
+
+function simulateJob(job){
+  setTimeout(()=>{
+    job.status="PROCESSING";
+    document.getElementById("jobStatus").innerText=job.status;
+  },1500);
+
+  setTimeout(()=>{
+    job.status="COMPLETED";
+    document.getElementById("jobStatus").innerText=job.status;
+    showToast("VIDEO READY 🎬");
+  },4000);
+}
+
+/* =========================
+   UTIL
+========================= */
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.innerText=msg;
+  t.style.display="block";
+  setTimeout(()=>t.style.display="none",2000);
+}
+
+/* =========================
+   BOOT
+========================= */
+route();
+
+</script>
 </body>
 </html>
