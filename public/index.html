@@ -1,79 +1,80 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>Decide Engine v100</title>
 <meta name="theme-color" content="#000000">
 <link rel="manifest" href="manifest.json">
 
+<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 :root{
 --brand-orange:#ff671f;
---bg:#050505;
+--brand-dark:#050505;
 --glass:rgba(20,20,20,0.9);
 --border:rgba(255,255,255,0.12);
 --accent:#00e676;
 --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
-body{
+
+html,body{
 margin:0;
-background:radial-gradient(circle at top left,#111,#000);
+padding:0;
+height:100%;
+background:var(--brand-dark);
 color:#fff;
 font-family:var(--font);
 overflow:hidden;
 }
-#app{height:100vh;display:flex;flex-direction:column;}
-.header{
-padding:16px 20px;
-background:#000;
-border-bottom:1px solid var(--border);
-font-weight:700;
-letter-spacing:2px;
-font-size:12px;
-}
-.content{
-flex:1;
-overflow-y:auto;
-padding:30px;
+
+#master-container{
+height:100%;
 display:flex;
-justify-content:center;
+flex-direction:column;
 align-items:center;
+justify-content:center;
+padding:20px;
 }
-.panel{
-background:var(--glass);
-border:1px solid var(--border);
-padding:40px;
-border-radius:20px;
-max-width:500px;
-width:100%;
-}
+
 .grid{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:12px;
-margin-top:20px;
-}
-.btn{
-background:var(--brand-orange);
-border:none;
-padding:14px;
-border-radius:12px;
-font-weight:700;
-cursor:pointer;
+gap:15px;
+max-width:600px;
 width:100%;
 }
-.btn.secondary{
-background:#222;
-color:#fff;
+
+.btn{
+background:var(--glass);
+border:1px solid var(--border);
+padding:20px;
+border-radius:18px;
+text-align:center;
+font-weight:700;
+cursor:pointer;
+transition:.2s;
 }
-.btn.small{
-padding:10px;
-font-size:12px;
+
+.btn:hover{background:rgba(255,255,255,0.08)}
+
+.btn-primary{
+background:var(--brand-orange);
+color:#000;
+border:none;
 }
+
+.winner{
+text-align:center;
+max-width:500px;
+}
+
 .toast{
 position:fixed;
 bottom:40px;
@@ -83,29 +84,22 @@ background:#111;
 border:1px solid #333;
 padding:10px 20px;
 border-radius:30px;
+font-size:0.8rem;
 opacity:0;
-transition:0.3s;
-font-size:12px;
+transition:.3s;
 }
-.toast.show{opacity:1;}
+.toast.show{opacity:1}
 </style>
 </head>
 <body>
 
-<div id="app">
-<div class="header">DECIDE ENGINE v100</div>
-<div class="content">
-<div id="view"></div>
-</div>
-</div>
-
+<div id="master-container"></div>
 <div id="toast" class="toast"></div>
 
 <script>
-
-/* =========================
+/* ===============================
    SUPABASE CONFIG
-========================= */
+================================= */
 
 const SUPABASE_URL = "https://adzkzeghlgzpbageszqh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SvFpgjJXowEo0JliWh0OVA_6U-8T2VA";
@@ -113,214 +107,245 @@ const AMZN_TAG = "decideos-21";
 
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* =========================
+/* ===============================
    DEVICE + SESSION
-========================= */
+================================= */
 
 let DEVICE_ID = localStorage.getItem("decide_device_id");
 if(!DEVICE_ID){
-    DEVICE_ID = crypto.randomUUID();
-    localStorage.setItem("decide_device_id", DEVICE_ID);
+DEVICE_ID = crypto.randomUUID();
+localStorage.setItem("decide_device_id", DEVICE_ID);
 }
 
-const ENGINE = {
-    session: "SID-" + Math.random().toString(36).substring(2,6).toUpperCase(),
-    domain: null,
-    filters: [],
-    winner: null
+let ENGINE_STATE = {
+currentDomain:null,
+active_filters:[],
+sessionID:"SID-"+Math.random().toString(36).substr(2,4).toUpperCase(),
+winner:null
 };
 
-/* =========================
+/* ===============================
    ANALYTICS
-========================= */
+================================= */
 
-let ANALYTICS = [];
+let ANALYTICS_QUEUE=[];
 
-function track(type, meta={}){
-    ANALYTICS.push({
-        device_id: DEVICE_ID,
-        session_id: ENGINE.session,
-        event_type: type,
-        module: ENGINE.domain,
-        product: meta.product || null,
-        filter: meta.filter || null,
-        created_at: new Date().toISOString()
-    });
-    if(ANALYTICS.length>=10) flush();
+function trackEvent(type,meta={}){
+ANALYTICS_QUEUE.push({
+device_id:DEVICE_ID,
+session_id:ENGINE_STATE.sessionID,
+event_type:type,
+module:ENGINE_STATE.currentDomain,
+product:meta.product||null,
+created_at:new Date().toISOString()
+});
+if(ANALYTICS_QUEUE.length>=10) flushAnalytics();
 }
 
-async function flush(){
-    if(!ANALYTICS.length) return;
-    const payload=[...ANALYTICS];
-    ANALYTICS=[];
-    await supabase.from("analytics_events").insert(payload);
+async function flushAnalytics(){
+if(!ANALYTICS_QUEUE.length) return;
+const payload=[...ANALYTICS_QUEUE];
+ANALYTICS_QUEUE=[];
+await supabase.from("analytics_events").insert(payload);
 }
-setInterval(flush,8000);
-window.addEventListener("beforeunload",flush);
 
-/* =========================
+setInterval(flushAnalytics,8000);
+window.addEventListener("beforeunload",flushAnalytics);
+
+/* ===============================
    DATABASE
-========================= */
+================================= */
 
-let PRODUCTS = { smartphones:{}, earbuds:{}, laptops:{} };
+let DB={
+smartphones:{},
+earbuds:{},
+laptops:{}
+};
 
-async function loadProducts(){
-    try{
-        const {data,error}=await supabase.from("products").select("*");
-        if(error) throw error;
+async function syncDatabase(){
+try{
+const {data,error}=await supabase.from("products").select("*");
+if(error) throw error;
 
-        PRODUCTS={smartphones:{},earbuds:{},laptops:{}};
+DB={smartphones:{},earbuds:{},laptops:{}};
 
-        data.forEach(p=>{
-            const entry={
-                name:p.name,
-                price:p.price,
-                attr:{
-                    cam:p.cam||0,gam:p.gam||0,bat:p.bat||0,
-                    snd:p.snd||0,anc:p.anc||0,mic:p.mic||0,
-                    perf:p.perf||0,port:p.port||0,scr:p.scr||0
-                }
-            };
-            if(PRODUCTS[p.category]) PRODUCTS[p.category][p.name]=entry;
-        });
+data.forEach(p=>{
+DB[p.category][p.name]={
+name:p.name,
+price:p.price,
+attr:{
+cam:p.cam||0,
+gam:p.gam||0,
+bat:p.bat||0,
+snd:p.snd||0,
+anc:p.anc||0,
+mic:p.mic||0,
+perf:p.perf||0,
+port:p.port||0,
+scr:p.scr||0
+}
+};
+});
 
-        localStorage.setItem("product_cache",JSON.stringify(data));
-        toast("SYSTEM LIVE ✅");
-    }catch(e){
-        const cache=localStorage.getItem("product_cache");
-        if(cache){
-            JSON.parse(cache).forEach(p=>{
-                if(PRODUCTS[p.category]) PRODUCTS[p.category][p.name]=p;
-            });
-            toast("OFFLINE MODE");
-        }
-    }
+localStorage.setItem("product_cache",JSON.stringify(data));
+showToast("SYSTEM LIVE ✅");
+}
+catch(e){
+const cache=localStorage.getItem("product_cache");
+if(cache){
+const data=JSON.parse(cache);
+data.forEach(p=>{
+DB[p.category][p.name]=p;
+});
+showToast("OFFLINE MODE");
+}
+}
 }
 
-/* =========================
+/* ===============================
    UI
-========================= */
+================================= */
 
-function renderHome(){
-    ENGINE.domain=null;
-    ENGINE.filters=[];
-    document.getElementById("view").innerHTML=`
-    <div class="panel">
-        <h2>Choose Module</h2>
-        <div class="grid">
-            <button class="btn" onclick="openModule('smartphones')">📱 Phones</button>
-            <button class="btn" onclick="openModule('earbuds')">🎧 Audio</button>
-            <button class="btn" onclick="openModule('laptops')">💻 Laptops</button>
-        </div>
-        <div style="margin-top:20px;font-size:11px;opacity:0.5">
-            Session: ${ENGINE.session}
-        </div>
-    </div>`;
+function renderLobby(){
+const c=document.getElementById("master-container");
+c.innerHTML=`
+<h1>DECIDE ENGINE v100</h1>
+<div class="grid">
+<div class="btn" onclick="loadDomain('smartphones')">📱 PHONES</div>
+<div class="btn" onclick="loadDomain('earbuds')">🎧 AUDIO</div>
+<div class="btn" onclick="loadDomain('laptops')">💻 LAPTOPS</div>
+<div class="btn btn-primary" onclick="syncDatabase()">SYNC DB</div>
+</div>
+<p style="opacity:.4;margin-top:20px">Session ${ENGINE_STATE.sessionID}</p>
+`;
 }
 
-function openModule(domain){
-    ENGINE.domain=domain;
-    ENGINE.filters=[];
-    track("open_module");
-    renderFilters();
-}
+function renderFilters(domain){
+const c=document.getElementById("master-container");
+ENGINE_STATE.currentDomain=domain;
+ENGINE_STATE.active_filters=[];
+trackEvent("open_module");
 
-function renderFilters(){
-    const map={
-        smartphones:["cam","gam","bat"],
-        earbuds:["snd","anc","mic"],
-        laptops:["perf","port","scr"]
-    };
-    const keys=map[ENGINE.domain]||[];
+const filters={
+smartphones:["cam","gam","bat"],
+earbuds:["snd","anc","mic"],
+laptops:["perf","port","scr"]
+};
 
-    document.getElementById("view").innerHTML=`
-    <div class="panel">
-        <h2>Select Priority</h2>
-        <div class="grid">
-            ${keys.map(k=>`
-                <button class="btn secondary" onclick="toggleFilter('${k}')">${k.toUpperCase()}</button>
-            `).join("")}
-        </div>
-        <button class="btn" style="margin-top:20px" onclick="calculate()">DECIDE →</button>
-        <button class="btn small secondary" style="margin-top:10px" onclick="renderHome()">Back</button>
-    </div>`;
+let buttons=filters[domain].map(f=>`
+<div class="btn" onclick="toggleFilter('${f}')">${f.toUpperCase()}</div>
+`).join("");
+
+c.innerHTML=`
+<h2>${domain.toUpperCase()}</h2>
+<div class="grid">${buttons}</div>
+<div style="margin-top:20px">
+<div class="btn btn-primary" onclick="buildVerdict()">DECIDE →</div>
+<div class="btn" onclick="renderLobby()" style="margin-top:10px">BACK</div>
+</div>
+`;
 }
 
 function toggleFilter(f){
-    if(ENGINE.filters.includes(f)){
-        ENGINE.filters=ENGINE.filters.filter(x=>x!==f);
-    }else{
-        ENGINE.filters.push(f);
-    }
-    track("filter",{filter:f});
+if(ENGINE_STATE.active_filters.includes(f)){
+ENGINE_STATE.active_filters=ENGINE_STATE.active_filters.filter(x=>x!==f);
+}else{
+ENGINE_STATE.active_filters.push(f);
+}
 }
 
-function calculate(){
-    const db=PRODUCTS[ENGINE.domain];
-    if(!db || !Object.keys(db).length){
-        toast("No data");
-        return;
-    }
+/* ===============================
+   SCORING
+================================= */
 
-    const scored=Object.values(db).map(p=>{
-        let score=0;
-        ENGINE.filters.forEach(f=>score+=p.attr[f]||0);
-        return {...p,score};
-    });
+function calculateWinner(){
+const db=DB[ENGINE_STATE.currentDomain];
+if(!db || !Object.keys(db).length) return null;
 
-    scored.sort((a,b)=>b.score-a.score||a.price-b.price);
-    ENGINE.winner=scored[0];
+const products=Object.values(db);
 
-    track("verdict",{product:ENGINE.winner.name});
-    renderResult();
+if(!ENGINE_STATE.active_filters.length) return products[0];
+
+let scored=products.map(p=>{
+let score=0;
+ENGINE_STATE.active_filters.forEach(f=>{
+score+=p.attr[f]||0;
+});
+return {...p,score};
+});
+
+scored.sort((a,b)=>b.score-a.score||a.price-b.price);
+return scored[0];
 }
 
-function renderResult(){
-    const w=ENGINE.winner;
-    const amzn=`https://www.amazon.in/s?k=${encodeURIComponent(w.name)}&tag=${AMZN_TAG}`;
-    const yt=`https://www.youtube.com/results?search_query=${encodeURIComponent(w.name+" review")}`;
+/* ===============================
+   VERDICT
+================================= */
 
-    document.getElementById("view").innerHTML=`
-    <div class="panel">
-        <h2>${w.name}</h2>
-        <div style="opacity:0.7">₹${w.price}</div>
-        <div style="margin-top:20px">
-            <button class="btn" onclick="window.open('${amzn}','_blank')">Buy ↗</button>
-            <button class="btn secondary" style="margin-top:10px" onclick="window.open('${yt}','_blank')">Review ▶</button>
-            <button class="btn secondary" style="margin-top:10px" onclick="exportPDF()">PDF</button>
-            <button class="btn small secondary" style="margin-top:10px" onclick="renderHome()">Home</button>
-        </div>
-    </div>`;
+function buildVerdict(){
+const winner=calculateWinner();
+if(!winner){ showToast("NO DATA"); return; }
+
+ENGINE_STATE.winner=winner;
+trackEvent("verdict",{product:winner.name});
+
+const amzn=`https://www.amazon.in/s?k=${encodeURIComponent(winner.name)}&tag=${AMZN_TAG}`;
+const yt=`https://www.youtube.com/results?search_query=${encodeURIComponent(winner.name+" review")}`;
+
+const c=document.getElementById("master-container");
+c.innerHTML=`
+<div class="winner">
+<h1>${winner.name}</h1>
+<h2>₹${winner.price}</h2>
+<div style="margin-top:20px">
+<div class="btn btn-primary" onclick="window.open('${amzn}','_blank')">CHECK PRICE</div>
+<div class="btn" onclick="window.open('${yt}','_blank')" style="margin-top:10px">WATCH REVIEW</div>
+<div class="btn" onclick="generatePDF()" style="margin-top:10px">EXPORT PDF</div>
+<div class="btn" onclick="renderLobby()" style="margin-top:10px">HOME</div>
+</div>
+</div>
+`;
 }
 
-function exportPDF(){
-    const {jsPDF}=window.jspdf;
-    const doc=new jsPDF();
-    doc.text("DECIDE ENGINE REPORT",20,20);
-    doc.text("Session: "+ENGINE.session,20,30);
-    doc.text("Winner: "+ENGINE.winner.name,20,45);
-    doc.text("Price: ₹"+ENGINE.winner.price,20,55);
-    doc.save("report_"+ENGINE.session+".pdf");
-    track("pdf_export",{product:ENGINE.winner.name});
+/* ===============================
+   PDF
+================================= */
+
+function generatePDF(){
+const w=ENGINE_STATE.winner;
+if(!w) return;
+
+const {jsPDF}=window.jspdf;
+const doc=new jsPDF();
+doc.setFontSize(20);
+doc.text("DECIDE ENGINE REPORT",20,20);
+doc.text("Session: "+ENGINE_STATE.sessionID,20,30);
+doc.text("Winner: "+w.name,20,50);
+doc.text("Price: ₹"+w.price,20,60);
+doc.save("Audit_"+ENGINE_STATE.sessionID+".pdf");
+trackEvent("pdf_export",{product:w.name});
 }
 
-function toast(msg){
-    const t=document.getElementById("toast");
-    t.innerText=msg;
-    t.classList.add("show");
-    setTimeout(()=>t.classList.remove("show"),2000);
+/* ===============================
+   UTIL
+================================= */
+
+function loadDomain(d){ renderFilters(d); }
+
+function showToast(msg){
+const t=document.getElementById("toast");
+t.innerText=msg;
+t.classList.add("show");
+setTimeout(()=>t.classList.remove("show"),2000);
 }
 
-/* =========================
-   INIT SAFE
-========================= */
+/* ===============================
+   INIT
+================================= */
 
-async function init(){
-    await loadProducts();
-    renderHome();
-}
-init();
-
+syncDatabase();
+renderLobby();
 </script>
+
 </body>
 </html>
