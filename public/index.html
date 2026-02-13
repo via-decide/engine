@@ -9,7 +9,6 @@
 <link rel="manifest" href="manifest.json" />
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
 <style>
 
@@ -32,10 +31,6 @@ body {
   flex-direction: column;
 }
 
-/* =========================
-   HEADER
-========================= */
-
 .header {
   padding: 20px 30px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
@@ -45,17 +40,10 @@ body {
   backdrop-filter: blur(10px);
 }
 
-/* =========================
-   LAYOUT
-========================= */
-
 .main-layout {
   flex: 1;
   display: flex;
-  height: 100%;
 }
-
-/* Sidebar (Desktop only) */
 
 .sidebar {
   width: 240px;
@@ -81,26 +69,20 @@ body {
   background: rgba(255,255,255,0.12);
 }
 
-/* Content */
-
 .content {
   flex: 1;
   padding: 40px;
   overflow-y: auto;
 }
 
-/* Card */
-
 .panel {
-  background: rgba(20,20,20,0.8);
+  background: rgba(20,20,20,0.85);
   border: 1px solid rgba(255,255,255,0.1);
   border-radius: 18px;
   padding: 40px;
   max-width: 700px;
   backdrop-filter: blur(20px);
 }
-
-/* Buttons */
 
 .btn {
   background: #ff671f;
@@ -115,15 +97,12 @@ body {
 
 .btn:hover {
   transform: translateY(-2px);
-  opacity: 0.9;
 }
 
 .btn-secondary {
   background: rgba(255,255,255,0.08);
   color: white;
 }
-
-/* Toast */
 
 .toast-msg {
   position: fixed;
@@ -144,19 +123,8 @@ body {
   opacity: 1;
 }
 
-/* =========================
-   DESKTOP ENABLE
-========================= */
-
 @media (min-width:1024px){
-  body { overflow: hidden; }
   .sidebar { display: flex; }
-}
-
-/* Mobile fallback */
-
-@media (max-width:1023px){
-  body { overflow-y: auto; }
 }
 
 </style>
@@ -173,8 +141,8 @@ body {
 
     <div class="sidebar">
       <button onclick="renderHome()">Home</button>
-      <button onclick="syncDatabase()">Load Phones</button>
-      <button onclick="generateDecisionReport()">Create Report</button>
+      <button onclick="syncDatabase()">Sync DB</button>
+      <button onclick="generateDecisionReport()">Export PDF</button>
     </div>
 
     <div class="content">
@@ -193,17 +161,22 @@ body {
 ========================= */
 
 const BACKEND_URL =
-  "https://script.google.com/macros/s/AKfycbycz1pVNID7fwlM3ckBsGC_mAjLkMwGoW-UbXHWxdkqdNtYIdeLWfo6EkRef0cHReUO/exec";
+"https://script.google.com/macros/s/AKfycbycz1pVNID7fwlM3ckBsGC_mAjLkMwGoW-UbXHWxdkqdNtYIdeLWfo6EkRef0cHReUO/exec";
 
 /* =========================
    STATE
 ========================= */
 
 let ENGINE_STATE = {
-  sessionID: "SID-" + Math.random().toString(36).substr(2,4).toUpperCase()
+  currentModule: null,
+  activeFilter: null,
+  sessionID: "SID-" + Math.random().toString(36).substr(2,4).toUpperCase(),
+  winner: null
 };
 
 let PHONE_DB = {};
+let AUDIO_DB = {};
+let LAPTOP_DB = {};
 
 /* =========================
    SERVICE WORKER
@@ -212,9 +185,7 @@ let PHONE_DB = {};
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
-      const reg = await navigator.serviceWorker.register("./sw.js");
-      if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
-      console.log("SW ready");
+      await navigator.serviceWorker.register("./sw.js");
     } catch(e){}
   });
 }
@@ -242,8 +213,17 @@ async function syncDatabase(){
   try{
     const r = await fetch(`${BACKEND_URL}?type=local`);
     const d = await r.json();
+
     PHONE_DB = {};
-    d.forEach(p=>PHONE_DB[p.Name]=p);
+    AUDIO_DB = {};
+    LAPTOP_DB = {};
+
+    d.forEach(p=>{
+      if(p.category==="smartphones") PHONE_DB[p.Name]=p;
+      if(p.category==="earbuds") AUDIO_DB[p.Name]=p;
+      if(p.category==="laptops") LAPTOP_DB[p.Name]=p;
+    });
+
     showToast("SYSTEM LIVE ✅");
   }catch(e){
     showToast("OFFLINE MODE");
@@ -251,26 +231,137 @@ async function syncDatabase(){
 }
 
 /* =========================
-   UI
+   HOME
 ========================= */
 
 function renderHome(){
   const c = document.getElementById("master-container");
   c.innerHTML = `
     <div class="panel">
-      <h1>Welcome</h1>
-      <p>Session ID: ${ENGINE_STATE.sessionID}</p>
-      <button class="btn" onclick="syncDatabase()">Load Phones</button>
-      <button class="btn btn-secondary" onclick="generateDecisionReport()">Create Report</button>
+      <h1>DECIDE ENGINE</h1>
+      <p>Session: ${ENGINE_STATE.sessionID}</p>
+
+      <button class="btn" onclick="selectModule('phone')">📱 Phones</button>
+      <button class="btn" onclick="selectModule('audio')">🎧 Audio</button>
+      <button class="btn" onclick="selectModule('laptop')">💻 Laptop</button>
     </div>
   `;
 }
 
-function showToast(msg){
-  const t=document.getElementById("toast");
-  t.innerText=msg;
-  t.classList.add("visible");
-  setTimeout(()=>t.classList.remove("visible"),2000);
+/* =========================
+   MODULE FLOW
+========================= */
+
+function selectModule(module){
+  ENGINE_STATE.currentModule = module;
+  ENGINE_STATE.activeFilter = null;
+
+  const c = document.getElementById("master-container");
+
+  c.innerHTML = `
+    <div class="panel">
+      <h1>Select Priority</h1>
+
+      <button class="btn btn-secondary" onclick="setFilter('performance')">Performance</button>
+      <button class="btn btn-secondary" onclick="setFilter('battery')">Battery</button>
+      <button class="btn btn-secondary" onclick="setFilter('value')">Value</button>
+
+      <br>
+      <button class="btn" onclick="startDecision()">Start Decision →</button>
+      <button class="btn btn-secondary" onclick="renderHome()">Back</button>
+    </div>
+  `;
+}
+
+function setFilter(filter){
+  ENGINE_STATE.activeFilter = filter;
+  showToast("Priority: "+filter.toUpperCase());
+}
+
+/* =========================
+   SCORING ENGINE
+========================= */
+
+function startDecision(){
+
+  if(!ENGINE_STATE.activeFilter){
+    showToast("Select priority first");
+    return;
+  }
+
+  let DB;
+  if(ENGINE_STATE.currentModule==="phone") DB = PHONE_DB;
+  if(ENGINE_STATE.currentModule==="audio") DB = AUDIO_DB;
+  if(ENGINE_STATE.currentModule==="laptop") DB = LAPTOP_DB;
+
+  const items = Object.values(DB);
+  if(!items.length){
+    showToast("No data loaded");
+    return;
+  }
+
+  const scored = items.map(item=>{
+    const scoreData = calculateScore(item);
+    return {...item, ...scoreData};
+  });
+
+  scored.sort((a,b)=> b.finalScore - a.finalScore || a.price - b.price);
+
+  ENGINE_STATE.winner = scored[0];
+
+  renderResult(ENGINE_STATE.winner);
+}
+
+function calculateScore(item){
+
+  const price = Number(item.price)||1;
+
+  const perf = Number(item.performance||item.perf||5);
+  const bat  = Number(item.battery||item.bat||5);
+  const val  = Number(item.value||item.val||5);
+
+  let wPerf=1, wBat=1, wVal=1;
+
+  if(ENGINE_STATE.activeFilter==="performance") wPerf=2;
+  if(ENGINE_STATE.activeFilter==="battery") wBat=2;
+  if(ENGINE_STATE.activeFilter==="value") wVal=2;
+
+  const base = (perf*wPerf)+(bat*wBat)+(val*wVal);
+  const efficiency = base/price*1000;
+
+  const finalScore = (base*0.7)+(efficiency*0.3);
+
+  return {
+    finalScore:Number(finalScore.toFixed(2)),
+    breakdown:{perf,bat,val,efficiency:Number(efficiency.toFixed(2))}
+  };
+}
+
+/* =========================
+   RESULT
+========================= */
+
+function renderResult(w){
+  const c=document.getElementById("master-container");
+
+  c.innerHTML=`
+    <div class="panel">
+      <h1>🏆 Verdict</h1>
+      <h2>${w.Name}</h2>
+      <p>Price: ₹${w.price}</p>
+      <p><strong>Final Score:</strong> ${w.finalScore}</p>
+
+      <hr>
+
+      <p>Performance: ${w.breakdown.perf}</p>
+      <p>Battery: ${w.breakdown.bat}</p>
+      <p>Value: ${w.breakdown.val}</p>
+      <p>Efficiency: ${w.breakdown.efficiency}</p>
+
+      <button class="btn" onclick="generateDecisionReport()">Download PDF</button>
+      <button class="btn btn-secondary" onclick="renderHome()">Home</button>
+    </div>
+  `;
 }
 
 /* =========================
@@ -278,11 +369,32 @@ function showToast(msg){
 ========================= */
 
 function generateDecisionReport(){
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
+  if(!ENGINE_STATE.winner){
+    showToast("No result");
+    return;
+  }
+
+  const w=ENGINE_STATE.winner;
+  const { jsPDF }=window.jspdf;
+  const doc=new jsPDF();
+
   doc.text("DECIDE ENGINE REPORT",20,20);
   doc.text("Session: "+ENGINE_STATE.sessionID,20,30);
-  doc.save("report.pdf");
+  doc.text("Winner: "+w.Name,20,45);
+  doc.text("Score: "+w.finalScore,20,55);
+
+  doc.save("decision_report.pdf");
+}
+
+/* =========================
+   TOAST
+========================= */
+
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.innerText=msg;
+  t.classList.add("visible");
+  setTimeout(()=>t.classList.remove("visible"),2000);
 }
 
 /* =========================
