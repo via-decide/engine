@@ -2,329 +2,287 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
-<title>Decide Engine</title>
-<meta name="theme-color" content="#000000" />
-<link rel="manifest" href="manifest.json" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>Decide Engine | Universal Logic OS</title>
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="manifest.json">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-/* ================= THEME ================= */
-
 :root{
-  --bg-primary:#050505;
-  --bg-secondary:rgba(20,20,20,0.85);
-  --text-primary:#ffffff;
-  --text-muted:#888;
-  --glass-border:rgba(255,255,255,0.1);
-  --accent:#ff671f;
-  --success:#00e676;
+--brand-orange:#ff671f;
+--brand-dark:#050505;
+--glass-surface:rgba(20,20,20,0.9);
+--glass-border:rgba(255,255,255,0.12);
+--text-main:#fff;
+--accent-go:#00e676;
+--font-ui:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
 
-@media (prefers-color-scheme: light){
-  :root{
-    --bg-primary:#f4f4f4;
-    --bg-secondary:rgba(255,255,255,0.9);
-    --text-primary:#111;
-    --text-muted:#555;
-    --glass-border:rgba(0,0,0,0.08);
-  }
+html,body{
+margin:0;padding:0;height:100%;width:100%;
+background:radial-gradient(circle at top left,#111,#050505);
+color:var(--text-main);
+font-family:var(--font-ui);
+overflow:hidden;
 }
 
-body{
-  margin:0;
-  background:var(--bg-primary);
-  color:var(--text-primary);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  overflow:hidden;
+#master-container{height:100%;width:100%;position:relative;overflow:hidden}
+
+.main-slide{
+position:absolute;
+top:0;left:0;
+width:100%;height:100%;
+display:flex;flex-direction:column;
+transition:0.5s;
 }
 
-#app{
-  height:100vh;
-  display:flex;
-  flex-direction:column;
+.main-slide.active{z-index:10}
+.main-slide.hidden{opacity:0;pointer-events:none}
+
+.lobby-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:14px;
+padding:80px 20px;
+overflow-y:auto;
 }
 
-.header{
-  padding:20px;
-  font-weight:700;
-  letter-spacing:1px;
-  border-bottom:1px solid var(--glass-border);
-  background:var(--bg-secondary);
+.grid-btn{
+background:rgba(255,255,255,0.03);
+border:1px solid var(--glass-border);
+border-radius:18px;
+padding:28px;
+text-align:center;
+font-weight:700;
+cursor:pointer;
 }
 
-.main{
-  flex:1;
-  display:flex;
+.grid-btn:active{transform:scale(0.96)}
+
+.full-width-btn{
+grid-column:span 2;
+padding:20px;
 }
 
-.sidebar{
-  width:240px;
-  display:none;
-  flex-direction:column;
-  padding:20px;
-  border-right:1px solid var(--glass-border);
-  background:var(--bg-secondary);
-  gap:12px;
+.header-bar{
+position:absolute;
+top:20px;left:20px;right:20px;
+display:flex;justify-content:space-between;align-items:center;
 }
 
-.sidebar button{
-  background:rgba(255,255,255,0.05);
-  border:1px solid var(--glass-border);
-  color:var(--text-primary);
-  padding:12px;
-  border-radius:10px;
-  cursor:pointer;
+.header-title{
+background:rgba(255,103,31,0.1);
+padding:6px 12px;
+border-radius:6px;
+font-size:0.75rem;
+color:var(--brand-orange);
+font-weight:700;
+letter-spacing:2px;
 }
 
-.content{
-  flex:1;
-  padding:40px;
-  overflow:auto;
-}
-
-.panel{
-  background:var(--bg-secondary);
-  border:1px solid var(--glass-border);
-  border-radius:18px;
-  padding:40px;
-  max-width:700px;
-  backdrop-filter:blur(20px);
-}
-
-.btn{
-  background:var(--accent);
-  border:none;
-  padding:14px 22px;
-  border-radius:12px;
-  font-weight:700;
-  cursor:pointer;
-  margin-top:12px;
-}
-
-.btn-secondary{
-  background:rgba(255,255,255,0.08);
-  color:var(--text-primary);
+.exit-btn{
+border:1px solid rgba(255,255,255,0.2);
+border-radius:20px;
+padding:8px 16px;
+cursor:pointer;
+background:rgba(0,0,0,0.5);
 }
 
 .toast{
-  position:fixed;
-  bottom:50px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#111;
-  color:var(--success);
-  padding:10px 20px;
-  border-radius:30px;
-  opacity:0;
-  transition:0.3s;
+position:fixed;
+bottom:80px;
+left:50%;
+transform:translateX(-50%);
+background:#111;
+padding:10px 18px;
+border-radius:30px;
+border:1px solid #333;
+opacity:0;
+transition:0.3s;
 }
 
-.toast.show{ opacity:1; }
-
-@media(min-width:1024px){
-  .sidebar{ display:flex; }
-}
-
+.toast.visible{opacity:1}
 </style>
 </head>
+
 <body>
 
-<div id="app">
-  <div class="header">DECIDE ENGINE — Universal Logic OS</div>
-  <div class="main">
-    <div class="sidebar">
-      <button onclick="renderHome()">Home</button>
-      <button onclick="syncProducts()">Sync Products</button>
-      <button onclick="exportPDF()">Export PDF</button>
-    </div>
-    <div class="content">
-      <div id="view"></div>
-    </div>
-  </div>
-</div>
-
+<div id="master-container"></div>
 <div id="toast" class="toast"></div>
 
 <script>
+/* ========================= CONFIG ========================= */
 
-/* ================= SUPABASE ================= */
-
+const AMAZON_TAG = "decideos-21";
 const SUPABASE_URL = "https://adzkzeghlgzpbageszqh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SvFpgjJXowEo0JliWh0OVA_6U-8T2VA";
-const { createClient } = supabase;
-const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* ================= STATE ================= */
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-const State = {
-  device_id: getDeviceID(),
-  session_id: "SID-" + crypto.randomUUID().slice(0,8),
-  module:null,
-  filter:null,
-  winner:null
-};
+/* ========================= STATE ========================= */
+
+let DEVICE_ID = localStorage.getItem("decide_device_id");
+if(!DEVICE_ID){
+DEVICE_ID = crypto.randomUUID();
+localStorage.setItem("decide_device_id",DEVICE_ID);
+}
+
+let SESSION_ID = "SID-"+Math.random().toString(36).substring(2,7).toUpperCase();
 
 let PRODUCTS = [];
+let ANALYTICS_QUEUE = [];
 
-/* ================= DEVICE ID ================= */
+/* ========================= ANALYTICS (BATCHED) ========================= */
 
-function getDeviceID(){
-  let id = localStorage.getItem("decide_device_id");
-  if(!id){
-    id = crypto.randomUUID();
-    localStorage.setItem("decide_device_id", id);
-  }
-  return id;
+function track(event_type, meta={}){
+ANALYTICS_QUEUE.push({
+device_id:DEVICE_ID,
+session_id:SESSION_ID,
+event_type,
+module:meta.module||null,
+filter:meta.filter||null,
+product:meta.product||null
+});
+
+if(ANALYTICS_QUEUE.length>=10) flushAnalytics();
 }
 
-/* ================= ANALYTICS ================= */
-
-async function track(event, payload={}){
-  try{
-    await db.from("analytics_events").insert({
-      device_id: State.device_id,
-      session_id: State.session_id,
-      event_name:event,
-      payload
-    });
-  }catch(e){}
+async function flushAnalytics(){
+if(!ANALYTICS_QUEUE.length) return;
+const payload = [...ANALYTICS_QUEUE];
+ANALYTICS_QUEUE=[];
+await supabase.from("analytics_events").insert(payload);
 }
 
-/* ================= PRODUCTS ================= */
+setInterval(flushAnalytics,10000);
+window.addEventListener("beforeunload",flushAnalytics);
 
-async function syncProducts(){
-  const { data, error } = await db.from("products").select("*");
-  if(error){
-    showToast("Offline mode");
-    return;
-  }
-  PRODUCTS = data || [];
-  localStorage.setItem("cached_products", JSON.stringify(PRODUCTS));
-  showToast("Products synced");
-  track("sync_products");
+/* ========================= DATA ========================= */
+
+async function loadProducts(){
+try{
+const {data,error} = await supabase.from("products").select("*");
+if(data){
+PRODUCTS = data;
+localStorage.setItem("products_cache",JSON.stringify(data));
+showToast("LIVE DB");
+}
+}catch(e){
+const cache = localStorage.getItem("products_cache");
+if(cache){
+PRODUCTS = JSON.parse(cache);
+showToast("OFFLINE MODE");
+}
+}
 }
 
-/* ================= SCORING ================= */
-
-function calculateScore(item){
-  const price = Number(item.price)||1;
-  const perf = Number(item.perf)||5;
-  const bat  = Number(item.bat)||5;
-  const val  = Number(item.cam)||5;
-
-  let weightPerf=1, weightBat=1, weightVal=1;
-  if(State.filter==="performance") weightPerf=2;
-  if(State.filter==="battery") weightBat=2;
-  if(State.filter==="value") weightVal=2;
-
-  const base = perf*weightPerf + bat*weightBat + val*weightVal;
-  const efficiency = base/price*1000;
-  const finalScore = (base*0.7)+(efficiency*0.3);
-
-  return finalScore;
-}
-
-/* ================= UI ================= */
-
-function renderHome(){
-  document.getElementById("view").innerHTML = `
-    <div class="panel">
-      <h1>Choose Module</h1>
-      <button class="btn" onclick="chooseModule('smartphones')">📱 Phones</button>
-      <button class="btn" onclick="chooseModule('earbuds')">🎧 Audio</button>
-      <button class="btn" onclick="chooseModule('laptops')">💻 Laptops</button>
-    </div>
-  `;
-  track("view_home");
-}
-
-function chooseModule(module){
-  State.module = module;
-  State.filter = null;
-  track("module_selected",{module});
-  document.getElementById("view").innerHTML = `
-    <div class="panel">
-      <h1>Select Priority</h1>
-      <button class="btn-secondary btn" onclick="setFilter('performance')">Performance</button>
-      <button class="btn-secondary btn" onclick="setFilter('battery')">Battery</button>
-      <button class="btn-secondary btn" onclick="setFilter('value')">Value</button>
-      <button class="btn" onclick="decide()">Start Decision →</button>
-    </div>
-  `;
-}
-
-function setFilter(f){
-  State.filter=f;
-  showToast("Priority: "+f);
-  track("filter_selected",{filter:f});
-}
-
-function decide(){
-  if(!State.filter){ showToast("Select priority"); return; }
-
-  const list = PRODUCTS.filter(p=>p.category===State.module);
-  if(!list.length){ showToast("No data"); return; }
-
-  const scored = list.map(p=>({...p,score:calculateScore(p)}))
-                     .sort((a,b)=>b.score-a.score);
-
-  State.winner = scored[0];
-
-  track("verdict_generated",{winner:State.winner.name});
-
-  renderResult();
-}
-
-function renderResult(){
-  const w = State.winner;
-  document.getElementById("view").innerHTML = `
-    <div class="panel">
-      <h1>🏆 ${w.name}</h1>
-      <p>Price: ₹${w.price}</p>
-      <p><strong>Score:</strong> ${w.score.toFixed(2)}</p>
-      <button class="btn" onclick="exportPDF()">Download PDF</button>
-      <button class="btn-secondary btn" onclick="renderHome()">Home</button>
-    </div>
-  `;
-}
-
-function exportPDF(){
-  if(!State.winner){ showToast("No result"); return; }
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-  doc.text("DECIDE ENGINE REPORT",20,20);
-  doc.text("Session: "+State.session_id,20,30);
-  doc.text("Winner: "+State.winner.name,20,40);
-  doc.text("Score: "+State.winner.score.toFixed(2),20,50);
-  doc.save("decision_report.pdf");
-  track("pdf_exported");
-}
-
-/* ================= TOAST ================= */
+/* ========================= UI ========================= */
 
 function showToast(msg){
-  const t=document.getElementById("toast");
-  t.innerText=msg;
-  t.classList.add("show");
-  setTimeout(()=>t.classList.remove("show"),2000);
+const t=document.getElementById("toast");
+t.innerText=msg;
+t.classList.add("visible");
+setTimeout(()=>t.classList.remove("visible"),2000);
 }
 
-/* ================= PWA ================= */
+function renderLobby(){
+track("view_lobby");
+
+const c=document.getElementById("master-container");
+c.innerHTML=`
+<div class="main-slide active">
+<div class="header-bar">
+<div class="header-title">DECIDE OS v100.0 ●</div>
+<div class="exit-btn" onclick="renderLobby()">EXIT</div>
+</div>
+
+<div class="lobby-grid">
+<div class="grid-btn" onclick="openModule('smartphones')">📱<br><br>DECIDE: PHONES</div>
+<div class="grid-btn" onclick="openModule('earbuds')">🎧<br><br>DECIDE: AUDIO</div>
+<div class="grid-btn" onclick="openModule('laptops')">💻<br><br>DECIDE: LAPTOPS</div>
+<div class="grid-btn" onclick="openYouTube()">▶ WATCH REVIEW</div>
+</div>
+</div>
+`;
+}
+
+function openYouTube(){
+track("youtube_click");
+location.href="https://youtube.com";
+}
+
+function openModule(cat){
+track("open_module",{module:cat});
+
+const filtered = PRODUCTS.filter(p=>p.category===cat);
+if(!filtered.length){
+showToast("NO DATA");
+return;
+}
+
+const winner = scoreProducts(filtered);
+renderResult(winner,cat);
+}
+
+function scoreProducts(list){
+return list.sort((a,b)=>{
+const scoreA = a.cam+a.gam+a.bat+a.snd+a.anc+a.mic+a.perf+a.port+a.scr;
+const scoreB = b.cam+b.gam+b.bat+b.snd+b.anc+b.mic+b.perf+b.port+b.scr;
+return scoreB-scoreA;
+})[0];
+}
+
+function renderResult(p,cat){
+track("view_result",{module:cat,product:p.name});
+
+const c=document.getElementById("master-container");
+c.innerHTML=`
+<div class="main-slide active">
+<div class="header-bar">
+<div class="header-title">VERDICT</div>
+<div class="exit-btn" onclick="renderLobby()">HOME</div>
+</div>
+
+<div style="padding:100px 30px">
+<h1>${p.name}</h1>
+<p>₹${p.price}</p>
+
+<button onclick="openAmazon('${p.name}')">CHECK PRICE</button>
+<button onclick="generatePDF('${p.name}',${p.price})">EXPORT PDF</button>
+</div>
+</div>
+`;
+}
+
+function openAmazon(name){
+track("amazon_click",{product:name});
+location.href=`https://www.amazon.in/s?k=${encodeURIComponent(name)}&tag=${AMAZON_TAG}`;
+}
+
+function generatePDF(name,price){
+track("pdf_export",{product:name});
+const {jsPDF}=window.jspdf;
+const doc=new jsPDF();
+doc.text("DECIDE ENGINE REPORT",20,20);
+doc.text("Session: "+SESSION_ID,20,30);
+doc.text("Winner: "+name,20,45);
+doc.text("Price: ₹"+price,20,55);
+doc.save("decision.pdf");
+}
+
+/* ========================= PWA ========================= */
 
 if("serviceWorker" in navigator){
-  navigator.serviceWorker.register("sw.js");
+navigator.serviceWorker.register("sw.js");
 }
 
-/* ================= INIT ================= */
+/* ========================= INIT ========================= */
 
-const cached = localStorage.getItem("cached_products");
-if(cached) PRODUCTS = JSON.parse(cached);
-
-renderHome();
-syncProducts();
+loadProducts();
+renderLobby();
 
 </script>
 </body>
