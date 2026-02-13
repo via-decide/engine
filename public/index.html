@@ -1,56 +1,189 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport"
-    content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
-  <title>Decide Engine | Universal Logic OS</title>
-  <meta name="theme-color" content="#000000" />
-  <link rel="manifest" href="manifest.json" />
+<meta charset="UTF-8" />
+<meta name="viewport"
+  content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no,viewport-fit=cover" />
+<title>Decide Engine | Universal Logic OS</title>
+<meta name="theme-color" content="#000000" />
+<link rel="manifest" href="manifest.json" />
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 
-  <style>
-    body {
-      margin: 0;
-      background: #050505;
-      color: #fff;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      overflow: hidden;
-    }
+<style>
 
-    #master-container {
-      height: 100vh;
-      width: 100vw;
-      position: relative;
-    }
+/* =========================
+   BASE
+========================= */
 
-    .toast-msg {
-      position: fixed;
-      bottom: 60px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #111;
-      padding: 12px 20px;
-      border-radius: 40px;
-      border: 1px solid #333;
-      font-size: 0.8rem;
-      opacity: 0;
-      transition: opacity 0.3s;
-      z-index: 9999;
-    }
+body {
+  margin: 0;
+  background: radial-gradient(circle at top left,#111,#050505);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow: hidden;
+}
 
-    .toast-msg.visible {
-      opacity: 1;
-    }
-  </style>
+#app-shell {
+  height: 100vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+  padding: 20px 30px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+  font-weight: 700;
+  letter-spacing: 1px;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(10px);
+}
+
+/* =========================
+   LAYOUT
+========================= */
+
+.main-layout {
+  flex: 1;
+  display: flex;
+  height: 100%;
+}
+
+/* Sidebar (Desktop only) */
+
+.sidebar {
+  width: 240px;
+  border-right: 1px solid rgba(255,255,255,0.08);
+  background: rgba(0,0,0,0.6);
+  padding: 20px;
+  display: none;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sidebar button {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: white;
+  padding: 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.sidebar button:hover {
+  background: rgba(255,255,255,0.12);
+}
+
+/* Content */
+
+.content {
+  flex: 1;
+  padding: 40px;
+  overflow-y: auto;
+}
+
+/* Card */
+
+.panel {
+  background: rgba(20,20,20,0.8);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 18px;
+  padding: 40px;
+  max-width: 700px;
+  backdrop-filter: blur(20px);
+}
+
+/* Buttons */
+
+.btn {
+  background: #ff671f;
+  border: none;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 15px;
+  transition: 0.2s;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
+}
+
+.btn-secondary {
+  background: rgba(255,255,255,0.08);
+  color: white;
+}
+
+/* Toast */
+
+.toast-msg {
+  position: fixed;
+  bottom: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #111;
+  padding: 12px 20px;
+  border-radius: 40px;
+  border: 1px solid #333;
+  font-size: 0.8rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 9999;
+}
+
+.toast-msg.visible {
+  opacity: 1;
+}
+
+/* =========================
+   DESKTOP ENABLE
+========================= */
+
+@media (min-width:1024px){
+  body { overflow: hidden; }
+  .sidebar { display: flex; }
+}
+
+/* Mobile fallback */
+
+@media (max-width:1023px){
+  body { overflow-y: auto; }
+}
+
+</style>
 </head>
 
 <body>
 
-<div id="master-container"></div>
+<div id="app-shell">
+  <div class="header">
+    DECIDE ENGINE — Universal Logic OS
+  </div>
+
+  <div class="main-layout">
+
+    <div class="sidebar">
+      <button onclick="renderHome()">Home</button>
+      <button onclick="syncDatabase()">Load Phones</button>
+      <button onclick="generateDecisionReport()">Create Report</button>
+    </div>
+
+    <div class="content">
+      <div id="master-container"></div>
+    </div>
+
+  </div>
+</div>
+
 <div id="toast" class="toast-msg"></div>
 
 <script>
@@ -67,143 +200,89 @@ const BACKEND_URL =
 ========================= */
 
 let ENGINE_STATE = {
-  currentDomain: null,
-  active_filters: [],
-  sessionID: "SID-" + Math.random().toString(36).substr(2, 4).toUpperCase(),
-  winner: null
+  sessionID: "SID-" + Math.random().toString(36).substr(2,4).toUpperCase()
 };
 
 let PHONE_DB = {};
-let slideElements = [];
-let currentIdx = 0;
 
 /* =========================
-   PWA INSTALL + SW
+   SERVICE WORKER
 ========================= */
-
-let deferredPrompt;
-
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-});
-
-async function triggerInstall() {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    await deferredPrompt.userChoice;
-    deferredPrompt = null;
-  }
-}
-
-/* ---------- PRODUCTION SW REGISTRATION ---------- */
 
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", async () => {
     try {
       const reg = await navigator.serviceWorker.register("./sw.js");
-
-      if (reg.waiting) {
-        reg.waiting.postMessage({ type: "SKIP_WAITING" });
-      }
-
-      reg.addEventListener("updatefound", () => {
-        const newWorker = reg.installing;
-        if (!newWorker) return;
-
-        newWorker.addEventListener("statechange", () => {
-          if (
-            newWorker.state === "installed" &&
-            navigator.serviceWorker.controller
-          ) {
-            showToast("UPDATE AVAILABLE — REFRESH");
-          }
-        });
-      });
-
-      console.log("Service Worker ready");
-    } catch (err) {
-      console.log("SW registration failed:", err);
-    }
+      if (reg.waiting) reg.waiting.postMessage({ type: "SKIP_WAITING" });
+      console.log("SW ready");
+    } catch(e){}
   });
 }
 
 /* =========================
-   ONLINE / OFFLINE EVENTS
+   ONLINE/OFFLINE
 ========================= */
 
-window.addEventListener("offline", () => {
-  showToast("YOU ARE OFFLINE");
-});
-
+window.addEventListener("offline", () => showToast("YOU ARE OFFLINE"));
 window.addEventListener("online", () => {
   showToast("BACK ONLINE");
   syncDatabase();
 });
 
 /* =========================
-   DATABASE SYNC (PATCHED)
+   DATABASE
 ========================= */
 
-async function syncDatabase() {
-
-  if (!navigator.onLine) {
+async function syncDatabase(){
+  if(!navigator.onLine){
     showToast("OFFLINE MODE");
     return;
   }
 
-  try {
+  try{
     const r = await fetch(`${BACKEND_URL}?type=local`);
     const d = await r.json();
-
     PHONE_DB = {};
-    d.forEach(item => {
-      PHONE_DB[item.Name] = item;
-    });
-
+    d.forEach(p=>PHONE_DB[p.Name]=p);
     showToast("SYSTEM LIVE ✅");
-
-  } catch (e) {
-    console.log(e);
+  }catch(e){
     showToast("OFFLINE MODE");
   }
 }
 
 /* =========================
-   UI CORE
+   UI
 ========================= */
 
-function renderHome() {
+function renderHome(){
   const c = document.getElementById("master-container");
   c.innerHTML = `
-    <div style="padding:40px">
-      <h1>DECIDE ENGINE</h1>
-      <button onclick="syncDatabase()">LOAD PHONES</button>
-      <button onclick="generateDecisionReport()">CREATE REPORT</button>
+    <div class="panel">
+      <h1>Welcome</h1>
+      <p>Session ID: ${ENGINE_STATE.sessionID}</p>
+      <button class="btn" onclick="syncDatabase()">Load Phones</button>
+      <button class="btn btn-secondary" onclick="generateDecisionReport()">Create Report</button>
     </div>
   `;
 }
 
-function showToast(message) {
-  const t = document.getElementById("toast");
-  t.innerText = message;
+function showToast(msg){
+  const t=document.getElementById("toast");
+  t.innerText=msg;
   t.classList.add("visible");
-  setTimeout(() => t.classList.remove("visible"), 2000);
+  setTimeout(()=>t.classList.remove("visible"),2000);
 }
 
 /* =========================
-   PDF REPORT
+   PDF
 ========================= */
 
-function generateDecisionReport() {
+function generateDecisionReport(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-
-  doc.setFontSize(20);
-  doc.text("DECIDE ENGINE REPORT", 20, 20);
-  doc.text(`Session ID: ${ENGINE_STATE.sessionID}`, 20, 35);
-
-  doc.save(`Audit_${ENGINE_STATE.sessionID}.pdf`);
+  doc.text("DECIDE ENGINE REPORT",20,20);
+  doc.text("Session: "+ENGINE_STATE.sessionID,20,30);
+  doc.save("report.pdf");
 }
 
 /* =========================
@@ -214,5 +293,6 @@ renderHome();
 syncDatabase();
 
 </script>
+
 </body>
 </html>
