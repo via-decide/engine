@@ -1,0 +1,1447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>Decide OS v2.0 - ONDC Powered</title>
+<meta name="theme-color" content="#ff671f">
+<link rel="manifest" href="manifest-ondc.json">
+
+<!-- Supabase -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+:root{
+--brand-orange:#ff671f;
+--brand-dark:#000000;
+--glass:rgba(20,20,20,0.95);
+--border:rgba(255,255,255,0.15);
+--accent:#00e676;
+--ondc-blue:#1e88e5;
+--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+
+*{
+box-sizing:border-box;
+}
+
+html,body{
+margin:0;
+padding:0;
+height:100%;
+background:#000;
+color:#fff;
+font-family:var(--font);
+overflow-x:hidden;
+-webkit-font-smoothing:antialiased;
+}
+
+#app{
+min-height:100vh;
+display:flex;
+flex-direction:column;
+padding:20px;
+padding-bottom:80px;
+}
+
+/* HEADER */
+.header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:30px;
+gap:15px;
+}
+
+.header-badge{
+background:rgba(255,103,31,0.1);
+border:2px solid var(--brand-orange);
+padding:12px 24px;
+border-radius:12px;
+font-size:0.85rem;
+font-weight:700;
+letter-spacing:1px;
+color:var(--brand-orange);
+display:flex;
+align-items:center;
+gap:10px;
+flex:1;
+}
+
+.ondc-badge{
+background:rgba(30,136,229,0.1);
+border:2px solid var(--ondc-blue);
+color:var(--ondc-blue);
+padding:6px 12px;
+border-radius:8px;
+font-size:0.7rem;
+margin-left:10px;
+}
+
+.status-dot{
+width:10px;
+height:10px;
+background:var(--accent);
+border-radius:50%;
+box-shadow:0 0 10px var(--accent);
+animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+0%,100%{opacity:1}
+50%{opacity:0.5}
+}
+
+.exit-btn{
+background:transparent;
+border:2px solid rgba(255,255,255,0.3);
+padding:12px 30px;
+border-radius:50px;
+font-size:0.9rem;
+font-weight:700;
+color:#fff;
+cursor:pointer;
+transition:all 0.3s;
+}
+
+.exit-btn:hover{
+background:rgba(255,255,255,0.1);
+border-color:rgba(255,255,255,0.5);
+}
+
+/* GRID */
+.module-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+margin-bottom:25px;
+}
+
+.module-card{
+background:rgba(20,20,20,0.6);
+border:1px solid var(--border);
+border-radius:24px;
+padding:30px 20px;
+display:flex;
+flex-direction:column;
+align-items:center;
+justify-content:center;
+gap:15px;
+cursor:pointer;
+transition:all 0.3s;
+min-height:180px;
+position:relative;
+}
+
+.module-card:hover{
+background:rgba(40,40,40,0.8);
+border-color:rgba(255,255,255,0.3);
+transform:translateY(-4px);
+}
+
+.module-card.disabled{
+opacity:0.5;
+cursor:not-allowed;
+}
+
+.module-card.disabled:hover{
+transform:none;
+}
+
+.module-icon{
+font-size:3.5rem;
+margin-bottom:5px;
+}
+
+.module-title{
+font-size:1.1rem;
+font-weight:700;
+letter-spacing:0.5px;
+text-align:center;
+margin:0;
+}
+
+.module-status{
+font-size:0.75rem;
+font-weight:600;
+letter-spacing:1.5px;
+padding:4px 12px;
+border-radius:6px;
+margin-top:5px;
+}
+
+.status-live{
+color:var(--accent);
+background:rgba(0,230,118,0.15);
+}
+
+.status-neutral{
+color:#888;
+background:rgba(136,136,136,0.15);
+}
+
+.status-beta{
+color:#4CAF50;
+background:rgba(76,175,80,0.15);
+}
+
+.status-soon{
+color:#FFA726;
+background:rgba(255,167,38,0.15);
+}
+
+.status-links{
+color:#42A5F5;
+background:rgba(66,165,245,0.15);
+}
+
+/* BOTTOM BUTTON */
+.bottom-action{
+width:100%;
+background:transparent;
+border:2px solid rgba(255,255,255,0.2);
+padding:18px;
+border-radius:20px;
+font-size:1rem;
+font-weight:700;
+color:#fff;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+transition:all 0.3s;
+margin-bottom:20px;
+}
+
+.bottom-action:hover{
+background:rgba(255,255,255,0.1);
+border-color:rgba(255,255,255,0.4);
+}
+
+/* SESSION ID */
+.session-id{
+text-align:center;
+font-size:0.8rem;
+color:rgba(255,255,255,0.3);
+margin-top:auto;
+padding-top:20px;
+}
+
+/* FILTER SCREEN */
+.filter-container{
+max-width:600px;
+margin:0 auto;
+width:100%;
+}
+
+.filter-title{
+font-size:1.8rem;
+font-weight:700;
+margin-bottom:30px;
+text-align:center;
+text-transform:uppercase;
+}
+
+.filter-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+margin-bottom:25px;
+}
+
+.filter-btn{
+background:rgba(20,20,20,0.6);
+border:2px solid var(--border);
+padding:25px;
+border-radius:18px;
+text-align:center;
+font-weight:700;
+font-size:1rem;
+cursor:pointer;
+transition:all 0.3s;
+text-transform:uppercase;
+}
+
+.filter-btn:hover{
+background:rgba(40,40,40,0.8);
+border-color:rgba(255,255,255,0.3);
+}
+
+.filter-btn.active{
+background:var(--brand-orange);
+color:#000;
+border-color:var(--brand-orange);
+}
+
+.action-btn{
+background:var(--brand-orange);
+color:#000;
+border:none;
+padding:18px;
+border-radius:18px;
+font-weight:700;
+font-size:1rem;
+cursor:pointer;
+width:100%;
+margin-bottom:12px;
+transition:all 0.3s;
+text-transform:uppercase;
+}
+
+.action-btn:hover{
+background:#ff7d3f;
+transform:translateY(-2px);
+}
+
+.secondary-btn{
+background:transparent;
+color:#fff;
+border:2px solid var(--border);
+padding:16px;
+border-radius:18px;
+font-weight:700;
+font-size:0.95rem;
+cursor:pointer;
+width:100%;
+transition:all 0.3s;
+text-transform:uppercase;
+}
+
+.secondary-btn:hover{
+background:rgba(255,255,255,0.1);
+border-color:rgba(255,255,255,0.3);
+}
+
+/* MARKETPLACE COMPARISON */
+.marketplace-results{
+max-width:800px;
+margin:0 auto;
+padding:20px 0;
+}
+
+.result-card{
+background:rgba(20,20,20,0.6);
+border:1px solid var(--border);
+border-radius:18px;
+padding:20px;
+margin-bottom:15px;
+transition:all 0.3s;
+}
+
+.result-card:hover{
+background:rgba(30,30,30,0.8);
+border-color:rgba(255,255,255,0.3);
+}
+
+.result-header{
+display:flex;
+justify-content:space-between;
+align-items:flex-start;
+margin-bottom:15px;
+}
+
+.product-name{
+font-size:1.2rem;
+font-weight:700;
+margin-bottom:5px;
+}
+
+.seller-info{
+display:flex;
+align-items:center;
+gap:10px;
+margin-top:8px;
+}
+
+.seller-badge{
+background:rgba(30,136,229,0.2);
+color:var(--ondc-blue);
+padding:4px 10px;
+border-radius:6px;
+font-size:0.75rem;
+font-weight:600;
+}
+
+.rating{
+color:#FFA726;
+font-size:0.85rem;
+}
+
+.price-section{
+text-align:right;
+}
+
+.price-main{
+font-size:1.8rem;
+font-weight:700;
+color:var(--brand-orange);
+}
+
+.price-original{
+font-size:0.9rem;
+color:#888;
+text-decoration:line-through;
+margin-top:5px;
+}
+
+.discount{
+color:var(--accent);
+font-size:0.85rem;
+font-weight:600;
+margin-top:5px;
+}
+
+.result-details{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-bottom:15px;
+padding:15px;
+background:rgba(255,255,255,0.03);
+border-radius:12px;
+}
+
+.detail-item{
+font-size:0.85rem;
+}
+
+.detail-label{
+color:#888;
+margin-bottom:3px;
+}
+
+.detail-value{
+font-weight:600;
+}
+
+.result-actions{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
+.buy-btn{
+background:var(--brand-orange);
+color:#000;
+border:none;
+padding:12px;
+border-radius:12px;
+font-weight:700;
+cursor:pointer;
+transition:all 0.3s;
+}
+
+.buy-btn:hover{
+background:#ff7d3f;
+transform:translateY(-2px);
+}
+
+.compare-btn{
+background:transparent;
+color:#fff;
+border:1px solid var(--border);
+padding:12px;
+border-radius:12px;
+font-weight:600;
+cursor:pointer;
+transition:all 0.3s;
+}
+
+.compare-btn:hover{
+background:rgba(255,255,255,0.1);
+}
+
+/* CHECKOUT SCREEN */
+.checkout-container{
+max-width:600px;
+margin:0 auto;
+}
+
+.checkout-section{
+background:rgba(20,20,20,0.6);
+border:1px solid var(--border);
+border-radius:18px;
+padding:20px;
+margin-bottom:20px;
+}
+
+.section-title{
+font-size:1.2rem;
+font-weight:700;
+margin-bottom:15px;
+}
+
+.order-summary{
+padding:15px;
+background:rgba(255,255,255,0.03);
+border-radius:12px;
+margin-bottom:15px;
+}
+
+.summary-row{
+display:flex;
+justify-content:space-between;
+margin-bottom:10px;
+font-size:0.95rem;
+}
+
+.summary-row.total{
+font-size:1.2rem;
+font-weight:700;
+padding-top:10px;
+border-top:1px solid var(--border);
+margin-top:10px;
+color:var(--brand-orange);
+}
+
+.payment-options{
+display:grid;
+gap:10px;
+}
+
+.payment-option{
+background:rgba(255,255,255,0.03);
+border:2px solid var(--border);
+padding:15px;
+border-radius:12px;
+display:flex;
+align-items:center;
+gap:15px;
+cursor:pointer;
+transition:all 0.3s;
+}
+
+.payment-option:hover{
+background:rgba(255,255,255,0.08);
+border-color:rgba(255,255,255,0.3);
+}
+
+.payment-option.selected{
+border-color:var(--brand-orange);
+background:rgba(255,103,31,0.1);
+}
+
+.payment-icon{
+font-size:2rem;
+}
+
+.payment-details{
+flex:1;
+}
+
+.payment-name{
+font-weight:700;
+margin-bottom:3px;
+}
+
+.payment-desc{
+font-size:0.8rem;
+color:#888;
+}
+
+/* ORDER TRACKING */
+.tracking-container{
+max-width:600px;
+margin:0 auto;
+}
+
+.tracking-timeline{
+position:relative;
+padding:20px 0;
+}
+
+.timeline-item{
+position:relative;
+padding-left:50px;
+padding-bottom:30px;
+}
+
+.timeline-item:last-child{
+padding-bottom:0;
+}
+
+.timeline-dot{
+position:absolute;
+left:0;
+width:30px;
+height:30px;
+background:var(--accent);
+border-radius:50%;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:1rem;
+box-shadow:0 0 15px var(--accent);
+}
+
+.timeline-item.pending .timeline-dot{
+background:#555;
+box-shadow:none;
+}
+
+.timeline-line{
+position:absolute;
+left:15px;
+top:30px;
+width:2px;
+height:calc(100% - 30px);
+background:var(--accent);
+}
+
+.timeline-item.pending .timeline-line{
+background:#333;
+}
+
+.timeline-item:last-child .timeline-line{
+display:none;
+}
+
+.timeline-content{
+background:rgba(20,20,20,0.6);
+border:1px solid var(--border);
+border-radius:12px;
+padding:15px;
+}
+
+.timeline-title{
+font-weight:700;
+margin-bottom:5px;
+}
+
+.timeline-time{
+font-size:0.8rem;
+color:#888;
+}
+
+.toast{
+position:fixed;
+bottom:40px;
+left:50%;
+transform:translateX(-50%);
+background:#111;
+border:1px solid #333;
+padding:12px 24px;
+border-radius:30px;
+font-size:0.85rem;
+opacity:0;
+transition:opacity 0.3s;
+z-index:1000;
+}
+
+.toast.show{
+opacity:1;
+}
+
+@media (max-width:600px){
+.module-grid{
+gap:15px;
+}
+.module-card{
+padding:25px 15px;
+min-height:160px;
+}
+.module-icon{
+font-size:3rem;
+}
+.module-title{
+font-size:1rem;
+}
+.result-details{
+grid-template-columns:1fr;
+}
+.result-actions{
+grid-template-columns:1fr;
+}
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ===============================
+   SUPABASE CONFIG
+================================= */
+
+const SUPABASE_URL = "hhttps://zdarsygrpqbbcafrqcjt.supabase.co";
+const SUPABASE_KEY = "sb_publishable_n-5v5RBHbp73ci_aebELJQ_s0udlFKz";
+
+"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemt6ZWdobGd6cGJhZ2VzenFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg4NDM4MzMsImV4cCI6MjA1NDQxOTgzM30.6ViFpPL8Rc_Nl5yxrGz8wuZdYEcRjMgDdEY4xLwPfpY";
+
+const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+/* ===============================
+   DEVICE + SESSION
+================================= */
+
+let DEVICE_ID = localStorage.getItem("decide_device_id");
+if(!DEVICE_ID){
+DEVICE_ID = crypto.randomUUID();
+localStorage.setItem("decide_device_id", DEVICE_ID);
+}
+
+let ENGINE_STATE = {
+currentDomain:null,
+active_filters:[],
+sessionID:"SID-"+Math.random().toString(36).substr(2,4).toUpperCase(),
+winner:null,
+cart:[],
+currentProduct:null,
+orderHistory:[]
+};
+
+/* ===============================
+   ANALYTICS
+================================= */
+
+let ANALYTICS_QUEUE=[];
+
+function trackEvent(type,meta={}){
+ANALYTICS_QUEUE.push({
+device_id:DEVICE_ID,
+session_id:ENGINE_STATE.sessionID,
+event_type:type,
+module:ENGINE_STATE.currentDomain,
+product:meta.product||null,
+created_at:new Date().toISOString()
+});
+if(ANALYTICS_QUEUE.length>=10) flushAnalytics();
+}
+
+async function flushAnalytics(){
+if(!ANALYTICS_QUEUE.length) return;
+const payload=[...ANALYTICS_QUEUE];
+ANALYTICS_QUEUE=[];
+try{
+await sbClient.from("analytics_events").insert(payload);
+}catch(e){
+console.log("Analytics error:",e);
+}
+}
+
+setInterval(flushAnalytics,8000);
+window.addEventListener("beforeunload",flushAnalytics);
+
+/* ===============================
+   DATABASE - ONDC ENHANCED
+================================= */
+
+// Multi-seller marketplace data
+const SAMPLE_DATA = [
+  // SMARTPHONES
+  {category:"smartphones",name:"iPhone 15 Pro",price:134900,cam:9,gam:9,bat:7,seller:"Apple Store India",rating:4.8,stock:50,delivery:"2 days",warranty:"1 year"},
+  {category:"smartphones",name:"iPhone 15 Pro",price:132900,cam:9,gam:9,bat:7,seller:"Flipkart",rating:4.7,stock:120,delivery:"1 day",warranty:"1 year"},
+  {category:"smartphones",name:"iPhone 15 Pro",price:133500,cam:9,gam:9,bat:7,seller:"Amazon India",rating:4.8,stock:85,delivery:"1 day",warranty:"1 year"},
+  {category:"smartphones",name:"Samsung S24 Ultra",price:129999,cam:10,gam:9,bat:8,seller:"Samsung India",rating:4.9,stock:40,delivery:"3 days",warranty:"1 year"},
+  {category:"smartphones",name:"Samsung S24 Ultra",price:127999,cam:10,gam:9,bat:8,seller:"Flipkart",rating:4.8,stock:95,delivery:"1 day",warranty:"1 year"},
+  {category:"smartphones",name:"OnePlus 12",price:64999,cam:8,gam:9,bat:9,seller:"OnePlus Store",rating:4.6,stock:70,delivery:"2 days",warranty:"1 year"},
+  {category:"smartphones",name:"OnePlus 12",price:63999,cam:8,gam:9,bat:9,seller:"Amazon India",rating:4.7,stock:110,delivery:"1 day",warranty:"1 year"},
+  {category:"smartphones",name:"Pixel 8 Pro",price:106999,cam:10,gam:7,bat:7,seller:"Flipkart",rating:4.7,stock:60,delivery:"2 days",warranty:"1 year"},
+  
+  // EARBUDS
+  {category:"earbuds",name:"AirPods Pro 2",price:24900,snd:9,anc:10,mic:9,seller:"Apple Store India",rating:4.9,stock:80,delivery:"2 days",warranty:"1 year"},
+  {category:"earbuds",name:"AirPods Pro 2",price:24499,snd:9,anc:10,mic:9,seller:"Amazon India",rating:4.8,stock:150,delivery:"1 day",warranty:"1 year"},
+  {category:"earbuds",name:"Sony WF-1000XM5",price:24990,snd:10,anc:10,mic:8,seller:"Sony Center",rating:4.9,stock:45,delivery:"3 days",warranty:"1 year"},
+  {category:"earbuds",name:"Sony WF-1000XM5",price:23990,snd:10,anc:10,mic:8,seller:"Flipkart",rating:4.8,stock:90,delivery:"1 day",warranty:"1 year"},
+  {category:"earbuds",name:"Nothing Ear 2",price:8999,snd:7,anc:7,mic:7,seller:"Flipkart",rating:4.5,stock:200,delivery:"1 day",warranty:"1 year"},
+  
+  // LAPTOPS
+  {category:"laptops",name:"MacBook Air M3",price:114900,perf:9,port:7,scr:9,seller:"Apple Store India",rating:4.9,stock:30,delivery:"3 days",warranty:"1 year"},
+  {category:"laptops",name:"MacBook Air M3",price:113900,perf:9,port:7,scr:9,seller:"Amazon India",rating:4.8,stock:55,delivery:"2 days",warranty:"1 year"},
+  {category:"laptops",name:"Dell XPS 13",price:139990,perf:8,port:6,scr:9,seller:"Dell India",rating:4.7,stock:40,delivery:"4 days",warranty:"1 year"},
+  {category:"laptops",name:"ThinkPad X1 Carbon",price:149999,perf:8,port:8,scr:8,seller:"Lenovo Store",rating:4.8,stock:25,delivery:"5 days",warranty:"3 years"},
+];
+
+let DB={
+smartphones:{},
+earbuds:{},
+laptops:{}
+};
+
+let MARKETPLACE_RESULTS = [];
+
+function loadDataToMemory(data){
+DB={smartphones:{},earbuds:{},laptops:{}};
+data.forEach(p=>{
+if(!DB[p.category]) DB[p.category]={};
+if(!DB[p.category][p.name]) DB[p.category][p.name]=[];
+DB[p.category][p.name].push({
+name:p.name,
+price:p.price,
+seller:p.seller||"Unknown",
+rating:p.rating||4.0,
+stock:p.stock||0,
+delivery:p.delivery||"5-7 days",
+warranty:p.warranty||"6 months",
+attr:{
+cam:p.cam||0,
+gam:p.gam||0,
+bat:p.bat||0,
+snd:p.snd||0,
+anc:p.anc||0,
+mic:p.mic||0,
+perf:p.perf||0,
+port:p.port||0,
+scr:p.scr||0
+}
+});
+});
+}
+
+async function syncDatabase(){
+try{
+const {data,error}=await sbClient.from("products").select("*");
+if(error) throw error;
+
+if(data && data.length > 0){
+loadDataToMemory(data);
+localStorage.setItem("product_cache",JSON.stringify(data));
+localStorage.setItem("db_last_sync",Date.now());
+showToast("ONDC NETWORK LIVE ✅");
+renderLobby();
+} else {
+throw new Error("No data in database");
+}
+}
+catch(e){
+console.log("Sync error:",e);
+const cache=localStorage.getItem("product_cache");
+if(cache){
+const data=JSON.parse(cache);
+loadDataToMemory(data);
+showToast("CACHE LOADED");
+renderLobby();
+}else{
+loadDataToMemory(SAMPLE_DATA);
+localStorage.setItem("product_cache",JSON.stringify(SAMPLE_DATA));
+showToast("DEMO MODE - ONDC");
+renderLobby();
+}
+}
+}
+
+/* ===============================
+   UI - LOBBY
+================================= */
+
+function renderLobby(){
+const app=document.getElementById("app");
+app.innerHTML=`
+<div class="header">
+<div class="header-badge">
+DECIDE OS v2.0
+<div class="status-dot"></div>
+<span class="ondc-badge">ONDC</span>
+</div>
+<button class="exit-btn" onclick="exitApp()">EXIT</button>
+</div>
+
+<div class="module-grid">
+<div class="module-card" onclick="loadDomain('smartphones')">
+<div class="module-icon">📱</div>
+<div class="module-title">SMART PHONES</div>
+<div class="module-status status-live">LIVE MARKETPLACE</div>
+</div>
+
+<div class="module-card" onclick="loadDomain('earbuds')">
+<div class="module-icon">🎧</div>
+<div class="module-title">AUDIO DEVICES</div>
+<div class="module-status status-live">LIVE MARKETPLACE</div>
+</div>
+
+<div class="module-card" onclick="loadDomain('laptops')">
+<div class="module-icon">💻</div>
+<div class="module-title">LAPTOPS</div>
+<div class="module-status status-live">LIVE MARKETPLACE</div>
+</div>
+
+<div class="module-card" onclick="viewOrders()">
+<div class="module-icon">📦</div>
+<div class="module-title">MY ORDERS</div>
+<div class="module-status status-beta">TRACK</div>
+</div>
+
+<div class="module-card" onclick="viewCart()">
+<div class="module-icon">🛒</div>
+<div class="module-title">CART</div>
+<div class="module-status status-neutral">${ENGINE_STATE.cart.length} ITEMS</div>
+</div>
+
+<div class="module-card" onclick="openTools()">
+<div class="module-icon">⚙️</div>
+<div class="module-title">SETTINGS</div>
+<div class="module-status status-links">MANAGE</div>
+</div>
+</div>
+
+<button class="bottom-action" onclick="syncDatabase()">
+🔄 SYNC MARKETPLACE
+</button>
+
+<div class="session-id">Session: ${ENGINE_STATE.sessionID} • ONDC Compliant</div>
+`;
+}
+
+/* ===============================
+   UI - FILTERS
+================================= */
+
+function renderFilters(domain){
+const app=document.getElementById("app");
+ENGINE_STATE.currentDomain=domain;
+ENGINE_STATE.active_filters=[];
+trackEvent("open_module");
+
+const filters={
+smartphones:["cam","gam","bat"],
+earbuds:["snd","anc","mic"],
+laptops:["perf","port","scr"]
+};
+
+const filterLabels={
+cam:"CAMERA",
+gam:"GAMING",
+bat:"BATTERY",
+snd:"SOUND QUALITY",
+anc:"NOISE CANCEL",
+mic:"MICROPHONE",
+perf:"PERFORMANCE",
+port:"PORTABILITY",
+scr:"DISPLAY"
+};
+
+let buttons=filters[domain].map(f=>`
+<div class="filter-btn" onclick="toggleFilter('${f}')" data-filter="${f}">
+${filterLabels[f]}
+</div>
+`).join("");
+
+app.innerHTML=`
+<div class="filter-container">
+<div class="filter-title">${domain.replace('smartphones','Smart Phones').replace('earbuds','Audio Devices').toUpperCase()}</div>
+<p style="text-align:center;color:#888;margin-bottom:25px">Select your priorities for smart recommendations</p>
+<div class="filter-grid">${buttons}</div>
+<button class="action-btn" onclick="findBestDeals()">🔍 FIND BEST DEALS</button>
+<button class="secondary-btn" onclick="renderLobby()">← BACK</button>
+</div>
+`;
+}
+
+function toggleFilter(f){
+const btn=document.querySelector(`[data-filter="${f}"]`);
+if(ENGINE_STATE.active_filters.includes(f)){
+ENGINE_STATE.active_filters=ENGINE_STATE.active_filters.filter(x=>x!==f);
+btn.classList.remove("active");
+}else{
+ENGINE_STATE.active_filters.push(f);
+btn.classList.add("active");
+}
+}
+
+/* ===============================
+   MARKETPLACE SCORING & SEARCH
+================================= */
+
+function findBestDeals(){
+const db=DB[ENGINE_STATE.currentDomain];
+if(!db || !Object.keys(db).length){
+showToast("NO PRODUCTS AVAILABLE");
+return;
+}
+
+trackEvent("search_marketplace");
+
+// Get all products with sellers
+let allProducts = [];
+Object.keys(db).forEach(productName=>{
+const sellers = db[productName];
+sellers.forEach(seller=>{
+let score = 0;
+if(ENGINE_STATE.active_filters.length > 0){
+ENGINE_STATE.active_filters.forEach(f=>{
+score += seller.attr[f] || 0;
+});
+} else {
+score = Math.random() * 10;
+}
+allProducts.push({...seller, score});
+});
+});
+
+// Sort by score, then by price
+allProducts.sort((a,b)=>{
+if(b.score !== a.score) return b.score - a.score;
+return a.price - b.price;
+});
+
+MARKETPLACE_RESULTS = allProducts.slice(0,10);
+renderMarketplace();
+}
+
+/* ===============================
+   MARKETPLACE UI
+================================= */
+
+function renderMarketplace(){
+const app=document.getElementById("app");
+const category = ENGINE_STATE.currentDomain.replace('smartphones','Smart Phones').replace('earbuds','Audio Devices');
+  
+app.innerHTML=`
+<div class="marketplace-results">
+<div style="text-align:center;margin-bottom:30px">
+<h2 style="margin:0;font-size:1.8rem">Best ${category}</h2>
+<p style="color:#888;margin-top:10px">Comparing prices across ${MARKETPLACE_RESULTS.length} sellers</p>
+</div>
+
+${MARKETPLACE_RESULTS.map((product,idx)=>{
+const discount = Math.floor(Math.random() * 20) + 5;
+const originalPrice = Math.floor(product.price / (1 - discount/100));
+return `
+<div class="result-card">
+<div class="result-header">
+<div>
+<div class="product-name">${product.name}</div>
+<div class="seller-info">
+<span class="seller-badge">${product.seller}</span>
+<span class="rating">⭐ ${product.rating}</span>
+</div>
+</div>
+<div class="price-section">
+<div class="price-main">₹${product.price.toLocaleString('en-IN')}</div>
+<div class="price-original">₹${originalPrice.toLocaleString('en-IN')}</div>
+<div class="discount">${discount}% OFF</div>
+</div>
+</div>
+
+<div class="result-details">
+<div class="detail-item">
+<div class="detail-label">Stock Status</div>
+<div class="detail-value" style="color:${product.stock > 50 ? 'var(--accent)' : '#FFA726'}">${product.stock} units available</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Delivery</div>
+<div class="detail-value">${product.delivery}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">Warranty</div>
+<div class="detail-value">${product.warranty}</div>
+</div>
+<div class="detail-item">
+<div class="detail-label">GST Included</div>
+<div class="detail-value" style="color:var(--accent)">Yes ✓</div>
+</div>
+</div>
+
+<div class="result-actions">
+<button class="buy-btn" onclick="initiateCheckout(${idx})">🛒 BUY NOW</button>
+<button class="compare-btn" onclick="addToCart(${idx})">+ ADD TO CART</button>
+</div>
+</div>
+`;
+}).join('')}
+
+<button class="secondary-btn" onclick="renderFilters('${ENGINE_STATE.currentDomain}')" style="margin-top:20px">← REFINE SEARCH</button>
+<button class="secondary-btn" onclick="renderLobby()" style="margin-top:10px">← HOME</button>
+</div>
+`;
+}
+
+/* ===============================
+   CART & CHECKOUT
+================================= */
+
+function addToCart(idx){
+const product = MARKETPLACE_RESULTS[idx];
+ENGINE_STATE.cart.push(product);
+showToast(`${product.name} added to cart`);
+trackEvent("add_to_cart",{product:product.name});
+}
+
+function viewCart(){
+if(ENGINE_STATE.cart.length === 0){
+showToast("Cart is empty");
+return;
+}
+
+const app=document.getElementById("app");
+const subtotal = ENGINE_STATE.cart.reduce((sum,p)=>sum+p.price,0);
+const gst = Math.floor(subtotal * 0.18);
+const delivery = ENGINE_STATE.cart.length > 0 ? 0 : 0;
+const total = subtotal + gst + delivery;
+
+app.innerHTML=`
+<div class="checkout-container">
+<h2 style="text-align:center;margin-bottom:30px">Shopping Cart</h2>
+
+<div class="checkout-section">
+<div class="section-title">Order Items (${ENGINE_STATE.cart.length})</div>
+${ENGINE_STATE.cart.map((item,idx)=>`
+<div style="display:flex;justify-content:space-between;padding:15px;background:rgba(255,255,255,0.03);border-radius:12px;margin-bottom:10px">
+<div>
+<div style="font-weight:700">${item.name}</div>
+<div style="font-size:0.85rem;color:#888">${item.seller}</div>
+</div>
+<div style="text-align:right">
+<div style="font-weight:700;color:var(--brand-orange)">₹${item.price.toLocaleString('en-IN')}</div>
+<button onclick="removeFromCart(${idx})" style="background:transparent;border:none;color:#ff4444;cursor:pointer;font-size:0.8rem;margin-top:5px">Remove</button>
+</div>
+</div>
+`).join('')}
+</div>
+
+<div class="checkout-section">
+<div class="section-title">Order Summary</div>
+<div class="order-summary">
+<div class="summary-row">
+<span>Subtotal</span>
+<span>₹${subtotal.toLocaleString('en-IN')}</span>
+</div>
+<div class="summary-row">
+<span>GST (18%)</span>
+<span>₹${gst.toLocaleString('en-IN')}</span>
+</div>
+<div class="summary-row">
+<span>Delivery</span>
+<span style="color:var(--accent)">FREE</span>
+</div>
+<div class="summary-row total">
+<span>Total Amount</span>
+<span>₹${total.toLocaleString('en-IN')}</span>
+</div>
+</div>
+</div>
+
+<button class="action-btn" onclick="proceedToPayment()">PROCEED TO PAYMENT →</button>
+<button class="secondary-btn" onclick="renderLobby()" style="margin-top:10px">← CONTINUE SHOPPING</button>
+</div>
+`;
+}
+
+function removeFromCart(idx){
+ENGINE_STATE.cart.splice(idx,1);
+viewCart();
+showToast("Item removed from cart");
+}
+
+function initiateCheckout(idx){
+const product = MARKETPLACE_RESULTS[idx];
+ENGINE_STATE.cart = [product];
+proceedToPayment();
+}
+
+function proceedToPayment(){
+const app=document.getElementById("app");
+const subtotal = ENGINE_STATE.cart.reduce((sum,p)=>sum+p.price,0);
+const gst = Math.floor(subtotal * 0.18);
+const total = subtotal + gst;
+
+app.innerHTML=`
+<div class="checkout-container">
+<h2 style="text-align:center;margin-bottom:30px">Payment Method</h2>
+
+<div class="checkout-section">
+<div class="section-title">Select Payment Option</div>
+<div class="payment-options">
+<div class="payment-option" onclick="selectPayment(this,'upi')" data-method="upi">
+<div class="payment-icon">📱</div>
+<div class="payment-details">
+<div class="payment-name">UPI Payment</div>
+<div class="payment-desc">GPay, PhonePe, Paytm & more</div>
+</div>
+</div>
+
+<div class="payment-option" onclick="selectPayment(this,'card')" data-method="card">
+<div class="payment-icon">💳</div>
+<div class="payment-details">
+<div class="payment-name">Credit/Debit Card</div>
+<div class="payment-desc">Visa, Mastercard, RuPay</div>
+</div>
+</div>
+
+<div class="payment-option" onclick="selectPayment(this,'netbanking')" data-method="netbanking">
+<div class="payment-icon">🏦</div>
+<div class="payment-details">
+<div class="payment-name">Net Banking</div>
+<div class="payment-desc">All major banks supported</div>
+</div>
+</div>
+
+<div class="payment-option" onclick="selectPayment(this,'cod')" data-method="cod">
+<div class="payment-icon">💵</div>
+<div class="payment-details">
+<div class="payment-name">Cash on Delivery</div>
+<div class="payment-desc">Pay when you receive</div>
+</div>
+</div>
+</div>
+</div>
+
+<div class="checkout-section">
+<div class="section-title">Amount to Pay</div>
+<div class="order-summary">
+<div class="summary-row total">
+<span>Total Payable</span>
+<span>₹${total.toLocaleString('en-IN')}</span>
+</div>
+</div>
+</div>
+
+<button class="action-btn" onclick="placeOrder()">PLACE ORDER</button>
+<button class="secondary-btn" onclick="viewCart()" style="margin-top:10px">← BACK TO CART</button>
+</div>
+`;
+}
+
+let selectedPaymentMethod = null;
+
+function selectPayment(elem,method){
+document.querySelectorAll('.payment-option').forEach(el=>el.classList.remove('selected'));
+elem.classList.add('selected');
+selectedPaymentMethod = method;
+}
+
+function placeOrder(){
+if(!selectedPaymentMethod){
+showToast("Please select payment method");
+return;
+}
+
+const orderID = "ORD-"+Math.random().toString(36).substr(2,8).toUpperCase();
+const order = {
+id:orderID,
+items:ENGINE_STATE.cart,
+total:ENGINE_STATE.cart.reduce((sum,p)=>sum+p.price,0),
+payment:selectedPaymentMethod,
+status:"confirmed",
+timestamp:new Date().toISOString()
+};
+
+ENGINE_STATE.orderHistory.push(order);
+localStorage.setItem("order_history",JSON.stringify(ENGINE_STATE.orderHistory));
+
+trackEvent("order_placed",{product:ENGINE_STATE.cart[0].name});
+
+ENGINE_STATE.cart = [];
+showOrderConfirmation(orderID);
+}
+
+function showOrderConfirmation(orderID){
+const app=document.getElementById("app");
+app.innerHTML=`
+<div style="max-width:500px;margin:50px auto;text-align:center">
+<div style="font-size:5rem;margin-bottom:20px">✅</div>
+<h1 style="color:var(--accent);margin-bottom:10px">Order Placed!</h1>
+<p style="font-size:1.2rem;color:#888;margin-bottom:30px">Order ID: ${orderID}</p>
+<div style="background:rgba(20,20,20,0.6);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:30px">
+<p style="margin:0;color:#888">Your order is confirmed and will be delivered soon. You will receive updates via SMS and Email.</p>
+</div>
+<button class="action-btn" onclick="trackOrder('${orderID}')">TRACK ORDER</button>
+<button class="secondary-btn" onclick="renderLobby()" style="margin-top:10px">← BACK TO HOME</button>
+</div>
+`;
+showToast("Order placed successfully!");
+}
+
+/* ===============================
+   ORDER TRACKING
+================================= */
+
+function viewOrders(){
+const orders = JSON.parse(localStorage.getItem("order_history") || "[]");
+if(orders.length === 0){
+showToast("No orders yet");
+return;
+}
+
+const app=document.getElementById("app");
+app.innerHTML=`
+<div class="checkout-container">
+<h2 style="text-align:center;margin-bottom:30px">My Orders</h2>
+${orders.reverse().map(order=>`
+<div class="checkout-section" style="cursor:pointer" onclick="trackOrder('${order.id}')">
+<div style="display:flex;justify-content:space-between;align-items:center">
+<div>
+<div style="font-weight:700;font-size:1.1rem">${order.id}</div>
+<div style="font-size:0.85rem;color:#888;margin-top:5px">${new Date(order.timestamp).toLocaleDateString('en-IN')}</div>
+</div>
+<div style="text-align:right">
+<div style="font-weight:700;color:var(--brand-orange)">₹${order.total.toLocaleString('en-IN')}</div>
+<div style="font-size:0.85rem;color:var(--accent);margin-top:5px">${order.status.toUpperCase()}</div>
+</div>
+</div>
+</div>
+`).join('')}
+<button class="secondary-btn" onclick="renderLobby()" style="margin-top:20px">← BACK TO HOME</button>
+</div>
+`;
+}
+
+function trackOrder(orderID){
+const app=document.getElementById("app");
+app.innerHTML=`
+<div class="tracking-container">
+<h2 style="text-align:center;margin-bottom:10px">Order Tracking</h2>
+<p style="text-align:center;color:#888;margin-bottom:40px">${orderID}</p>
+
+<div class="tracking-timeline">
+<div class="timeline-item">
+<div class="timeline-dot">✓</div>
+<div class="timeline-line"></div>
+<div class="timeline-content">
+<div class="timeline-title">Order Confirmed</div>
+<div class="timeline-time">Today, 2:30 PM</div>
+</div>
+</div>
+
+<div class="timeline-item">
+<div class="timeline-dot">✓</div>
+<div class="timeline-line"></div>
+<div class="timeline-content">
+<div class="timeline-title">Payment Verified</div>
+<div class="timeline-time">Today, 2:32 PM</div>
+</div>
+</div>
+
+<div class="timeline-item">
+<div class="timeline-dot">✓</div>
+<div class="timeline-line"></div>
+<div class="timeline-content">
+<div class="timeline-title">Seller Processing</div>
+<div class="timeline-time">Today, 3:00 PM</div>
+</div>
+</div>
+
+<div class="timeline-item pending">
+<div class="timeline-dot">⏳</div>
+<div class="timeline-line"></div>
+<div class="timeline-content">
+<div class="timeline-title">Out for Delivery</div>
+<div class="timeline-time">Expected Tomorrow</div>
+</div>
+</div>
+
+<div class="timeline-item pending">
+<div class="timeline-dot">📦</div>
+<div class="timeline-content">
+<div class="timeline-title">Delivered</div>
+<div class="timeline-time">Expected in 2 days</div>
+</div>
+</div>
+</div>
+
+<button class="secondary-btn" onclick="viewOrders()" style="margin-top:30px">← BACK TO ORDERS</button>
+<button class="secondary-btn" onclick="renderLobby()" style="margin-top:10px">← HOME</button>
+</div>
+`;
+}
+
+/* ===============================
+   UTIL
+================================= */
+
+function loadDomain(d){ 
+renderFilters(d); 
+}
+
+function exitApp(){
+if(confirm("Exit Decide OS?")){
+trackEvent("exit_app");
+flushAnalytics();
+window.close();
+}
+}
+
+function openTools(){
+trackEvent("open_tools");
+const app=document.getElementById("app");
+app.innerHTML=`
+<div class="checkout-container">
+<h2 style="text-align:center;margin-bottom:30px">Settings & Info</h2>
+
+<div class="checkout-section">
+<div class="section-title">About Decide OS</div>
+<p style="color:#888;line-height:1.6">
+Decide OS v2.0 is India's first ONDC-compliant smart shopping assistant. 
+We compare prices across multiple sellers to help you find the best deals 
+while ensuring transparency and fair pricing.
+</p>
+</div>
+
+<div class="checkout-section">
+<div class="section-title">ONDC Compliance</div>
+<div style="color:#888;line-height:1.6">
+✓ Multi-seller marketplace integration<br>
+✓ Real-time price comparison<br>
+✓ Transparent pricing with GST<br>
+✓ Secure payment gateway<br>
+✓ Order tracking & fulfillment<br>
+✓ Return & refund policies
+</div>
+</div>
+
+<div class="checkout-section">
+<div class="section-title">Developer Info</div>
+<p style="color:#888">
+GitHub: github.com/via-decide/engine<br>
+Version: 2.0.0<br>
+Session: ${ENGINE_STATE.sessionID}
+</p>
+</div>
+
+<button class="action-btn" onclick="clearCache()">CLEAR CACHE & DATA</button>
+<button class="secondary-btn" onclick="renderLobby()" style="margin-top:10px">← BACK</button>
+</div>
+`;
+}
+
+function clearCache(){
+if(confirm("This will clear all cached data and order history. Continue?")){
+localStorage.clear();
+location.reload();
+}
+}
+
+function showToast(msg){
+const t=document.getElementById("toast");
+t.innerText=msg;
+t.classList.add("show");
+setTimeout(()=>t.classList.remove("show"),2500);
+}
+
+/* ===============================
+   INIT
+================================= */
+
+async function init(){
+   // Load order history
+   ENGINE_STATE.orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
+
+   // Try to load from cache first
+   const cache = localStorage.getItem("product_cache");
+   if(cache){
+      const data = JSON.parse(cache);
+      loadDataToMemory(data);
+   } else {
+      loadDataToMemory(SAMPLE_DATA);
+   }
+
+   renderLobby();
+
+   // Sync in background
+   syncDatabase();
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+   init();
+});
+
+</script>
+
+</body>
+</html>
