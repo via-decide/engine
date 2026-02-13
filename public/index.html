@@ -1,10 +1,9 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Decide Engine v100</title>
+<title>Decide OS v100</title>
 <meta name="theme-color" content="#000000">
 <link rel="manifest" href="manifest.json">
 
@@ -17,62 +16,314 @@
 <style>
 :root{
 --brand-orange:#ff671f;
---brand-dark:#050505;
---glass:rgba(20,20,20,0.9);
---border:rgba(255,255,255,0.12);
+--brand-dark:#000000;
+--glass:rgba(20,20,20,0.95);
+--border:rgba(255,255,255,0.15);
 --accent:#00e676;
 --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+
+*{
+box-sizing:border-box;
 }
 
 html,body{
 margin:0;
 padding:0;
 height:100%;
-background:var(--brand-dark);
+background:#000;
 color:#fff;
 font-family:var(--font);
-overflow:hidden;
+overflow-x:hidden;
+-webkit-font-smoothing:antialiased;
 }
 
-#master-container{
-height:100%;
+#app{
+min-height:100vh;
+display:flex;
+flex-direction:column;
+padding:20px;
+padding-bottom:80px;
+}
+
+/* HEADER */
+.header{
+display:flex;
+align-items:center;
+justify-content:space-between;
+margin-bottom:30px;
+gap:15px;
+}
+
+.header-badge{
+background:rgba(255,103,31,0.1);
+border:2px solid var(--brand-orange);
+padding:12px 24px;
+border-radius:12px;
+font-size:0.85rem;
+font-weight:700;
+letter-spacing:1px;
+color:var(--brand-orange);
+display:flex;
+align-items:center;
+gap:10px;
+flex:1;
+}
+
+.status-dot{
+width:10px;
+height:10px;
+background:var(--accent);
+border-radius:50%;
+box-shadow:0 0 10px var(--accent);
+animation:pulse 2s infinite;
+}
+
+@keyframes pulse{
+0%,100%{opacity:1}
+50%{opacity:0.5}
+}
+
+.exit-btn{
+background:transparent;
+border:2px solid rgba(255,255,255,0.3);
+padding:12px 30px;
+border-radius:50px;
+font-size:0.9rem;
+font-weight:700;
+color:#fff;
+cursor:pointer;
+transition:all 0.3s;
+}
+
+.exit-btn:hover{
+background:rgba(255,255,255,0.1);
+border-color:rgba(255,255,255,0.5);
+}
+
+/* GRID */
+.module-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:20px;
+margin-bottom:25px;
+}
+
+.module-card{
+background:rgba(20,20,20,0.6);
+border:1px solid var(--border);
+border-radius:24px;
+padding:30px 20px;
 display:flex;
 flex-direction:column;
 align-items:center;
 justify-content:center;
-padding:20px;
+gap:15px;
+cursor:pointer;
+transition:all 0.3s;
+min-height:180px;
+position:relative;
 }
 
-.grid{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:15px;
+.module-card:hover{
+background:rgba(40,40,40,0.8);
+border-color:rgba(255,255,255,0.3);
+transform:translateY(-4px);
+}
+
+.module-card.disabled{
+opacity:0.5;
+cursor:not-allowed;
+}
+
+.module-card.disabled:hover{
+transform:none;
+}
+
+.module-icon{
+font-size:3.5rem;
+margin-bottom:5px;
+}
+
+.module-title{
+font-size:1.1rem;
+font-weight:700;
+letter-spacing:0.5px;
+text-align:center;
+margin:0;
+}
+
+.module-status{
+font-size:0.75rem;
+font-weight:600;
+letter-spacing:1.5px;
+padding:4px 12px;
+border-radius:6px;
+margin-top:5px;
+}
+
+.status-live{
+color:var(--accent);
+background:rgba(0,230,118,0.15);
+}
+
+.status-neutral{
+color:#888;
+background:rgba(136,136,136,0.15);
+}
+
+.status-beta{
+color:#4CAF50;
+background:rgba(76,175,80,0.15);
+}
+
+.status-soon{
+color:#FFA726;
+background:rgba(255,167,38,0.15);
+}
+
+.status-links{
+color:#42A5F5;
+background:rgba(66,165,245,0.15);
+}
+
+/* BOTTOM BUTTON */
+.bottom-action{
+width:100%;
+background:transparent;
+border:2px solid rgba(255,255,255,0.2);
+padding:18px;
+border-radius:20px;
+font-size:1rem;
+font-weight:700;
+color:#fff;
+cursor:pointer;
+display:flex;
+align-items:center;
+justify-content:center;
+gap:10px;
+transition:all 0.3s;
+margin-bottom:20px;
+}
+
+.bottom-action:hover{
+background:rgba(255,255,255,0.1);
+border-color:rgba(255,255,255,0.4);
+}
+
+/* SESSION ID */
+.session-id{
+text-align:center;
+font-size:0.8rem;
+color:rgba(255,255,255,0.3);
+margin-top:auto;
+padding-top:20px;
+}
+
+/* FILTER SCREEN */
+.filter-container{
 max-width:600px;
+margin:0 auto;
 width:100%;
 }
 
-.btn{
-background:var(--glass);
-border:1px solid var(--border);
-padding:20px;
+.filter-title{
+font-size:1.8rem;
+font-weight:700;
+margin-bottom:30px;
+text-align:center;
+text-transform:uppercase;
+}
+
+.filter-grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:15px;
+margin-bottom:25px;
+}
+
+.filter-btn{
+background:rgba(20,20,20,0.6);
+border:2px solid var(--border);
+padding:25px;
 border-radius:18px;
 text-align:center;
 font-weight:700;
+font-size:1rem;
 cursor:pointer;
-transition:.2s;
+transition:all 0.3s;
+text-transform:uppercase;
 }
 
-.btn:hover{background:rgba(255,255,255,0.08)}
+.filter-btn:hover{
+background:rgba(40,40,40,0.8);
+border-color:rgba(255,255,255,0.3);
+}
 
-.btn-primary{
+.filter-btn.active{
+background:var(--brand-orange);
+color:#000;
+border-color:var(--brand-orange);
+}
+
+.action-btn{
 background:var(--brand-orange);
 color:#000;
 border:none;
+padding:18px;
+border-radius:18px;
+font-weight:700;
+font-size:1rem;
+cursor:pointer;
+width:100%;
+margin-bottom:12px;
+transition:all 0.3s;
+text-transform:uppercase;
 }
 
-.winner{
-text-align:center;
+.action-btn:hover{
+background:#ff7d3f;
+transform:translateY(-2px);
+}
+
+.secondary-btn{
+background:transparent;
+color:#fff;
+border:2px solid var(--border);
+padding:16px;
+border-radius:18px;
+font-weight:700;
+font-size:0.95rem;
+cursor:pointer;
+width:100%;
+transition:all 0.3s;
+text-transform:uppercase;
+}
+
+.secondary-btn:hover{
+background:rgba(255,255,255,0.1);
+border-color:rgba(255,255,255,0.3);
+}
+
+/* VERDICT SCREEN */
+.verdict-container{
 max-width:500px;
+margin:0 auto;
+text-align:center;
+padding:20px;
+}
+
+.winner-name{
+font-size:2rem;
+font-weight:700;
+margin-bottom:15px;
+}
+
+.winner-price{
+font-size:2.5rem;
+font-weight:700;
+color:var(--brand-orange);
+margin-bottom:30px;
 }
 
 .toast{
@@ -82,18 +333,38 @@ left:50%;
 transform:translateX(-50%);
 background:#111;
 border:1px solid #333;
-padding:10px 20px;
+padding:12px 24px;
 border-radius:30px;
-font-size:0.8rem;
+font-size:0.85rem;
 opacity:0;
-transition:.3s;
+transition:opacity 0.3s;
+z-index:1000;
 }
-.toast.show{opacity:1}
+
+.toast.show{
+opacity:1;
+}
+
+@media (max-width:600px){
+.module-grid{
+gap:15px;
+}
+.module-card{
+padding:25px 15px;
+min-height:160px;
+}
+.module-icon{
+font-size:3rem;
+}
+.module-title{
+font-size:1rem;
+}
+}
 </style>
 </head>
 <body>
 
-<div id="master-container"></div>
+<div id="app"></div>
 <div id="toast" class="toast"></div>
 
 <script>
@@ -102,10 +373,10 @@ transition:.3s;
 ================================= */
 
 const SUPABASE_URL = "https://adzkzeghlgzpbageszqh.supabase.co";
-const SUPABASE_KEY = "sb_publishable_SvFpgjJXowEo0JliWh0OVA_6U-8T2VA";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFkemt6ZWdobGd6cGJhZ2VzenFoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg4NDM4MzMsImV4cCI6MjA1NDQxOTgzM30.6ViFpPL8Rc_Nl5yxrGz8wuZdYEcRjMgDdEY4xLwPfpY";
 const AMZN_TAG = "decideos-21";
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* ===============================
    DEVICE + SESSION
@@ -146,7 +417,11 @@ async function flushAnalytics(){
 if(!ANALYTICS_QUEUE.length) return;
 const payload=[...ANALYTICS_QUEUE];
 ANALYTICS_QUEUE=[];
-await supabase.from("analytics_events").insert(payload);
+try{
+await sbClient.from("analytics_events").insert(payload);
+}catch(e){
+console.log("Analytics error:",e);
+}
 }
 
 setInterval(flushAnalytics,8000);
@@ -164,12 +439,13 @@ laptops:{}
 
 async function syncDatabase(){
 try{
-const {data,error}=await supabase.from("products").select("*");
+const {data,error}=await sbClient.from("products").select("*");
 if(error) throw error;
 
 DB={smartphones:{},earbuds:{},laptops:{}};
 
 data.forEach(p=>{
+if(!DB[p.category]) DB[p.category]={};
 DB[p.category][p.name]={
 name:p.name,
 price:p.price,
@@ -188,40 +464,109 @@ scr:p.scr||0
 });
 
 localStorage.setItem("product_cache",JSON.stringify(data));
+localStorage.setItem("db_last_sync",Date.now());
 showToast("SYSTEM LIVE ✅");
+renderLobby();
 }
 catch(e){
+console.log("Sync error:",e);
 const cache=localStorage.getItem("product_cache");
 if(cache){
 const data=JSON.parse(cache);
+DB={smartphones:{},earbuds:{},laptops:{}};
 data.forEach(p=>{
-DB[p.category][p.name]=p;
+if(!DB[p.category]) DB[p.category]={};
+DB[p.category][p.name]={
+name:p.name,
+price:p.price,
+attr:{
+cam:p.cam||0,
+gam:p.gam||0,
+bat:p.bat||0,
+snd:p.snd||0,
+anc:p.anc||0,
+mic:p.mic||0,
+perf:p.perf||0,
+port:p.port||0,
+scr:p.scr||0
+}
+};
 });
 showToast("OFFLINE MODE");
+renderLobby();
+}else{
+showToast("NO DATA AVAILABLE");
 }
 }
 }
 
 /* ===============================
-   UI
+   UI - LOBBY
 ================================= */
 
 function renderLobby(){
-const c=document.getElementById("master-container");
-c.innerHTML=`
-<h1>DECIDE ENGINE v100</h1>
-<div class="grid">
-<div class="btn" onclick="loadDomain('smartphones')">📱 PHONES</div>
-<div class="btn" onclick="loadDomain('earbuds')">🎧 AUDIO</div>
-<div class="btn" onclick="loadDomain('laptops')">💻 LAPTOPS</div>
-<div class="btn btn-primary" onclick="syncDatabase()">SYNC DB</div>
+const app=document.getElementById("app");
+app.innerHTML=`
+<div class="header">
+<div class="header-badge">
+DECIDE OS v100.0
+<div class="status-dot"></div>
 </div>
-<p style="opacity:.4;margin-top:20px">Session ${ENGINE_STATE.sessionID}</p>
+<button class="exit-btn" onclick="exitApp()">EXIT</button>
+</div>
+
+<div class="module-grid">
+<div class="module-card" onclick="loadDomain('smartphones')">
+<div class="module-icon">📱</div>
+<div class="module-title">DECIDE: PHONES</div>
+<div class="module-status status-live">LIVE DB</div>
+</div>
+
+<div class="module-card" onclick="loadDomain('earbuds')">
+<div class="module-icon">🎧</div>
+<div class="module-title">DECIDE: AUDIO</div>
+<div class="module-status status-neutral">NEUTRAL</div>
+</div>
+
+<div class="module-card" onclick="loadDomain('laptops')">
+<div class="module-icon">💻</div>
+<div class="module-title">DECIDE: LAPTOPS</div>
+<div class="module-status status-beta">BETA</div>
+</div>
+
+<div class="module-card module-card disabled">
+<div class="module-icon">📦</div>
+<div class="module-title">TRACK</div>
+<div class="module-status status-soon">SOON</div>
+</div>
+
+<div class="module-card module-card disabled">
+<div class="module-icon">🧾</div>
+<div class="module-title">BUY</div>
+<div class="module-status status-soon">SOON</div>
+</div>
+
+<div class="module-card" onclick="openTools()">
+<div class="module-icon">🧰</div>
+<div class="module-title">TOOLS</div>
+<div class="module-status status-links">LINKS</div>
+</div>
+</div>
+
+<button class="bottom-action" onclick="openYouTube()">
+▶ WATCH REVIEW
+</button>
+
+<div class="session-id">ID: ${ENGINE_STATE.sessionID}</div>
 `;
 }
 
+/* ===============================
+   UI - FILTERS
+================================= */
+
 function renderFilters(domain){
-const c=document.getElementById("master-container");
+const app=document.getElementById("app");
 ENGINE_STATE.currentDomain=domain;
 ENGINE_STATE.active_filters=[];
 trackEvent("open_module");
@@ -232,25 +577,42 @@ earbuds:["snd","anc","mic"],
 laptops:["perf","port","scr"]
 };
 
+const filterLabels={
+cam:"CAMERA",
+gam:"GAMING",
+bat:"BATTERY",
+snd:"SOUND",
+anc:"ANC",
+mic:"MIC",
+perf:"PERFORMANCE",
+port:"PORTABILITY",
+scr:"SCREEN"
+};
+
 let buttons=filters[domain].map(f=>`
-<div class="btn" onclick="toggleFilter('${f}')">${f.toUpperCase()}</div>
+<div class="filter-btn" onclick="toggleFilter('${f}')" data-filter="${f}">
+${filterLabels[f]}
+</div>
 `).join("");
 
-c.innerHTML=`
-<h2>${domain.toUpperCase()}</h2>
-<div class="grid">${buttons}</div>
-<div style="margin-top:20px">
-<div class="btn btn-primary" onclick="buildVerdict()">DECIDE →</div>
-<div class="btn" onclick="renderLobby()" style="margin-top:10px">BACK</div>
+app.innerHTML=`
+<div class="filter-container">
+<div class="filter-title">${domain.toUpperCase()}</div>
+<div class="filter-grid">${buttons}</div>
+<button class="action-btn" onclick="buildVerdict()">DECIDE →</button>
+<button class="secondary-btn" onclick="renderLobby()">← BACK</button>
 </div>
 `;
 }
 
 function toggleFilter(f){
+const btn=document.querySelector(`[data-filter="${f}"]`);
 if(ENGINE_STATE.active_filters.includes(f)){
 ENGINE_STATE.active_filters=ENGINE_STATE.active_filters.filter(x=>x!==f);
+btn.classList.remove("active");
 }else{
 ENGINE_STATE.active_filters.push(f);
+btn.classList.add("active");
 }
 }
 
@@ -264,7 +626,9 @@ if(!db || !Object.keys(db).length) return null;
 
 const products=Object.values(db);
 
-if(!ENGINE_STATE.active_filters.length) return products[0];
+if(!ENGINE_STATE.active_filters.length){
+return products[Math.floor(Math.random()*products.length)];
+}
 
 let scored=products.map(p=>{
 let score=0;
@@ -284,7 +648,10 @@ return scored[0];
 
 function buildVerdict(){
 const winner=calculateWinner();
-if(!winner){ showToast("NO DATA"); return; }
+if(!winner){ 
+showToast("NO DATA - SYNC DATABASE FIRST"); 
+return; 
+}
 
 ENGINE_STATE.winner=winner;
 trackEvent("verdict",{product:winner.name});
@@ -292,17 +659,15 @@ trackEvent("verdict",{product:winner.name});
 const amzn=`https://www.amazon.in/s?k=${encodeURIComponent(winner.name)}&tag=${AMZN_TAG}`;
 const yt=`https://www.youtube.com/results?search_query=${encodeURIComponent(winner.name+" review")}`;
 
-const c=document.getElementById("master-container");
-c.innerHTML=`
-<div class="winner">
-<h1>${winner.name}</h1>
-<h2>₹${winner.price}</h2>
-<div style="margin-top:20px">
-<div class="btn btn-primary" onclick="window.open('${amzn}','_blank')">CHECK PRICE</div>
-<div class="btn" onclick="window.open('${yt}','_blank')" style="margin-top:10px">WATCH REVIEW</div>
-<div class="btn" onclick="generatePDF()" style="margin-top:10px">EXPORT PDF</div>
-<div class="btn" onclick="renderLobby()" style="margin-top:10px">HOME</div>
-</div>
+const app=document.getElementById("app");
+app.innerHTML=`
+<div class="verdict-container">
+<div class="winner-name">${winner.name}</div>
+<div class="winner-price">₹${winner.price.toLocaleString('en-IN')}</div>
+<button class="action-btn" onclick="window.open('${amzn}','_blank')">CHECK PRICE</button>
+<button class="secondary-btn" onclick="window.open('${yt}','_blank')" style="margin-bottom:12px">WATCH REVIEW</button>
+<button class="secondary-btn" onclick="generatePDF()" style="margin-bottom:12px">EXPORT PDF</button>
+<button class="secondary-btn" onclick="renderLobby()">← HOME</button>
 </div>
 `;
 }
@@ -318,33 +683,86 @@ if(!w) return;
 const {jsPDF}=window.jspdf;
 const doc=new jsPDF();
 doc.setFontSize(20);
-doc.text("DECIDE ENGINE REPORT",20,20);
-doc.text("Session: "+ENGINE_STATE.sessionID,20,30);
-doc.text("Winner: "+w.name,20,50);
-doc.text("Price: ₹"+w.price,20,60);
-doc.save("Audit_"+ENGINE_STATE.sessionID+".pdf");
+doc.text("DECIDE OS REPORT",20,20);
+doc.setFontSize(12);
+doc.text("Session: "+ENGINE_STATE.sessionID,20,35);
+doc.text("Category: "+ENGINE_STATE.currentDomain,20,45);
+doc.text("Winner: "+w.name,20,60);
+doc.text("Price: Rs "+w.price,20,70);
+doc.text("Filters: "+ENGINE_STATE.active_filters.join(", "),20,80);
+doc.save("DecideOS_"+ENGINE_STATE.sessionID+".pdf");
 trackEvent("pdf_export",{product:w.name});
+showToast("PDF EXPORTED ✅");
 }
 
 /* ===============================
    UTIL
 ================================= */
 
-function loadDomain(d){ renderFilters(d); }
+function loadDomain(d){ 
+renderFilters(d); 
+}
+
+function exitApp(){
+if(confirm("Exit Decide OS?")){
+trackEvent("exit_app");
+flushAnalytics();
+window.close();
+}
+}
+
+function openTools(){
+trackEvent("open_tools");
+alert("TOOLS MODULE\n\n• GitHub: github.com/via-decide/engine\n• Support: Contact Admin\n• Version: 100.0");
+}
+
+function openYouTube(){
+trackEvent("watch_review_lobby");
+window.open("https://www.youtube.com/results?search_query=tech+reviews","_blank");
+}
 
 function showToast(msg){
 const t=document.getElementById("toast");
 t.innerText=msg;
 t.classList.add("show");
-setTimeout(()=>t.classList.remove("show"),2000);
+setTimeout(()=>t.classList.remove("show"),2500);
 }
 
 /* ===============================
    INIT
 ================================= */
 
-syncDatabase();
+(async function init(){
+// Try to load from cache first
+const cache=localStorage.getItem("product_cache");
+if(cache){
+const data=JSON.parse(cache);
+DB={smartphones:{},earbuds:{},laptops:{}};
+data.forEach(p=>{
+if(!DB[p.category]) DB[p.category]={};
+DB[p.category][p.name]={
+name:p.name,
+price:p.price,
+attr:{
+cam:p.cam||0,
+gam:p.gam||0,
+bat:p.bat||0,
+snd:p.snd||0,
+anc:p.anc||0,
+mic:p.mic||0,
+perf:p.perf||0,
+port:p.port||0,
+scr:p.scr||0
+}
+};
+});
+}
+
 renderLobby();
+
+// Then sync in background
+syncDatabase();
+})();
 </script>
 
 </body>
