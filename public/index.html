@@ -1,67 +1,78 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Decide Engine</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Decide Engine v100</title>
 <meta name="theme-color" content="#000000">
 <link rel="manifest" href="manifest.json">
 
-<!-- Supabase -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<!-- PDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 :root{
 --brand-orange:#ff671f;
---brand-dark:#050505;
---glass-surface:rgba(20,20,20,0.9);
---glass-border:rgba(255,255,255,0.12);
---text-main:#fff;
---accent-go:#00e676;
+--bg:#050505;
+--glass:rgba(20,20,20,0.9);
+--border:rgba(255,255,255,0.12);
+--accent:#00e676;
+--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
 body{
 margin:0;
-background:var(--brand-dark);
+background:radial-gradient(circle at top left,#111,#000);
 color:#fff;
-font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+font-family:var(--font);
 overflow:hidden;
 }
-#master-container{
-height:100vh;
+#app{height:100vh;display:flex;flex-direction:column;}
+.header{
+padding:16px 20px;
+background:#000;
+border-bottom:1px solid var(--border);
+font-weight:700;
+letter-spacing:2px;
+font-size:12px;
+}
+.content{
+flex:1;
+overflow-y:auto;
+padding:30px;
 display:flex;
-align-items:center;
 justify-content:center;
+align-items:center;
+}
+.panel{
+background:var(--glass);
+border:1px solid var(--border);
+padding:40px;
+border-radius:20px;
+max-width:500px;
+width:100%;
 }
 .grid{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:14px;
-width:90%;
-max-width:600px;
-}
-.grid button{
-padding:20px;
-border-radius:18px;
-background:var(--glass-surface);
-border:1px solid var(--glass-border);
-color:#fff;
-font-weight:700;
-cursor:pointer;
-}
-.winner{
-text-align:center;
+gap:12px;
+margin-top:20px;
 }
 .btn{
-padding:14px;
-border-radius:14px;
 background:var(--brand-orange);
 border:none;
-font-weight:800;
+padding:14px;
+border-radius:12px;
+font-weight:700;
 cursor:pointer;
 width:100%;
+}
+.btn.secondary{
+background:#222;
+color:#fff;
+}
+.btn.small{
+padding:10px;
+font-size:12px;
 }
 .toast{
 position:fixed;
@@ -69,16 +80,25 @@ bottom:40px;
 left:50%;
 transform:translateX(-50%);
 background:#111;
+border:1px solid #333;
 padding:10px 20px;
 border-radius:30px;
-display:none;
+opacity:0;
+transition:0.3s;
+font-size:12px;
 }
-.toast.show{display:block;}
+.toast.show{opacity:1;}
 </style>
 </head>
-
 <body>
-<div id="master-container"></div>
+
+<div id="app">
+<div class="header">DECIDE ENGINE v100</div>
+<div class="content">
+<div id="view"></div>
+</div>
+</div>
+
 <div id="toast" class="toast"></div>
 
 <script>
@@ -91,191 +111,215 @@ const SUPABASE_URL = "https://adzkzeghlgzpbageszqh.supabase.co";
 const SUPABASE_KEY = "sb_publishable_SvFpgjJXowEo0JliWh0OVA_6U-8T2VA";
 const AMZN_TAG = "decideos-21";
 
-const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* =========================
-   DEVICE ID
+   DEVICE + SESSION
 ========================= */
 
 let DEVICE_ID = localStorage.getItem("decide_device_id");
 if(!DEVICE_ID){
-DEVICE_ID = crypto.randomUUID();
-localStorage.setItem("decide_device_id", DEVICE_ID);
+    DEVICE_ID = crypto.randomUUID();
+    localStorage.setItem("decide_device_id", DEVICE_ID);
 }
 
-let ENGINE_STATE = {
-currentDomain:null,
-active_filters:[],
-sessionID:"SID-"+Math.random().toString(36).substr(2,4).toUpperCase(),
-winner:null
+const ENGINE = {
+    session: "SID-" + Math.random().toString(36).substring(2,6).toUpperCase(),
+    domain: null,
+    filters: [],
+    winner: null
 };
-
-let ANALYTICS_QUEUE = [];
 
 /* =========================
    ANALYTICS
 ========================= */
 
-function trackEvent(type,meta={}){
-ANALYTICS_QUEUE.push({
-device_id:DEVICE_ID,
-session_id:ENGINE_STATE.sessionID,
-event_type:type,
-module:ENGINE_STATE.currentDomain,
-product:meta.product||null,
-filter:meta.filter||null,
-created_at:new Date().toISOString()
-});
-if(ANALYTICS_QUEUE.length>=10) flushAnalytics();
+let ANALYTICS = [];
+
+function track(type, meta={}){
+    ANALYTICS.push({
+        device_id: DEVICE_ID,
+        session_id: ENGINE.session,
+        event_type: type,
+        module: ENGINE.domain,
+        product: meta.product || null,
+        filter: meta.filter || null,
+        created_at: new Date().toISOString()
+    });
+    if(ANALYTICS.length>=10) flush();
 }
 
-async function flushAnalytics(){
-if(!ANALYTICS_QUEUE.length) return;
-await supabase.from("analytics_events").insert(ANALYTICS_QUEUE);
-ANALYTICS_QUEUE=[];
+async function flush(){
+    if(!ANALYTICS.length) return;
+    const payload=[...ANALYTICS];
+    ANALYTICS=[];
+    await supabase.from("analytics_events").insert(payload);
 }
-
-setInterval(flushAnalytics,8000);
-window.addEventListener("beforeunload",flushAnalytics);
+setInterval(flush,8000);
+window.addEventListener("beforeunload",flush);
 
 /* =========================
    DATABASE
 ========================= */
 
-let DB={};
+let PRODUCTS = { smartphones:{}, earbuds:{}, laptops:{} };
 
-async function syncDatabase(){
-try{
-const {data,error}=await supabase.from("products").select("*");
-if(error) throw error;
-DB=data;
-localStorage.setItem("product_cache",JSON.stringify(data));
-showToast("SYSTEM LIVE");
-}catch(e){
-const cache=localStorage.getItem("product_cache");
-if(cache){
-DB=JSON.parse(cache);
-showToast("OFFLINE MODE");
-}
-}
+async function loadProducts(){
+    try{
+        const {data,error}=await supabase.from("products").select("*");
+        if(error) throw error;
+
+        PRODUCTS={smartphones:{},earbuds:{},laptops:{}};
+
+        data.forEach(p=>{
+            const entry={
+                name:p.name,
+                price:p.price,
+                attr:{
+                    cam:p.cam||0,gam:p.gam||0,bat:p.bat||0,
+                    snd:p.snd||0,anc:p.anc||0,mic:p.mic||0,
+                    perf:p.perf||0,port:p.port||0,scr:p.scr||0
+                }
+            };
+            if(PRODUCTS[p.category]) PRODUCTS[p.category][p.name]=entry;
+        });
+
+        localStorage.setItem("product_cache",JSON.stringify(data));
+        toast("SYSTEM LIVE ✅");
+    }catch(e){
+        const cache=localStorage.getItem("product_cache");
+        if(cache){
+            JSON.parse(cache).forEach(p=>{
+                if(PRODUCTS[p.category]) PRODUCTS[p.category][p.name]=p;
+            });
+            toast("OFFLINE MODE");
+        }
+    }
 }
 
 /* =========================
    UI
 ========================= */
 
-function renderLobby(){
-ENGINE_STATE.currentDomain=null;
-document.getElementById("master-container").innerHTML=`
-<div class="grid">
-<button onclick="loadDomain('smartphones')">📱 Phones</button>
-<button onclick="loadDomain('earbuds')">🎧 Audio</button>
-<button onclick="loadDomain('laptops')">💻 Laptops</button>
-</div>`;
+function renderHome(){
+    ENGINE.domain=null;
+    ENGINE.filters=[];
+    document.getElementById("view").innerHTML=`
+    <div class="panel">
+        <h2>Choose Module</h2>
+        <div class="grid">
+            <button class="btn" onclick="openModule('smartphones')">📱 Phones</button>
+            <button class="btn" onclick="openModule('earbuds')">🎧 Audio</button>
+            <button class="btn" onclick="openModule('laptops')">💻 Laptops</button>
+        </div>
+        <div style="margin-top:20px;font-size:11px;opacity:0.5">
+            Session: ${ENGINE.session}
+        </div>
+    </div>`;
 }
 
-function loadDomain(domain){
-ENGINE_STATE.currentDomain=domain;
-ENGINE_STATE.active_filters=[];
-trackEvent("open_module");
-renderFilters();
+function openModule(domain){
+    ENGINE.domain=domain;
+    ENGINE.filters=[];
+    track("open_module");
+    renderFilters();
 }
 
 function renderFilters(){
-document.getElementById("master-container").innerHTML=`
-<div class="grid">
-<button onclick="setFilter('cam')">Camera</button>
-<button onclick="setFilter('gam')">Gaming</button>
-<button onclick="setFilter('bat')">Battery</button>
-<button onclick="startHunt()">Start Hunt →</button>
-</div>`;
+    const map={
+        smartphones:["cam","gam","bat"],
+        earbuds:["snd","anc","mic"],
+        laptops:["perf","port","scr"]
+    };
+    const keys=map[ENGINE.domain]||[];
+
+    document.getElementById("view").innerHTML=`
+    <div class="panel">
+        <h2>Select Priority</h2>
+        <div class="grid">
+            ${keys.map(k=>`
+                <button class="btn secondary" onclick="toggleFilter('${k}')">${k.toUpperCase()}</button>
+            `).join("")}
+        </div>
+        <button class="btn" style="margin-top:20px" onclick="calculate()">DECIDE →</button>
+        <button class="btn small secondary" style="margin-top:10px" onclick="renderHome()">Back</button>
+    </div>`;
 }
 
-function setFilter(f){
-ENGINE_STATE.active_filters.push(f);
-trackEvent("select_filter",{filter:f});
-showToast("Filter Added");
+function toggleFilter(f){
+    if(ENGINE.filters.includes(f)){
+        ENGINE.filters=ENGINE.filters.filter(x=>x!==f);
+    }else{
+        ENGINE.filters.push(f);
+    }
+    track("filter",{filter:f});
+}
+
+function calculate(){
+    const db=PRODUCTS[ENGINE.domain];
+    if(!db || !Object.keys(db).length){
+        toast("No data");
+        return;
+    }
+
+    const scored=Object.values(db).map(p=>{
+        let score=0;
+        ENGINE.filters.forEach(f=>score+=p.attr[f]||0);
+        return {...p,score};
+    });
+
+    scored.sort((a,b)=>b.score-a.score||a.price-b.price);
+    ENGINE.winner=scored[0];
+
+    track("verdict",{product:ENGINE.winner.name});
+    renderResult();
+}
+
+function renderResult(){
+    const w=ENGINE.winner;
+    const amzn=`https://www.amazon.in/s?k=${encodeURIComponent(w.name)}&tag=${AMZN_TAG}`;
+    const yt=`https://www.youtube.com/results?search_query=${encodeURIComponent(w.name+" review")}`;
+
+    document.getElementById("view").innerHTML=`
+    <div class="panel">
+        <h2>${w.name}</h2>
+        <div style="opacity:0.7">₹${w.price}</div>
+        <div style="margin-top:20px">
+            <button class="btn" onclick="window.open('${amzn}','_blank')">Buy ↗</button>
+            <button class="btn secondary" style="margin-top:10px" onclick="window.open('${yt}','_blank')">Review ▶</button>
+            <button class="btn secondary" style="margin-top:10px" onclick="exportPDF()">PDF</button>
+            <button class="btn small secondary" style="margin-top:10px" onclick="renderHome()">Home</button>
+        </div>
+    </div>`;
+}
+
+function exportPDF(){
+    const {jsPDF}=window.jspdf;
+    const doc=new jsPDF();
+    doc.text("DECIDE ENGINE REPORT",20,20);
+    doc.text("Session: "+ENGINE.session,20,30);
+    doc.text("Winner: "+ENGINE.winner.name,20,45);
+    doc.text("Price: ₹"+ENGINE.winner.price,20,55);
+    doc.save("report_"+ENGINE.session+".pdf");
+    track("pdf_export",{product:ENGINE.winner.name});
+}
+
+function toast(msg){
+    const t=document.getElementById("toast");
+    t.innerText=msg;
+    t.classList.add("show");
+    setTimeout(()=>t.classList.remove("show"),2000);
 }
 
 /* =========================
-   SCORING ENGINE
+   INIT SAFE
 ========================= */
 
-function calculateVerdict(){
-const items=DB.filter(x=>x.category===ENGINE_STATE.currentDomain);
-const keys=ENGINE_STATE.active_filters;
-const scored=items.map(p=>{
-let score=0;
-keys.forEach(k=>score+=p[k]||0);
-return {...p,score};
-});
-scored.sort((a,b)=>b.score-a.score||a.price-b.price);
-return scored[0];
+async function init(){
+    await loadProducts();
+    renderHome();
 }
-
-function startHunt(){
-if(!ENGINE_STATE.active_filters.length) return showToast("Select filter");
-const winner=calculateVerdict();
-ENGINE_STATE.winner=winner;
-trackEvent("verdict",{product:winner.name});
-renderWinner(winner);
-}
-
-function renderWinner(w){
-const amzn=`https://www.amazon.in/s?k=${encodeURIComponent(w.name)}&tag=${AMZN_TAG}`;
-const yt=`https://www.youtube.com/results?search_query=${encodeURIComponent(w.name+" review")}`;
-document.getElementById("master-container").innerHTML=`
-<div class="winner">
-<h1>${w.name}</h1>
-<h3>₹${w.price}</h3>
-<br>
-<button class="btn" onclick="window.open('${amzn}','_blank')">Check Price</button>
-<br><br>
-<button class="btn" onclick="window.open('${yt}','_blank')">Watch Review</button>
-<br><br>
-<button class="btn" onclick="generatePDF()">Export PDF</button>
-<br><br>
-<button class="btn" onclick="renderLobby()">Home</button>
-</div>`;
-}
-
-/* =========================
-   PDF
-========================= */
-
-function generatePDF(){
-const w=ENGINE_STATE.winner;
-if(!w) return;
-const {jsPDF}=window.jspdf;
-const doc=new jsPDF();
-doc.text("DECIDE ENGINE REPORT",20,20);
-doc.text("Winner: "+w.name,20,40);
-doc.text("Price: ₹"+w.price,20,50);
-doc.save("report.pdf");
-trackEvent("pdf_export",{product:w.name});
-}
-
-/* =========================
-   TOAST
-========================= */
-
-function showToast(msg){
-const t=document.getElementById("toast");
-t.innerText=msg;
-t.classList.add("show");
-setTimeout(()=>t.classList.remove("show"),2000);
-}
-
-/* =========================
-   INIT
-========================= */
-
-syncDatabase();
-renderLobby();
-
-if("serviceWorker" in navigator){
-navigator.serviceWorker.register("sw.js");
-}
+init();
 
 </script>
 </body>
