@@ -1,57 +1,37 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Decide Engine</title>
-
-  <link rel="manifest" href="/manifest.json" />
-  <link rel="stylesheet" href="/assets/styles.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Decide Engine</title>
+    <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
 
-  <div id="app">Loading...</div>
+    <div class="app">
+        <header>
+            <h1>⚙️ Decide Engine</h1>
+            <div class="actions">
+                <button id="loadPhonesBtn" class="primary">
+                    📱 Load Phones
+                </button>
+                <button id="createJobBtn" class="secondary" disabled>
+                    🎬 Create Video Job
+                </button>
+            </div>
+        </header>
 
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const app = document.getElementById("app");
+        <section class="phones-section">
+            <h2>Available Phones</h2>
+            <div id="phonesList" class="phones-list"></div>
+        </section>
 
-      app.innerHTML = `
-        <div class="container">
-          <h1>DECIDE ENGINE</h1>
+        <section class="jobs-section">
+            <h2>Video Jobs</h2>
+            <div id="jobsList" class="jobs-list"></div>
+        </section>
+    </div>
 
-          <button id="phonesBtn">📱 Load Phones</button>
-          <button id="videoBtn">🎬 Create Video Job</button>
-
-          <pre id="output"></pre>
-        </div>
-      `;
-
-      document.getElementById("phonesBtn").onclick = loadPhones;
-      document.getElementById("videoBtn").onclick = createVideo;
-    });
-
-    async function loadPhones() {
-      const res = await fetch("/api/products?category=smartphones");
-      const data = await res.json();
-      document.getElementById("output").textContent =
-        JSON.stringify(data, null, 2);
-    }
-
-    async function createVideo() {
-      const res = await fetch("/api/video-jobs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          topic: "Test Phone Review"
-        })
-      });
-
-      const data = await res.json();
-      document.getElementById("output").textContent =
-        JSON.stringify(data, null, 2);
-    }
-  </script>
-
+    <script src="app.js"></script>
 </body>
 </html>
