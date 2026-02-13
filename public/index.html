@@ -1416,24 +1416,29 @@ setTimeout(()=>t.classList.remove("show"),2500);
    INIT
 ================================= */
 
-(async function init(){
-// Load order history
-ENGINE_STATE.orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
+async function init(){
+   // Load order history
+   ENGINE_STATE.orderHistory = JSON.parse(localStorage.getItem("order_history") || "[]");
 
-// Try to load from cache first
-const cache=localStorage.getItem("product_cache");
-if(cache){
-const data=JSON.parse(cache);
-loadDataToMemory(data);
-}else{
-loadDataToMemory(SAMPLE_DATA);
+   // Try to load from cache first
+   const cache = localStorage.getItem("product_cache");
+   if(cache){
+      const data = JSON.parse(cache);
+      loadDataToMemory(data);
+   } else {
+      loadDataToMemory(SAMPLE_DATA);
+   }
+
+   renderLobby();
+
+   // Sync in background
+   syncDatabase();
 }
 
-renderLobby();
+document.addEventListener("DOMContentLoaded", function(){
+   init();
+});
 
-// Then sync in background
-syncDatabase();
-})();
 </script>
 
 </body>
