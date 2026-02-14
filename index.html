@@ -6,162 +6,54 @@
 <title>Decide - India's Smart Marketplace</title>
 <meta name="theme-color" content="#ff671f">
 <link rel="manifest" href="manifest-ondc.json">
-
-<!-- Supabase (optional later) -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- jsPDF -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 <style>
-:root{
-  --brand-orange:#ff671f;
-  --border:rgba(255,255,255,0.15);
-  --accent:#00e676;
-  --ondc-blue:#1e88e5;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-}
-
-/* === Fix blue tap highlight / selection glitch === */
+:root{--brand-orange:#ff671f;--border:rgba(255,255,255,0.15);--accent:#00e676;--ondc-blue:#1e88e5;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;--safe-bottom:env(safe-area-inset-bottom,0px)}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;padding:0;min-height:100%;background:#000;color:#fff;font-family:var(--font);-webkit-font-smoothing:antialiased}
 button{font:inherit;-webkit-tap-highlight-color:transparent}
 button:focus{outline:none}
-[role="button"], .card, .filter-btn, .payment-option{ -webkit-tap-highlight-color:transparent; user-select:none; -webkit-user-select:none; }
-
+[role="button"],.card,.filter-btn,.payment-option{-webkit-tap-highlight-color:transparent;user-select:none;-webkit-user-select:none}
 #app{min-height:100vh;display:flex;flex-direction:column;padding:20px;padding-bottom:calc(80px + var(--safe-bottom))}
-
-/* HEADER */
 .header{display:flex;align-items:center;justify-content:space-between;margin-bottom:30px;gap:15px}
-.header-badge{
-  background:rgba(255,103,31,0.1);
-  border:2px solid var(--brand-orange);
-  padding:12px 24px;border-radius:12px;
-  font-size:.85rem;font-weight:800;letter-spacing:1px;
-  color:var(--brand-orange);
-  display:flex;align-items:center;gap:10px;flex:1;
-}
-.status-dot{
-  width:10px;height:10px;background:var(--accent);border-radius:50%;
-  box-shadow:0 0 10px var(--accent);
-  animation:pulse 2s infinite;
-  display:inline-block;
-}
+.header-badge{background:rgba(255,103,31,0.1);border:2px solid var(--brand-orange);padding:12px 24px;border-radius:12px;font-size:.85rem;font-weight:800;letter-spacing:1px;color:var(--brand-orange);display:flex;align-items:center;gap:10px;flex:1}
+.status-dot{width:10px;height:10px;background:var(--accent);border-radius:50%;box-shadow:0 0 10px var(--accent);animation:pulse 2s infinite;display:inline-block}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-
-.btn{
-  background:transparent;border:2px solid rgba(255,255,255,0.3);
-  padding:12px 30px;border-radius:50px;font-size:.9rem;
-  font-weight:800;color:#fff;cursor:pointer;transition:.2s;
-}
+.btn{background:transparent;border:2px solid rgba(255,255,255,0.3);padding:12px 30px;border-radius:50px;font-size:.9rem;font-weight:800;color:#fff;cursor:pointer;transition:.2s}
 .btn:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.5)}
-.btn:focus-visible,.card:focus-visible,.filter-btn:focus-visible,.payment-option:focus-visible{
-  outline:3px solid rgba(255,103,31,.75);outline-offset:3px;
-}
-
-/* TWO COLUMN GRID */
-.two-col-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:20px;
-  margin-bottom:25px;
-}
-
-/* LEFT COLUMN - Main Categories */
-.left-col{
-  display:flex;
-  flex-direction:column;
-  gap:15px;
-}
-
-/* RIGHT COLUMN - Active Cities */
-.right-col{
-  display:flex;
-  flex-direction:column;
-  gap:15px;
-}
-
-.col-header{
-  text-align:center;
-  font-size:.75rem;
-  font-weight:900;
-  letter-spacing:1.5px;
-  color:#888;
-  padding:10px 0;
-  border-bottom:1px solid var(--border);
-  margin-bottom:5px;
-}
-
-/* CARDS */
-.card{
-  background:rgba(20,20,20,0.6);border:1px solid var(--border);
-  border-radius:24px;padding:25px 20px;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:12px;cursor:pointer;transition:.2s;min-height:150px;
-}
+.btn:focus-visible,.card:focus-visible,.filter-btn:focus-visible,.payment-option:focus-visible{outline:3px solid rgba(255,103,31,.75);outline-offset:3px}
+.two-col-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:25px}
+.left-col{display:flex;flex-direction:column;gap:15px}
+.right-col{display:flex;flex-direction:column;gap:15px}
+.col-header{text-align:center;font-size:.75rem;font-weight:900;letter-spacing:1.5px;color:#888;padding:10px 0;border-bottom:1px solid var(--border);margin-bottom:5px}
+.card{background:rgba(20,20,20,0.6);border:1px solid var(--border);border-radius:24px;padding:25px 20px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;cursor:pointer;transition:.2s;min-height:150px}
 .card:hover{background:rgba(40,40,40,0.8);border-color:rgba(255,255,255,0.3);transform:translateY(-4px)}
 .card[aria-disabled="true"]{opacity:.4;cursor:not-allowed;pointer-events:none}
 .icon{font-size:3rem}
 .title{font-size:1rem;font-weight:900;letter-spacing:.5px;text-align:center;margin:0;line-height:1.2}
-.tag{
-  font-size:.7rem;font-weight:800;letter-spacing:1.2px;
-  padding:4px 10px;border-radius:6px;text-align:center;
-}
+.tag{font-size:.7rem;font-weight:800;letter-spacing:1.2px;padding:4px 10px;border-radius:6px;text-align:center}
 .tag-live{color:var(--accent);background:rgba(0,230,118,0.15)}
 .tag-neutral{color:#888;background:rgba(136,136,136,0.15)}
 .tag-soon{color:#FFA726;background:rgba(255,167,38,0.15)}
 .tag-beta{color:#4CAF50;background:rgba(76,175,80,0.15)}
 .tag-city{color:#42A5F5;background:rgba(66,165,245,0.15)}
-
-/* ACTION CARDS (Cart/Track at bottom) */
-.action-grid{
-  display:grid;
-  grid-template-columns:1fr 1fr;
-  gap:15px;
-  margin-top:20px;
-}
-
-/* Buttons */
-.bottom{
-  width:100%;background:transparent;border:2px solid rgba(255,255,255,0.2);
-  padding:18px;border-radius:20px;font-size:1rem;font-weight:900;color:#fff;
-  cursor:pointer;transition:.2s;margin-bottom:20px;
-}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-top:20px}
+.bottom{width:100%;background:transparent;border:2px solid rgba(255,255,255,0.2);padding:18px;border-radius:20px;font-size:1rem;font-weight:900;color:#fff;cursor:pointer;transition:.2s;margin-bottom:20px}
 .bottom:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.4)}
-
-/* Screens */
 .wrap{max-width:700px;margin:0 auto;width:100%}
 .h1{font-size:1.8rem;font-weight:900;margin:0 0 20px;text-align:center;text-transform:uppercase}
 .p{text-align:center;color:#888;margin:0 0 25px}
-
-/* FILTERS */
 .filter-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px;margin-bottom:25px}
-.filter-btn{
-  background:rgba(20,20,20,0.6);border:2px solid var(--border);
-  padding:25px;border-radius:18px;text-align:center;font-weight:900;font-size:1rem;
-  cursor:pointer;transition:.2s;text-transform:uppercase;
-}
+.filter-btn{background:rgba(20,20,20,0.6);border:2px solid var(--border);padding:25px;border-radius:18px;text-align:center;font-weight:900;font-size:1rem;cursor:pointer;transition:.2s;text-transform:uppercase}
 .filter-btn:hover{background:rgba(40,40,40,0.8);border-color:rgba(255,255,255,0.3)}
 .filter-btn.active{background:var(--brand-orange);color:#000;border-color:var(--brand-orange)}
-
-.action{
-  background:var(--brand-orange);color:#000;border:none;padding:18px;border-radius:18px;
-  font-weight:900;font-size:1rem;cursor:pointer;width:100%;margin-bottom:12px;
-  transition:.2s;text-transform:uppercase;
-}
+.action{background:var(--brand-orange);color:#000;border:none;padding:18px;border-radius:18px;font-weight:900;font-size:1rem;cursor:pointer;width:100%;margin-bottom:12px;transition:.2s;text-transform:uppercase}
 .action:hover{background:#ff7d3f;transform:translateY(-2px)}
-.secondary{
-  background:transparent;color:#fff;border:2px solid var(--border);padding:16px;border-radius:18px;
-  font-weight:900;font-size:.95rem;cursor:pointer;width:100%;transition:.2s;text-transform:uppercase;
-}
+.secondary{background:transparent;color:#fff;border:2px solid var(--border);padding:16px;border-radius:18px;font-weight:900;font-size:.95rem;cursor:pointer;width:100%;transition:.2s;text-transform:uppercase}
 .secondary:hover{background:rgba(255,255,255,0.1);border-color:rgba(255,255,255,0.3)}
-
-/* RESULTS / LIST */
 .results{max-width:800px;margin:0 auto;padding:20px 0}
-.result{
-  background:rgba(20,20,20,0.6);border:1px solid var(--border);
-  border-radius:18px;padding:20px;margin-bottom:15px;transition:.2s;
-}
+.result{background:rgba(20,20,20,0.6);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:15px;transition:.2s}
 .result:hover{background:rgba(30,30,30,0.8);border-color:rgba(255,255,255,0.3)}
 .row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .name{font-size:1.2rem;font-weight:900;margin:0 0 5px}
@@ -170,10 +62,7 @@ button:focus{outline:none}
 .rating{color:#FFA726;font-size:.85rem}
 .price{text-align:right}
 .price-main{font-size:1.8rem;font-weight:900;color:var(--brand-orange)}
-.details{
-  display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0;padding:15px;
-  background:rgba(255,255,255,0.03);border-radius:12px;
-}
+.details{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0;padding:15px;background:rgba(255,255,255,0.03);border-radius:12px}
 .label{color:#888;font-size:.85rem}
 .value{font-weight:800;font-size:.9rem}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
@@ -181,812 +70,194 @@ button:focus{outline:none}
 .buy:hover{background:#ff7d3f;transform:translateY(-2px)}
 .add{background:transparent;color:#fff;border:1px solid var(--border);padding:12px;border-radius:12px;font-weight:800;cursor:pointer;transition:.2s}
 .add:hover{background:rgba(255,255,255,0.1)}
-
-/* PAYMENT */
-.payment-option{
-  background:rgba(255,255,255,0.03);border:2px solid var(--border);padding:15px;border-radius:12px;
-  display:flex;align-items:center;gap:15px;cursor:pointer;transition:.2s;
-}
+.payment-option{background:rgba(255,255,255,0.03);border:2px solid var(--border);padding:15px;border-radius:12px;display:flex;align-items:center;gap:15px;cursor:pointer;transition:.2s}
 .payment-option:hover{background:rgba(255,255,255,0.08);border-color:rgba(255,255,255,0.3)}
 .payment-option.selected{border-color:var(--brand-orange);background:rgba(255,103,31,0.1)}
-
-.toast{
-  position:fixed;bottom:calc(40px + var(--safe-bottom));left:50%;transform:translateX(-50%);
-  background:#111;border:1px solid #333;padding:12px 24px;border-radius:30px;
-  font-size:.85rem;opacity:0;transition:opacity .2s;z-index:1000;
-}
+.tracking-status{background:rgba(255,103,31,0.08);border:1px solid var(--border);border-radius:18px;padding:20px;margin-bottom:20px}
+.tracking-timeline{position:relative;padding:20px 0}
+.timeline-item{position:relative;padding-left:50px;padding-bottom:25px}
+.timeline-item:last-child{padding-bottom:0}
+.timeline-dot{position:absolute;left:0;width:30px;height:30px;background:#555;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.timeline-item.active .timeline-dot{background:var(--accent);box-shadow:0 0 15px var(--accent)}
+.timeline-line{position:absolute;left:15px;top:30px;width:2px;height:calc(100% - 30px);background:#333}
+.timeline-item.active .timeline-line{background:var(--accent)}
+.timeline-item:last-child .timeline-line{display:none}
+.timeline-content{font-weight:900;margin-bottom:5px}
+.timeline-time{font-size:0.85rem;color:#888}
+.toast{position:fixed;bottom:calc(40px + var(--safe-bottom));left:50%;transform:translateX(-50%);background:#111;border:1px solid #333;padding:12px 24px;border-radius:30px;font-size:.85rem;opacity:0;transition:opacity .2s;z-index:1000}
 .toast.show{opacity:1}
-
-/* ===== DEMO LABELS ===== */
-.demo-pill{
-  display:inline-flex;align-items:center;gap:6px;
-  padding:4px 10px;border-radius:999px;
-  font-size:.65rem;font-weight:900;letter-spacing:1.2px;
-  background:rgba(255,213,79,0.12);
-  border:1px solid rgba(255,213,79,0.35);
-  color:#FFD54F;
-  text-transform:uppercase;
-  line-height:1;
-}
-
-@media (max-width:600px){
-  .two-col-grid{grid-template-columns:1fr;gap:20px}
-  .card{padding:20px 15px;min-height:130px}
-  .icon{font-size:2.5rem}
-  .title{font-size:.95rem}
-  .details{grid-template-columns:1fr}
-  .actions{grid-template-columns:1fr}
-}
+@media (max-width:600px){.two-col-grid{grid-template-columns:1fr;gap:20px}.card{padding:20px 15px;min-height:130px}.icon{font-size:2.5rem}.title{font-size:.95rem}.details{grid-template-columns:1fr}.actions{grid-template-columns:1fr}}
 </style>
 </head>
-
 <body>
 <div id="app"></div>
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-
 <script>
 (function(){
-  "use strict";
-  
-  function $(id){ return document.getElementById(id); }
-  function esc(s){
-    s = String(s == null ? "" : s);
-    return s
-      .replace(/&/g,"&amp;")
-      .replace(/</g,"&lt;")
-      .replace(/>/g,"&gt;")
-      .replace(/"/g,"&quot;")
-      .replace(/'/g,"&#039;");
-  }
-  function toast(msg){
-    var t = $("toast"); if(!t) return;
-    t.textContent = String(msg || "");
-    t.classList.add("show");
-    clearTimeout(toast._t);
-    toast._t = setTimeout(function(){ t.classList.remove("show"); }, 2200);
-  }
-  
-  function safeId(){
-    try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
-    return "dev-" + Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
-  }
-  
-  var DEVICE_ID = localStorage.getItem("decide_device_id");
-  if(!DEVICE_ID){ DEVICE_ID = safeId(); localStorage.setItem("decide_device_id", DEVICE_ID); }
-  
-  var STATE = {
-    domain: null,
-    filters: [],
-    cart: [],
-    orders: [],
-    session: "SID-" + Math.random().toString(36).slice(2,6).toUpperCase(),
-    activeCity: null,
-    selectedRestaurantId: null
-  };
-  
-  /* ========= DEMO DATA ========= */
-  
-  // E-COMMERCE (Gandhidham MVP)
-  var ECOMMERCE_DATA = [
-    {category:"smartphones",name:"iPhone 15 Pro",price:134900,cam:9,gam:9,bat:7,seller:"Apple Store",rating:4.8,stock:50,delivery:"2 days",warranty:"1 year",city:"Gandhidham"},
-    {category:"smartphones",name:"Samsung S24 Ultra",price:129999,cam:10,gam:9,bat:8,seller:"Samsung",rating:4.9,stock:40,delivery:"3 days",warranty:"1 year",city:"Gandhidham"},
-    {category:"smartphones",name:"OnePlus 12",price:63999,cam:8,gam:9,bat:9,seller:"OnePlus",rating:4.7,stock:110,delivery:"1 day",warranty:"1 year",city:"Gandhidham"},
-    {category:"earbuds",name:"AirPods Pro 2",price:24499,snd:9,anc:10,mic:9,seller:"Apple Store",rating:4.8,stock:150,delivery:"1 day",warranty:"1 year",city:"Gandhidham"},
-    {category:"earbuds",name:"Sony WF-1000XM5",price:23990,snd:10,anc:10,mic:8,seller:"Sony",rating:4.8,stock:90,delivery:"1 day",warranty:"1 year",city:"Gandhidham"},
-    {category:"laptops",name:"MacBook Air M3",price:113900,perf:9,port:7,scr:9,seller:"Apple Store",rating:4.8,stock:55,delivery:"2 days",warranty:"1 year",city:"Gandhidham"},
-    {category:"laptops",name:"Dell XPS 13",price:139990,perf:8,port:6,scr:9,seller:"Dell",rating:4.7,stock:40,delivery:"4 days",warranty:"1 year",city:"Gandhidham"}
-  ];
-  
-  // FOOD (Rajkot MVP)
-  var FOOD_DATA = {
-    restaurants: [
-      {
-        id: "rajkot-thali-001",
-        name: "Unlimited Gujarati Thali",
-        brand: "Family Restaurant",
-        city: "Rajkot",
-        area: "Race Course Road",
-        priceHint: 150,
-        tags: ["veg","family","unlimited"],
-        hours: "11:00 AM - 3:30 PM, 7:00 PM - 10:30 PM",
-        phone: "+91XXXXXXXXXX",
-        whatsapp: "https://wa.me/91XXXXXXXXXX?text=Hi%20I%20want%20to%20order%20from%20Decide",
-        menu: [
-          { id:"thali-150", name:"Unlimited Gujarati Thali", price:150, veg:true, desc:"Traditional unlimited thali", prepMins:20 },
-          { id:"pavbhaji-120", name:"Pav Bhaji", price:120, veg:true, desc:"Butter pav bhaji", prepMins:20 },
-          { id:"chaas-25", name:"Chaas", price:25, veg:true, desc:"Fresh buttermilk", prepMins:5 }
-        ]
-      }
-    ]
-  };
-  
-  /* ========= MEMORY DB ========= */
-  var DB = { smartphones:{}, earbuds:{}, laptops:{} };
-  var RESULTS = [];
-  var payMethod = null;
-  
-  function loadToMemory(arr){
-    DB = { smartphones:{}, earbuds:{}, laptops:{} };
-    (arr || []).forEach(function(p){
-      if(!p || !p.category || !p.name) return;
-      if(!DB[p.category]) DB[p.category] = {};
-      if(!DB[p.category][p.name]) DB[p.category][p.name] = [];
-      DB[p.category][p.name].push({
-        name:p.name,
-        price:Number(p.price)||0,
-        seller:p.seller||"Seller",
-        rating:Number(p.rating)||4.0,
-        stock:Number(p.stock)||0,
-        delivery:p.delivery||"2-5 days",
-        warranty:p.warranty||"6 months",
-        city:p.city||"",
-        attr:{
-          cam:Number(p.cam)||0, gam:Number(p.gam)||0, bat:Number(p.bat)||0,
-          snd:Number(p.snd)||0, anc:Number(p.anc)||0, mic:Number(p.mic)||0,
-          perf:Number(p.perf)||0, port:Number(p.port)||0, scr:Number(p.scr)||0
-        }
-      });
-    });
-  }
-  
-  function loadOrders(){
-    try{
-      var x = JSON.parse(localStorage.getItem("order_history") || "[]");
-      STATE.orders = Array.isArray(x) ? x : [];
-    }catch(e){ STATE.orders = []; }
-  }
-  function saveOrders(){
-    try{ localStorage.setItem("order_history", JSON.stringify(STATE.orders)); }catch(e){}
-  }
-  
-  function money(n){ return "₹" + Number(n||0).toLocaleString("en-IN"); }
-  
-  /* ========= HOME LOBBY ========= */
-  function renderLobby(){
-    var app = $("app");
-    var cartCount = STATE.cart.length;
-  
-    app.innerHTML =
-      '<div class="header">' +
-        '<div class="header-badge">' +
-          'DECIDE INDIA <span class="status-dot" aria-hidden="true"></span>' +
-        '</div>' +
-        '<button class="btn" type="button" data-action="home">HOME</button>' +
-      '</div>' +
+"use strict";
 
-      '<div class="two-col-grid">' +
-        
-        // LEFT COLUMN - Main Categories
-        '<div class="left-col">' +
-          '<div class="col-header">MAIN CATEGORIES</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="module" data-module="ecommerce">' +
-            '<div class="icon">🛍️</div><div class="title">E-COMMERCE</div><div class="tag tag-live">GANDHIDHAM</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="module" data-module="food">' +
-            '<div class="icon">🍽️</div><div class="title">FOOD</div><div class="tag tag-live">RAJKOT</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="module" data-module="education" aria-disabled="true">' +
-            '<div class="icon">📚</div><div class="title">EDUCATION</div><div class="tag tag-soon">GANDHIDHAM SOON</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="module" data-module="insurance" aria-disabled="true">' +
-            '<div class="icon">🛡️</div><div class="title">INSURANCE</div><div class="tag tag-soon">GANDHIDHAM SOON</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="module" data-module="health" aria-disabled="true">' +
-            '<div class="icon">🏥</div><div class="title">HEALTH</div><div class="tag tag-soon">RAJKOT SOON</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="module" data-module="cinema" aria-disabled="true">' +
-            '<div class="icon">🎬</div><div class="title">CINEMA</div><div class="tag tag-soon">KUTCH SOON</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="module" data-module="bingewatch" aria-disabled="true">' +
-            '<div class="icon">📺</div><div class="title">BINGE WATCH</div><div class="tag tag-soon">ALL INDIA SOON</div>' +
-          '</div>' +
-        '</div>' +
-        
-        // RIGHT COLUMN - Active Cities
-        '<div class="right-col">' +
-          '<div class="col-header">ACTIVE MVP CITIES</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="city" data-city="Gandhidham">' +
-            '<div class="icon">🏙️</div><div class="title">GANDHIDHAM</div><div class="tag tag-city">E-COMMERCE LIVE</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="city" data-city="Rajkot">' +
-            '<div class="icon">🏙️</div><div class="title">RAJKOT</div><div class="tag tag-city">FOOD LIVE</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="city" data-city="Kutch" aria-disabled="true">' +
-            '<div class="icon">🏙️</div><div class="title">KUTCH</div><div class="tag tag-soon">COMING SOON</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="city" data-city="Ahmedabad" aria-disabled="true">' +
-            '<div class="icon">🏙️</div><div class="title">AHMEDABAD</div><div class="tag tag-soon">COMING SOON</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="city" data-city="Surat" aria-disabled="true">' +
-            '<div class="icon">🏙️</div><div class="title">SURAT</div><div class="tag tag-soon">COMING SOON</div>' +
-          '</div>' +
-          
-          '<div class="card" role="button" tabindex="0" data-action="city" data-city="All India" aria-disabled="true">' +
-            '<div class="icon">🇮🇳</div><div class="title">ALL INDIA</div><div class="tag tag-soon">EXPANSION PHASE</div>' +
-          '</div>' +
-        '</div>' +
-        
-      '</div>' +
-      
-      // BOTTOM ACTION CARDS
-      '<div class="action-grid">' +
-        '<div class="card" role="button" tabindex="0" data-action="orders">' +
-          '<div class="icon">📦</div><div class="title">MY ORDERS</div><div class="tag tag-beta">TRACK</div>' +
-        '</div>' +
-        '<div class="card" role="button" tabindex="0" data-action="cart" aria-disabled="' + (cartCount? "false":"true") + '">' +
-          '<div class="icon">🛒</div><div class="title">CART</div><div class="tag tag-neutral">' + cartCount + ' ITEMS</div>' +
-        '</div>' +
-      '</div>' +
-      
-      '<div style="text-align:center;margin-top:30px;color:#888;font-size:.85rem">Session: ' + esc(STATE.session) + '</div>';
-  }
-  
-  /* ========= E-COMMERCE MODULE ========= */
-  
-  function renderEcommerce(){
-    STATE.domain = "ecommerce";
-    STATE.activeCity = "Gandhidham";
-    
-    var app = $("app");
-    app.innerHTML =
-      '<div class="wrap">' +
-        '<div class="h1">E-COMMERCE</div>' +
-        '<div class="p">Gandhidham MVP • Choose category</div>' +
-        
-        '<div class="card" role="button" tabindex="0" data-action="category" data-cat="smartphones" style="margin-bottom:15px">' +
-          '<div class="icon">📱</div><div class="title">SMARTPHONES</div><div class="tag tag-live">AVAILABLE</div>' +
-        '</div>' +
-        
-        '<div class="card" role="button" tabindex="0" data-action="category" data-cat="earbuds" style="margin-bottom:15px">' +
-          '<div class="icon">🎧</div><div class="title">AUDIO DEVICES</div><div class="tag tag-live">AVAILABLE</div>' +
-        '</div>' +
-        
-        '<div class="card" role="button" tabindex="0" data-action="category" data-cat="laptops" style="margin-bottom:15px">' +
-          '<div class="icon">💻</div><div class="title">LAPTOPS</div><div class="tag tag-live">AVAILABLE</div>' +
-        '</div>' +
-        
-        '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
-      '</div>';
-  }
-  
-  function renderFilters(cat){
-    STATE.domain = cat;
-    STATE.filters = [];
-  
-    var filters = {
-      smartphones:["cam","gam","bat"],
-      earbuds:["snd","anc","mic"],
-      laptops:["perf","port","scr"]
-    };
-    var labels = {
-      cam:"CAMERA",gam:"GAMING",bat:"BATTERY",
-      snd:"SOUND",anc:"NOISE",mic:"MIC",
-      perf:"POWER",port:"TRAVEL",scr:"SCREEN"
-    };
-  
-    var btns = (filters[cat] || []).map(function(f){
-      return '<div class="filter-btn" role="button" tabindex="0" data-action="toggle" data-filter="' + f + '">' + labels[f] + '</div>';
-    }).join("");
-  
-    $("app").innerHTML =
-      '<div class="wrap">' +
-        '<div class="h1">' + cat.toUpperCase() + '</div>' +
-        '<div class="p">Gandhidham • Pick priorities</div>' +
-        '<div class="filter-grid">' + btns + '</div>' +
-        '<button class="action" type="button" data-action="search">FIND BEST DEALS</button>' +
-        '<button class="secondary" type="button" data-action="ecommerce">← BACK</button>' +
-      '</div>';
-  }
-  
-  function toggleFilter(key, el){
-    var i = STATE.filters.indexOf(key);
-    if(i >= 0){ STATE.filters.splice(i, 1); el.classList.remove("active"); }
-    else { STATE.filters.push(key); el.classList.add("active"); }
-  }
-  
-  function search(){
-    var cat = STATE.domain;
-    var db = DB[cat];
-    if(!db || !Object.keys(db).length){ toast("No items"); return; }
-  
-    var all = [];
-    Object.keys(db).forEach(function(name){
-      (db[name] || []).forEach(function(seller){
-        var score = 0;
-        if(STATE.filters.length){
-          STATE.filters.forEach(function(f){ score += (seller.attr && seller.attr[f]) ? seller.attr[f] : 0; });
-        }
-        all.push({ 
-          type:"ecommerce", 
-          name:seller.name, 
-          price:seller.price, 
-          seller:seller.seller, 
-          rating:seller.rating, 
-          stock:seller.stock, 
-          delivery:seller.delivery, 
-          warranty:seller.warranty, 
-          city:seller.city,
-          score:score 
-        });
-      });
-    });
-  
-    all.sort(function(a,b){
-      if(b.score !== a.score) return b.score - a.score;
-      return a.price - b.price;
-    });
-  
-    RESULTS = all.slice(0,10);
-    renderMarketplace();
-  }
-  
-  function renderMarketplace(){
-    if(!RESULTS.length){ toast("No results"); return; }
-  
-    var list = RESULTS.map(function(p, idx){
-      var discount = Math.floor(Math.random()*20)+5;
-      var original = p.price ? Math.floor(p.price/(1-discount/100)) : p.price;
-      var stockColor = (p.stock > 50) ? "var(--accent)" : "#FFA726";
-  
-      return (
-        '<div class="result">' +
-          '<div class="row">' +
-            '<div>' +
-              '<div class="name">' + esc(p.name) + '</div>' +
-              '<div class="seller">' +
-                '<span class="badge">' + esc(p.seller) + '</span>' +
-                '<span class="rating">⭐ ' + Number(p.rating||0).toFixed(1) + '</span>' +
-                '<span class="badge">' + esc(p.city) + '</span>' +
-              '</div>' +
-            '</div>' +
-            '<div class="price">' +
-              '<div class="price-main">' + money(p.price) + '</div>' +
-              '<div style="font-size:.9rem;color:#888;text-decoration:line-through;margin-top:5px">' + money(original) + '</div>' +
-              '<div style="color:var(--accent);font-size:.85rem;font-weight:800;margin-top:5px">' + discount + '% OFF</div>' +
-            '</div>' +
-          '</div>' +
-  
-          '<div class="details">' +
-            '<div><div class="label">Stock</div><div class="value" style="color:' + stockColor + '">' + Number(p.stock||0) + ' units</div></div>' +
-            '<div><div class="label">Delivery</div><div class="value">' + esc(p.delivery||"") + '</div></div>' +
-            '<div><div class="label">Warranty</div><div class="value">' + esc(p.warranty||"") + '</div></div>' +
-            '<div><div class="label">GST</div><div class="value" style="color:var(--accent)">Included ✓</div></div>' +
-          '</div>' +
-  
-          '<div class="actions">' +
-            '<button class="buy" type="button" data-action="buy" data-idx="' + idx + '">BUY NOW</button>' +
-            '<button class="add" type="button" data-action="add" data-idx="' + idx + '">ADD TO CART</button>' +
-          '</div>' +
-        '</div>'
-      );
-    }).join("");
-  
-    $("app").innerHTML =
-      '<div class="results">' +
-        '<div style="text-align:center;margin-bottom:30px">' +
-          '<h2 style="margin:0;font-size:1.8rem">BEST DEALS • GANDHIDHAM</h2>' +
-          '<p style="color:#888;margin-top:10px">Comparing ' + RESULTS.length + ' options</p>' +
-        '</div>' +
-        list +
-        '<button class="secondary" type="button" data-action="category" data-cat="' + STATE.domain + '" style="margin-top:20px">← REFINE</button>' +
-        '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
-      '</div>';
-  }
-  
-  /* ========= FOOD MODULE ========= */
-  
-  function renderFood(){
-    STATE.domain = "food";
-    STATE.activeCity = "Rajkot";
-    
-    var restaurants = FOOD_DATA.restaurants || [];
-    var cards = restaurants.map(function(r){
-      return (
-        '<div class="result" role="button" tabindex="0" data-action="restaurant" data-rid="' + esc(r.id) + '">' +
-          '<div class="row">' +
-            '<div>' +
-              '<div class="name">' + esc(r.name) + '</div>' +
-              '<div class="seller">' +
-                '<span class="badge">' + esc(r.city) + '</span>' +
-                '<span class="rating">⭐ 4.8</span>' +
-              '</div>' +
-              '<div style="color:#888;margin-top:8px;font-size:.9rem">' + esc(r.brand) + ' • From ' + money(r.priceHint) + '</div>' +
-              '<div style="color:#888;margin-top:6px;font-size:.85rem">' + esc(r.hours) + '</div>' +
-            '</div>' +
-            '<div class="price"><div class="price-main">' + money(r.priceHint) + '</div></div>' +
-          '</div>' +
-        '</div>'
-      );
-    }).join("");
-  
-    $("app").innerHTML =
-      '<div class="wrap">' +
-        '<div class="h1">FOOD DELIVERY</div>' +
-        '<div class="p">Rajkot MVP • Order now</div>' +
-        cards +
-        '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
-      '</div>';
-  }
-  
-  function getRestaurantById(id){
-    var list = FOOD_DATA.restaurants || [];
-    for(var i=0;i<list.length;i++){
-      if(String(list[i].id) === String(id)) return list[i];
+function $(id){return document.getElementById(id)}
+function esc(s){
+  s=String(s==null?"":s);
+  return s.replace(/&/g,"&amp;")
+          .replace(/</g,"&lt;")
+          .replace(/>/g,"&gt;")
+          .replace(/"/g,"&quot;")
+          .replace(/'/g,"&#039;");
+}
+function toast(msg){
+  var t=$("toast"); if(!t) return;
+  t.textContent=msg;
+  t.classList.add("show");
+  setTimeout(()=>t.classList.remove("show"),2200);
+}
+
+/* =========================
+   TEST UPI
+========================= */
+const TEST_UPI = "6351537770@yapl";
+
+/* =========================
+   STATE
+========================= */
+var STATE = {
+  cart: [],
+  orders: []
+};
+
+/* =========================
+   LOAD / SAVE ORDERS
+========================= */
+function loadOrders(){
+  try{
+    var x=JSON.parse(localStorage.getItem("order_history")||"[]");
+    STATE.orders=Array.isArray(x)?x:[];
+  }catch(e){STATE.orders=[]}
+}
+function saveOrders(){
+  localStorage.setItem("order_history",JSON.stringify(STATE.orders));
+}
+
+/* =========================
+   UTR VALIDATION
+========================= */
+function isValidUTR(utr){
+  if(!utr) return false;
+  utr = utr.trim();
+  return /^[0-9]{12}$/.test(utr);
+}
+
+function isDuplicateUTR(utr){
+  for(var i=0;i<STATE.orders.length;i++){
+    if(STATE.orders[i].utr === utr){
+      return true;
     }
-    return null;
   }
-  
-  function renderRestaurant(rid){
-    var r = getRestaurantById(rid);
-    if(!r){ toast("Restaurant not found"); renderFood(); return; }
-    STATE.selectedRestaurantId = r.id;
-  
-    var menu = (r.menu || []).map(function(it){
-      return (
-        '<div class="result">' +
-          '<div class="row">' +
-            '<div>' +
-              '<div class="name">' + esc(it.name) + '</div>' +
-              '<div style="color:#888;font-size:.9rem;margin-top:6px">' + esc(it.desc || "") + '</div>' +
-              '<div style="color:#888;font-size:.85rem;margin-top:6px">Prep: ' + Number(it.prepMins||15) + ' mins • ' + (it.veg ? "🟢 Veg" : "🔴 Non-veg") + '</div>' +
-            '</div>' +
-            '<div class="price">' +
-              '<div class="price-main">' + money(it.price) + '</div>' +
-              '<button class="add" type="button" data-action="addFood" data-item="' + esc(it.id) + '" style="margin-top:10px">ADD</button>' +
-            '</div>' +
-          '</div>' +
-        '</div>'
-      );
-    }).join("");
-  
-    $("app").innerHTML =
-      '<div class="wrap">' +
-        '<div class="h1">' + esc(r.name) + '</div>' +
-        '<div class="p">' + esc(r.city) + ' • ' + esc(r.brand) + '</div>' +
-        '<div class="h1" style="font-size:1.2rem;margin-bottom:12px">MENU</div>' +
-        menu +
-        '<button class="action" type="button" data-action="cart">GO TO CART →</button>' +
-        '<button class="secondary" type="button" data-action="food">← BACK</button>' +
-      '</div>';
+  return false;
+}
+
+/* =========================
+   PAYMENT FLOW
+========================= */
+
+function copyUpi(){
+  navigator.clipboard.writeText(TEST_UPI);
+  toast("UPI ID copied!");
+}
+
+function openUpiApp(amount){
+  var link="upi://pay?pa="+encodeURIComponent(TEST_UPI)
+           +"&pn=Decide"
+           +"&am="+amount
+           +"&cu=INR"
+           +"&tn=Decide Order";
+  window.location.href=link;
+}
+
+function submitUtrScreen(total){
+  $("app").innerHTML=
+  '<div class="wrap">'+
+  '<div class="h1">Submit UTR</div>'+
+  '<div class="p">Total Paid: ₹'+total+'</div>'+
+  '<div class="result" style="padding:25px">'+
+  '<input type="text" id="utrNumber" placeholder="Enter 12-digit UTR" maxlength="12" style="width:100%;padding:15px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.2);border-radius:12px;color:#fff;font-size:1.1rem;text-align:center;letter-spacing:2px;margin-bottom:20px">'+
+  '</div>'+
+  '<button class="action" onclick="confirmUTR('+total+')">CONFIRM UTR</button>'+
+  '</div>';
+}
+
+window.confirmUTR = function(total){
+  loadOrders();
+  var input = $("utrNumber");
+  var utr = input.value.trim();
+
+  if(!isValidUTR(utr)){
+    toast("Invalid UTR. Must be 12 digits.");
+    return;
   }
-  
-  function addFoodItem(itemId){
-    var r = getRestaurantById(STATE.selectedRestaurantId);
-    if(!r) return toast("Restaurant missing");
-    var item = null;
-    for(var i=0;i<(r.menu||[]).length;i++){
-      if(String(r.menu[i].id) === String(itemId)) { item = r.menu[i]; break; }
-    }
-    if(!item) return toast("Item missing");
-  
-    STATE.cart.push({
-      type: "food",
-      restaurantId: r.id,
-      seller: r.name,
-      name: item.name,
-      price: Number(item.price)||0,
-      qty: 1
-    });
-    toast("Added: " + item.name);
+
+  if(isDuplicateUTR(utr)){
+    toast("Duplicate UTR detected!");
+    return;
   }
-  
-  /* ========= CART & CHECKOUT ========= */
-  
-  function add(idx){
-    var p = RESULTS[idx]; if(!p) return;
-    STATE.cart.push({ type:p.type||"ecommerce", name:p.name, seller:p.seller, price:Number(p.price)||0, qty:1 });
-    toast("Added to cart");
-  }
-  
-  function buy(idx){
-    var p = RESULTS[idx]; if(!p) return;
-    STATE.cart = [{ type:p.type||"ecommerce", name:p.name, seller:p.seller, price:Number(p.price)||0, qty:1 }];
-    renderPayment();
-  }
-  
-  function remove(idx){
-    STATE.cart.splice(idx, 1);
-    if(!STATE.cart.length){ toast("Cart empty"); renderLobby(); return; }
-    toast("Removed");
-    renderCart();
-  }
-  
-  function renderCart(){
-    if(!STATE.cart.length){ toast("Cart is empty"); renderLobby(); return; }
-  
-    var subtotal = STATE.cart.reduce(function(s,p){ return s + (Number(p.price)||0) * (Number(p.qty)||1); }, 0);
-    var taxRate = (STATE.cart[0] && STATE.cart[0].type === "food") ? 0.05 : 0.18;
-    var gst = Math.floor(subtotal * taxRate);
-    var total = subtotal + gst;
-  
-    var items = STATE.cart.map(function(it, idx){
-      return (
-        '<div style="display:flex;justify-content:space-between;gap:10px;padding:15px;background:rgba(255,255,255,0.03);border-radius:12px;margin-bottom:10px">' +
-          '<div>' +
-            '<div style="font-weight:900">' + esc(it.name) + '</div>' +
-            '<div style="font-size:0.85rem;color:#888">' + esc(it.seller || "") + '</div>' +
-          '</div>' +
-          '<div style="text-align:right;min-width:120px">' +
-            '<div style="font-weight:900;color:var(--brand-orange)">' + money(it.price) + '</div>' +
-            '<button type="button" data-action="remove" data-idx="' + idx + '" style="background:transparent;border:none;color:#ff4444;cursor:pointer;font-size:0.8rem;margin-top:5px">Remove</button>' +
-          '</div>' +
-        '</div>'
-      );
-    }).join("");
-  
-    $("app").innerHTML =
-      '<div class="wrap">' +
-        '<div class="h1">CART</div>' +
-        '<div class="result" style="margin-bottom:20px">' +
-          '<div style="font-weight:900;margin-bottom:10px">Items (' + STATE.cart.length + ')</div>' +
-          items +
-        '</div>' +
-        '<div class="result">' +
-          '<div class="label">Subtotal</div><div class="value">' + money(subtotal) + '</div>' +
-          '<div style="height:8px"></div>' +
-          '<div class="label">Tax (' + (taxRate*100) + '%)</div><div class="value">' + money(gst) + '</div>' +
-          '<div style="height:12px;border-top:1px solid var(--border);margin-top:12px;padding-top:12px"></div>' +
-          '<div class="value" style="color:var(--brand-orange);font-size:1.2rem">Total ' + money(total) + '</div>' +
-        '</div>' +
-        '<button class="action" type="button" data-action="pay">PROCEED TO PAY</button>' +
-        '<button class="secondary" type="button" data-action="home">← HOME</button>' +
-      '</div>';
-  }
-  
-  function renderPayment(){
-    if(!STATE.cart.length){ toast("Cart is empty"); renderLobby(); return; }
-    payMethod = null;
-  
-    var subtotal = STATE.cart.reduce(function(s,p){ return s + (Number(p.price)||0) * (Number(p.qty)||1); }, 0);
-    var taxRate = (STATE.cart[0] && STATE.cart[0].type === "food") ? 0.05 : 0.18;
-    var gst = Math.floor(subtotal * taxRate);
-    var total = subtotal + gst;
-  
-    $("app").innerHTML =
-      '<div class="wrap">' +
-        '<div class="h1">PAYMENT</div>' +
-        '<div class="p">Total: ' + money(total) + '</div>' +
-        '<div class="result" style="margin-bottom:20px">' +
-          '<div style="font-weight:900;margin-bottom:12px">Choose Payment</div>' +
-  
-          '<div class="payment-option" role="button" tabindex="0" data-action="pm" data-method="upi">' +
-            '<div style="font-size:2rem">📱</div><div><div style="font-weight:900">UPI</div><div style="color:#888;font-size:.85rem">GPay / PhonePe / Paytm</div></div>' +
-          '</div>' +
-  
-          '<div style="height:10px"></div>' +
-  
-          '<div class="payment-option" role="button" tabindex="0" data-action="pm" data-method="card">' +
-            '<div style="font-size:2rem">💳</div><div><div style="font-weight:900">Card</div><div style="color:#888;font-size:.85rem">Visa / Mastercard / RuPay</div></div>' +
-          '</div>' +
-  
-          '<div style="height:10px"></div>' +
-  
-          '<div class="payment-option" role="button" tabindex="0" data-action="pm" data-method="cod">' +
-            '<div style="font-size:2rem">💵</div><div><div style="font-weight:900">Cash on Delivery</div><div style="color:#888;font-size:.85rem">Pay when you receive</div></div>' +
-          '</div>' +
-        '</div>' +
-  
-        '<button class="action" type="button" data-action="place">PLACE ORDER</button>' +
-        '<button class="secondary" type="button" data-action="cart">← BACK</button>' +
-      '</div>';
-  }
-  
-  function place(){
-    if(!payMethod){ toast("Select payment method"); return; }
-  
-    var subtotal = STATE.cart.reduce(function(s,p){ return s + (Number(p.price)||0) * (Number(p.qty)||1); }, 0);
-    var taxRate = (STATE.cart[0] && STATE.cart[0].type === "food") ? 0.05 : 0.18;
-    var gst = Math.floor(subtotal * taxRate);
-    var total = subtotal + gst;
-  
-    var id = "ORD-" + Math.random().toString(36).slice(2,10).toUpperCase();
-    var order = {
-      id:id,
-      items:STATE.cart.slice(),
-      subtotal:subtotal,
-      tax:gst,
-      total:total,
-      payment:payMethod,
-      status:"confirmed",
-      timestamp:new Date().toISOString()
-    };
-  
-    loadOrders();
-    STATE.orders.push(order);
-    saveOrders();
-  
-    var first = STATE.cart[0];
-    if(first && first.type === "food"){
-      var r = getRestaurantById(first.restaurantId);
-      if(r && r.whatsapp){
-        setTimeout(function(){ try{ window.open(r.whatsapp, "_blank"); }catch(e){} }, 200);
-      }
-    }
-  
-    STATE.cart = [];
-    payMethod = null;
-  
-    $("app").innerHTML =
-      '<div class="wrap" style="text-align:center;margin-top:40px">' +
-        '<div style="font-size:5rem;margin-bottom:20px">✅</div>' +
-        '<div class="h1" style="color:var(--accent)">ORDER PLACED</div>' +
-        '<div class="p">Order ID: ' + esc(id) + '</div>' +
-        '<button class="action" type="button" data-action="track" data-order="' + esc(id) + '">TRACK ORDER</button>' +
-        '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
-      '</div>';
-    toast("Order placed successfully!");
-  }
-  
-  /* ========= ORDERS & TRACKING ========= */
-  
-  function renderOrders(){
-    loadOrders();
-    if(!STATE.orders.length){ toast("No orders"); renderLobby(); return; }
-  
-    var list = STATE.orders.slice().reverse().map(function(o){
-      return (
-        '<div class="result" role="button" tabindex="0" data-action="track" data-order="' + esc(o.id) + '" style="cursor:pointer">' +
-          '<div class="row">' +
-            '<div><div style="font-weight:900;font-size:1.1rem">' + esc(o.id) + '</div><div style="color:#888;font-size:.85rem;margin-top:5px">' +
-              new Date(o.timestamp).toLocaleDateString("en-IN") +
-            '</div></div>' +
-            '<div style="text-align:right">' +
-              '<div style="font-weight:900;color:var(--brand-orange)">' + money(o.total||0) + '</div>' +
-              '<div style="color:var(--accent);font-size:.85rem;margin-top:5px">' + esc(String(o.status||"").toUpperCase()) + '</div>' +
-            '</div>' +
-          '</div>' +
-        '</div>'
-      );
-    }).join("");
-  
-    $("app").innerHTML =
-      '<div class="wrap">' +
-        '<div class="h1">MY ORDERS</div>' +
-        list +
-        '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
-      '</div>';
-  }
-  
-  function renderTracking(orderId){
-    $("app").innerHTML =
-      '<div class="wrap">' +
-        '<div class="h1">ORDER TRACKING</div>' +
-        '<div class="p">' + esc(orderId) + '</div>' +
-        '<div class="result">' +
-          '<div style="font-weight:900">✓ Order Confirmed</div><div style="color:#888;margin-top:6px">Today</div>' +
-          '<div style="height:12px"></div><div style="font-weight:900">✓ Payment Verified</div><div style="color:#888;margin-top:6px">Today</div>' +
-          '<div style="height:12px"></div><div style="font-weight:900">⏳ Preparing</div><div style="color:#888;margin-top:6px">In Progress</div>' +
-          '<div style="height:12px"></div><div style="font-weight:900">📦 Out for Delivery</div><div style="color:#888;margin-top:6px">Soon</div>' +
-        '</div>' +
-        '<button class="secondary" type="button" data-action="orders" style="margin-top:10px">← BACK TO ORDERS</button>' +
-        '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
-      '</div>';
-  }
-  
-  /* ========= CITY VIEW ========= */
-  
-  function renderCity(city){
-    var modules = [];
-    
-    if(city === "Gandhidham"){
-      modules.push({name:"E-Commerce", icon:"🛍️", action:"ecommerce", status:"LIVE"});
-      modules.push({name:"Education", icon:"📚", action:"", status:"COMING SOON", disabled:true});
-      modules.push({name:"Insurance", icon:"🛡️", action:"", status:"COMING SOON", disabled:true});
-    }
-    else if(city === "Rajkot"){
-      modules.push({name:"Food", icon:"🍽️", action:"food", status:"LIVE"});
-      modules.push({name:"Health", icon:"🏥", action:"", status:"COMING SOON", disabled:true});
-    }
-    else{
-      toast("City coming soon"); renderLobby(); return;
-    }
-    
-    var cards = modules.map(function(m){
-      return (
-        '<div class="card" role="button" tabindex="0" data-action="' + (m.action||'disabled') + '" aria-disabled="' + (m.disabled?"true":"false") + '" style="margin-bottom:15px">' +
-          '<div class="icon">' + m.icon + '</div>' +
-          '<div class="title">' + m.name + '</div>' +
-          '<div class="tag ' + (m.disabled?"tag-soon":"tag-live") + '">' + m.status + '</div>' +
-        '</div>'
-      );
-    }).join("");
-    
-    $("app").innerHTML =
-      '<div class="wrap">' +
-        '<div class="h1">' + esc(city) + '</div>' +
-        '<div class="p">Available modules</div>' +
-        cards +
-        '<button class="secondary" type="button" data-action="home">← HOME</button>' +
-      '</div>';
-  }
-  
-  /* ========= EVENT HANDLERS ========= */
-  
-  function handle(el){
-    var action = el.getAttribute("data-action");
-    if(!action || action === "disabled") return;
-    if(el.getAttribute("aria-disabled") === "true") return;
-  
-    if(action === "home"){ renderLobby(); return; }
-    
-    if(action === "module"){
-      var mod = el.getAttribute("data-module");
-      if(mod === "ecommerce"){ renderEcommerce(); return; }
-      if(mod === "food"){ renderFood(); return; }
-      toast("Module coming soon");
-      return;
-    }
-    
-    if(action === "city"){ renderCity(el.getAttribute("data-city")); return; }
-    
-    if(action === "ecommerce"){ renderEcommerce(); return; }
-    if(action === "category"){ renderFilters(el.getAttribute("data-cat")); return; }
-    if(action === "toggle"){ toggleFilter(el.getAttribute("data-filter"), el); return; }
-    if(action === "search"){ search(); return; }
-    
-    if(action === "food"){ renderFood(); return; }
-    if(action === "restaurant"){ renderRestaurant(el.getAttribute("data-rid")); return; }
-    if(action === "addFood"){ addFoodItem(el.getAttribute("data-item")); return; }
-    
-    if(action === "add"){ add(Number(el.getAttribute("data-idx"))); return; }
-    if(action === "buy"){ buy(Number(el.getAttribute("data-idx"))); return; }
-    
-    if(action === "cart"){ renderCart(); return; }
-    if(action === "remove"){ remove(Number(el.getAttribute("data-idx"))); return; }
-    
-    if(action === "pay"){ renderPayment(); return; }
-    if(action === "pm"){
-      var method = el.getAttribute("data-method");
-      var opts = document.querySelectorAll(".payment-option");
-      for(var i=0;i<opts.length;i++) opts[i].classList.remove("selected");
-      el.classList.add("selected");
-      payMethod = method;
-      return;
-    }
-    if(action === "place"){ place(); return; }
-    
-    if(action === "orders"){ renderOrders(); return; }
-    if(action === "track"){ renderTracking(el.getAttribute("data-order")); return; }
-  }
-  
-  document.addEventListener("click", function(e){
-    var el = e.target.closest("[data-action]");
-    if(el) handle(el);
-  });
-  
-  document.addEventListener("keydown", function(e){
-    if(e.key !== "Enter" && e.key !== " ") return;
-    var el = e.target.closest("[data-action][role='button']");
-    if(!el) return;
-    e.preventDefault();
-    handle(el);
-  });
-  
-  function init(){
-    loadOrders();
-    loadToMemory(ECOMMERCE_DATA);
-    renderLobby();
-  }
-  
-  if(document.readyState === "loading"){
-    document.addEventListener("DOMContentLoaded", init, {once:true});
-    setTimeout(function(){ try{ if(!$("app").innerHTML.trim()) init(); }catch(e){} }, 1200);
-  }else{
-    init();
-  }
-  
+
+  var id="DEC-"+Math.random().toString(36).slice(2,6).toUpperCase();
+
+  var order={
+    id:id,
+    total:total,
+    utr:utr,
+    status:"utr_submitted",
+    timestamp:new Date().toISOString()
+  };
+
+  STATE.orders.push(order);
+  saveOrders();
+
+  $("app").innerHTML=
+  '<div class="wrap" style="text-align:center;margin-top:40px">'+
+  '<div style="font-size:5rem;margin-bottom:20px">⏳</div>'+
+  '<div class="h1">UTR SUBMITTED</div>'+
+  '<div class="p">Order ID: '+esc(id)+'</div>'+
+  '<div class="p">Awaiting seller confirmation</div>'+
+  '</div>';
+
+  toast("UTR submitted securely!");
+}
+
+/* =========================
+   DEMO ORDER SCREEN
+========================= */
+
+window.startDemoPayment = function(){
+  var total = 150; // example
+  $("app").innerHTML=
+  '<div class="wrap">'+
+  '<div class="h1">Pay ₹'+total+'</div>'+
+  '<div class="result" style="text-align:center;padding:30px">'+
+  '<div style="font-size:1rem;margin-bottom:10px">UPI ID</div>'+
+  '<div style="font-weight:900;margin-bottom:20px">'+TEST_UPI+'</div>'+
+  '<button class="secondary" onclick="copyUpi()">COPY UPI</button>'+
+  '<button class="action" style="margin-top:15px" onclick="openUpiApp('+total+')">OPEN UPI APP</button>'+
+  '<button class="action" style="margin-top:15px;background:#00e676" onclick="submitUtrScreen('+total+')">I HAVE PAID</button>'+
+  '</div>'+
+  '</div>';
+}
+
+/* =========================
+   INIT
+========================= */
+function init(){
+  loadOrders();
+  $("app").innerHTML=
+  '<div class="wrap">'+
+  '<div class="h1">Decide Payment Test</div>'+
+  '<button class="action" onclick="startDemoPayment()">START TEST ORDER</button>'+
+  '</div>';
+}
+
+document.addEventListener("DOMContentLoaded",init);
+
 })();
 </script>
 </body>
