@@ -11,13 +11,11 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 <link rel="icon" type="image/x-icon" href="/favicon.ico" />
 
-<!-- MANIFEST (use the one that exists in your repo; your screenshot shows manifest.json) -->
+<!-- MANIFEST -->
 <link rel="manifest" href="/manifest.json" />
 
-<!-- Supabase (optional - will fallback to localStorage if not configured) -->
+<!-- Supabase (client) -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<!-- jsPDF (optional later) -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
 :root{
@@ -251,25 +249,52 @@ textarea{min-height:120px;resize:vertical}
   "use strict";
 
   // ======================
-  // SUPABASE CONFIG
+  // SUPABASE CONFIG (INSERTED)
   // ======================
-  // Leave as-is for DEMO (localStorage fallback).
-  // When ready, replace with real values.
-  const SUPABASE_URL = "YOUR_SUPABASE_URL";
-  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+  const SUPABASE_URL = "https://zdarsygrpqbbcafrqcjt.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkYXJzeWdycHFiYmNhZnJxY2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5ODczMTUsImV4cCI6MjA4NjU2MzMxNX0.ut97BRi9_UFkeZuG_6Ue4mXdAAmtH6MFFdi2vUgHiW4";
 
   let supabase = null;
 
   function initSupabase(){
     try{
       if(window.supabase && window.supabase.createClient){
-        if(!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
-        if(String(SUPABASE_URL).includes("YOUR_SUPABASE")) return null;
-        if(String(SUPABASE_ANON_KEY).includes("YOUR_SUPABASE")) return null;
         return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
       }
     }catch(e){}
     return null;
+  }
+
+  // ======================
+  // "DON'T REVEAL BACKEND LOGIC"
+  // Frontend only calls Edge Functions (no table names / DB logic here).
+  // Create functions in Supabase: feedback, seller-interest, waitlist
+  // ======================
+  async function apiPost(fnName, payload){
+    // Edge Function URL:
+    // https://<project>.supabase.co/functions/v1/<fnName>
+    const url = SUPABASE_URL.replace(/\/+$/,"") + "/functions/v1/" + encodeURIComponent(fnName);
+
+    const res = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "apikey": SUPABASE_ANON_KEY,
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify(payload || {})
+    });
+
+    // Edge Functions may return non-JSON sometimes; handle both
+    const text = await res.text();
+    let data = null;
+    try{ data = text ? JSON.parse(text) : null; }catch(e){ data = { raw: text }; }
+
+    if(!res.ok){
+      const msg = (data && (data.error || data.message)) ? (data.error || data.message) : ("Request failed ("+res.status+")");
+      throw new Error(msg);
+    }
+    return data;
   }
 
   // ---------- helpers ----------
@@ -326,7 +351,6 @@ textarea{min-height:120px;resize:vertical}
         city: "Rajkot",
         area: "Race Course Road",
         priceHint: 150,
-        // ✅ CHANGE THIS LINE for real UPI ID later
         upiId: "6351537770@yapl",
         whatsapp: "https://wa.me/91XXXXXXXXXX",
         hours: "11:00 AM - 3:30 PM, 7:00 PM - 10:30 PM",
@@ -399,31 +423,8 @@ textarea{min-height:120px;resize:vertical}
   }
 
   // ======================
-  // SUPABASE: Safe wrappers (fallback to local)
+  // Safe wrappers (Edge Functions w/ local fallback)
   // ======================
-  async function submitFeedbackSupabase(title, message){
-    if(!supabase){
-      saveFeedbackLocal(title, message);
-      toast("Saved locally (demo)");
-      return true;
-    }
-    try{
-      const { error } = await supabase.from("feedback").insert([{
-        title: title || "Feedback",
-        message: message,
-        device_id: DEVICE_ID
-      }]);
-      if(error) throw error;
-      toast("✅ Feedback saved!");
-      return true;
-    }catch(err){
-      console.error("Feedback error:", err);
-      saveFeedbackLocal(title, message);
-      toast("Saved locally (demo)");
-      return true;
-    }
-  }
-
   function saveFeedbackLocal(title, message){
     try{
       var arr = JSON.parse(localStorage.getItem("feedback_items") || "[]");
@@ -433,31 +434,16 @@ textarea{min-height:120px;resize:vertical}
     }catch(e){}
   }
 
-  async function submitSellerInterestSupabase(type, businessName, city, phone, idea){
-    var payload = {
-      category: type,
-      business_name: businessName,
-      city: city,
-      phone: phone,
-      idea: idea || null,
-      device_id: DEVICE_ID
-    };
-
-    if(!supabase){
-      saveSellerInterestLocal(type, businessName, city, phone, idea);
-      toast("Submitted (local demo)");
-      return true;
-    }
-
+  async function submitFeedback(title, message){
+    // Uses Edge Function: feedback
     try{
-      const { error } = await supabase.from("seller_interest").insert([payload]);
-      if(error) throw error;
-      toast("✅ Submitted!");
+      await apiPost("feedback", { title:title||"Feedback", message:message, device_id: DEVICE_ID });
+      toast("✅ Feedback saved!");
       return true;
     }catch(err){
-      console.error("Seller interest error:", err);
-      saveSellerInterestLocal(type, businessName, city, phone, idea);
-      toast("Submitted (local demo)");
+      console.warn("feedback fn failed, local fallback:", err);
+      saveFeedbackLocal(title, message);
+      toast("Saved locally (demo)");
       return true;
     }
   }
@@ -471,42 +457,18 @@ textarea{min-height:120px;resize:vertical}
     }catch(e){}
   }
 
-  async function joinWaitlistSupabase(email, phone, city, interest){
-    if(!supabase){
-      saveWaitlistLocal(email, phone, city, interest);
-      toast("Saved locally (demo)");
-      return true;
-    }
-
+  async function submitSellerInterest(type, businessName, city, phone, idea){
+    // Uses Edge Function: seller-interest
     try{
-      // soft duplicate check
-      const { data: exists } = await supabase
-        .from("waitlist")
-        .select("id")
-        .ilike("email", email)
-        .maybeSingle();
-
-      if(exists && exists.id){
-        toast("Already registered!");
-        return false;
-      }
-
-      const { error } = await supabase.from("waitlist").insert([{
-        email: email,
-        phone: phone || null,
-        city: city || null,
-        interest: interest || null,
-        source: "website",
-        device_id: DEVICE_ID
-      }]);
-
-      if(error) throw error;
-      toast("✅ Added to waitlist!");
+      await apiPost("seller-interest", {
+        category:type, business_name:businessName, city:city, phone:phone, idea:idea||null, device_id:DEVICE_ID
+      });
+      toast("✅ Submitted!");
       return true;
     }catch(err){
-      console.error("Waitlist error:", err);
-      saveWaitlistLocal(email, phone, city, interest);
-      toast("Saved locally (demo)");
+      console.warn("seller-interest fn failed, local fallback:", err);
+      saveSellerInterestLocal(type, businessName, city, phone, idea);
+      toast("Submitted (local demo)");
       return true;
     }
   }
@@ -520,15 +482,39 @@ textarea{min-height:120px;resize:vertical}
     }catch(e){}
   }
 
-  // ======================
-  // LANDING (fixed: no inline onclick)
-  // ======================
-  function isVisited(){
-    return localStorage.getItem("decide_visited") === "true";
+  async function joinWaitlist(email, phone, city, interest){
+    // Uses Edge Function: waitlist
+    try{
+      const out = await apiPost("waitlist", {
+        email: email,
+        phone: phone || null,
+        city: city || null,
+        interest: interest || null,
+        source: "website",
+        device_id: DEVICE_ID
+      });
+
+      // if your function returns {already:true}
+      if(out && out.already){
+        toast("Already registered!");
+        return false;
+      }
+
+      toast("✅ Added to waitlist!");
+      return true;
+    }catch(err){
+      console.warn("waitlist fn failed, local fallback:", err);
+      saveWaitlistLocal(email, phone, city, interest);
+      toast("Saved locally (demo)");
+      return true;
+    }
   }
-  function markVisited(){
-    localStorage.setItem("decide_visited","true");
-  }
+
+  // ======================
+  // LANDING (no inline onclick)
+  // ======================
+  function isVisited(){ return localStorage.getItem("decide_visited") === "true"; }
+  function markVisited(){ localStorage.setItem("decide_visited","true"); }
 
   function renderLanding(){
     stopLiveTracking();
@@ -589,19 +575,10 @@ textarea{min-height:120px;resize:vertical}
     var email = (($("wl_email")||{}).value || "").trim();
     var city = (($("wl_city")||{}).value || "").trim();
     var interest = (($("wl_interest")||{}).value || "").trim();
-
-    if(!email || email.indexOf("@") < 1){
-      toast("Enter valid email");
-      return;
-    }
-
-    joinWaitlistSupabase(email, null, city, interest || "landing")
-      .then(function(ok){
-        if(ok){
-          markVisited();
-          setTimeout(function(){ renderLobby(); }, 700);
-        }
-      });
+    if(!email || email.indexOf("@") < 1){ toast("Enter valid email"); return; }
+    joinWaitlist(email, null, city, interest || "landing").then(function(ok){
+      if(ok){ markVisited(); setTimeout(function(){ renderLobby(); }, 500); }
+    });
   }
 
   // ---------- lobby ----------
@@ -616,38 +593,30 @@ textarea{min-height:120px;resize:vertical}
         '<button class="btn" type="button" data-action="home">HOME</button>' +
       '</div>' +
 
-      '<div class="demo-note">⚠ <b>Demo build</b> — Payments & confirmations are for testing UX. Data saved locally (unless Supabase connected).</div>' +
+      '<div class="demo-note">⚠ <b>Demo build</b> — Payments & confirmations are for testing UX. Data saved locally (unless Edge Functions are live).</div>' +
 
       '<div class="two-col-grid">' +
-
         '<div class="left-col">' +
           '<div class="col-header">MAIN CATEGORIES</div>' +
-
           '<div class="card" role="button" tabindex="0" data-action="seller">' +
             '<div class="icon">🏪</div><div class="title">BECOME A SELLER</div>' +
             '<div class="tag" style="background:var(--brand-orange);color:#000">START</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" data-action="module" data-module="ecommerce">' +
             '<div class="icon">🛍️</div><div class="title">E-COMMERCE</div><div class="tag tag-live">GANDHIDHAM</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" data-action="module" data-module="food">' +
             '<div class="icon">🍽️</div><div class="title">FOOD</div><div class="tag tag-live">RAJKOT • UPI</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" aria-disabled="true">' +
             '<div class="icon">👕</div><div class="title">FASHION</div><div class="tag tag-soon">DISABLED</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" aria-disabled="true">' +
             '<div class="icon">🛒</div><div class="title">GROCERIES</div><div class="tag tag-soon">DISABLED</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" aria-disabled="true">' +
             '<div class="icon">🕶️</div><div class="title">ACCESSORIES</div><div class="tag tag-soon">DISABLED</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" data-action="feedback">' +
             '<div class="icon">💬</div><div class="title">FEEDBACK CENTER</div><div class="tag tag-beta">OPEN</div>' +
           '</div>' +
@@ -655,28 +624,22 @@ textarea{min-height:120px;resize:vertical}
 
         '<div class="right-col">' +
           '<div class="col-header">ACTIVE MVP CITIES</div>' +
-
           '<div class="card" role="button" tabindex="0" data-action="city" data-city="Gandhidham">' +
             '<div class="icon">🏙️</div><div class="title">GANDHIDHAM</div><div class="tag tag-city">E-COM LIVE</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" data-action="city" data-city="Rajkot">' +
             '<div class="icon">🏙️</div><div class="title">RAJKOT</div><div class="tag tag-city">FOOD LIVE</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" aria-disabled="true">' +
             '<div class="icon">🏙️</div><div class="title">AHMEDABAD</div><div class="tag tag-soon">SOON</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" aria-disabled="true">' +
             '<div class="icon">🏙️</div><div class="title">SURAT</div><div class="tag tag-soon">SOON</div>' +
           '</div>' +
-
           '<div class="card" role="button" tabindex="0" aria-disabled="true">' +
             '<div class="icon">🇮🇳</div><div class="title">ALL INDIA</div><div class="tag tag-soon">PHASE 2</div>' +
           '</div>' +
         '</div>' +
-
       '</div>' +
 
       '<div class="action-grid">' +
@@ -697,16 +660,14 @@ textarea{min-height:120px;resize:vertical}
       '</div>';
   }
 
-  // ---------- seller onboarding CTA ----------
+  // ---------- seller ----------
   function renderSellerCTA(){
     stopLiveTracking();
     $("app").innerHTML =
       '<div class="wrap">' +
         '<div class="h1">Join Decide</div>' +
         '<div class="p">A clean, local-first way to get customers — without commission.</div>' +
-
-        '<div class="demo-note"><b>DEMO:</b> Seller interest is saved (Supabase if connected, otherwise local).</div>' +
-
+        '<div class="demo-note"><b>DEMO:</b> Saved via Edge Function if available, otherwise local.</div>' +
         '<div class="payment-box">' +
           '<div style="font-weight:900;font-size:1.1rem;margin-bottom:10px">Why join Decide?</div>' +
           '<div style="color:#bbb;line-height:1.7">' +
@@ -716,7 +677,6 @@ textarea{min-height:120px;resize:vertical}
             '• <b>No algorithm suppression</b> (transparent listing)<br />' +
           '</div>' +
         '</div>' +
-
         '<div class="payment-box">' +
           '<div style="font-weight:900;margin-bottom:10px">I want to join as</div>' +
           '<div class="actions">' +
@@ -726,7 +686,6 @@ textarea{min-height:120px;resize:vertical}
           '<div style="height:10px"></div>' +
           '<button class="secondary" type="button" data-action="sellerForm" data-type="Services">🧰 Services</button>' +
         '</div>' +
-
         '<button class="secondary" type="button" data-action="home">← HOME</button>' +
       '</div>';
   }
@@ -737,50 +696,38 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">Seller Interest</div>' +
         '<div class="p">Fast onboarding. You’ll be manually verified first.</div>' +
-
         '<div class="payment-box">' +
           '<div class="label">Category</div>' +
           '<div class="value" style="margin:6px 0 12px">' + esc(type) + '</div>' +
-
           '<div class="label">Business Name</div>' +
           '<input id="s_bname" placeholder="e.g. Rajkot Thali House" />' +
           '<div style="height:10px"></div>' +
-
           '<div class="label">City</div>' +
           '<input id="s_city" placeholder="e.g. Rajkot" />' +
           '<div style="height:10px"></div>' +
-
           '<div class="label">Phone (WhatsApp)</div>' +
           '<input id="s_phone" placeholder="e.g. 9XXXXXXXXX" />' +
           '<div style="height:10px"></div>' +
-
           '<div class="label">Your idea (optional)</div>' +
           '<textarea id="s_idea" placeholder="Tell us what you want Decide to build for you..."></textarea>' +
         '</div>' +
-
         '<button class="action" type="button" data-action="sellerSubmit" data-type="' + esc(type) + '">SUBMIT INTEREST</button>' +
         '<button class="secondary" type="button" data-action="seller">← BACK</button>' +
       '</div>';
   }
 
   function sellerSubmit(type){
-    var b = ($("s_bname")||{}).value || "";
-    var c = ($("s_city")||{}).value || "";
-    var p = ($("s_phone")||{}).value || "";
-    var idea = ($("s_idea")||{}).value || "";
-
-    b = b.trim(); c = c.trim(); p = p.trim();
-
+    var b = (($("s_bname")||{}).value || "").trim();
+    var c = (($("s_city")||{}).value || "").trim();
+    var p = (($("s_phone")||{}).value || "").trim();
+    var idea = (($("s_idea")||{}).value || "").trim();
     if(b.length < 2){ toast("Enter business name"); return; }
     if(c.length < 2){ toast("Enter city"); return; }
     if(p.length < 8){ toast("Enter valid phone"); return; }
-
-    submitSellerInterestSupabase(type, b, c, p, idea.trim()).then(function(){
-      renderLobby();
-    });
+    submitSellerInterest(type, b, c, p, idea).then(function(){ renderLobby(); });
   }
 
-  // ---------- feedback center ----------
+  // ---------- feedback ----------
   function renderFeedbackCenter(){
     stopLiveTracking();
     var list = [];
@@ -803,9 +750,7 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">Feedback Center</div>' +
         '<div class="p">Tell your ideas. This builds real UX connection.</div>' +
-
-        '<div class="demo-note"><b>DEMO:</b> Feedback saves to Supabase if configured, otherwise local.</div>' +
-
+        '<div class="demo-note"><b>DEMO:</b> Uses Edge Function if available, otherwise local.</div>' +
         '<div class="payment-box">' +
           '<div class="label">Title</div>' +
           '<input id="fb_title" placeholder="e.g. Add seller rating, Add swipe mode..." />' +
@@ -813,10 +758,8 @@ textarea{min-height:120px;resize:vertical}
           '<div class="label">Message</div>' +
           '<textarea id="fb_msg" placeholder="Write your idea in detail..."></textarea>' +
         '</div>' +
-
         '<button class="action" type="button" data-action="fbSubmit">SUBMIT FEEDBACK</button>' +
         '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
-
         '<div style="height:18px"></div>' +
         '<div class="p" style="margin-bottom:10px">Your saved feedback (local demo)</div>' +
         (itemsHtml || '<div class="p">No feedback yet.</div>') +
@@ -827,9 +770,7 @@ textarea{min-height:120px;resize:vertical}
     var title = (($("fb_title")||{}).value || "").trim();
     var msg = (($("fb_msg")||{}).value || "").trim();
     if(msg.length < 5){ toast("Write a longer message"); return; }
-    submitFeedbackSupabase(title, msg).then(function(){
-      renderFeedbackCenter();
-    });
+    submitFeedback(title, msg).then(function(){ renderFeedbackCenter(); });
   }
 
   // ---------- city view ----------
@@ -871,19 +812,15 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">E-COMMERCE</div>' +
         '<div class="p">Gandhidham MVP • Choose category</div>' +
-
         '<div class="card" role="button" tabindex="0" data-action="category" data-cat="smartphones" style="margin-bottom:12px">' +
           '<div class="icon">📱</div><div class="title">SMARTPHONES</div><div class="tag tag-live">AVAILABLE</div>' +
         '</div>' +
-
         '<div class="card" role="button" tabindex="0" data-action="category" data-cat="earbuds" style="margin-bottom:12px">' +
           '<div class="icon">🎧</div><div class="title">AUDIO DEVICES</div><div class="tag tag-live">AVAILABLE</div>' +
         '</div>' +
-
         '<div class="card" role="button" tabindex="0" data-action="category" data-cat="laptops" style="margin-bottom:12px">' +
           '<div class="icon">💻</div><div class="title">LAPTOPS</div><div class="tag tag-live">AVAILABLE</div>' +
         '</div>' +
-
         '<button class="secondary" type="button" data-action="home">← HOME</button>' +
       '</div>';
   }
@@ -987,14 +924,12 @@ textarea{min-height:120px;resize:vertical}
               '<div style="color:var(--accent);font-size:.85rem;font-weight:800;margin-top:5px">' + discount + '% OFF</div>' +
             '</div>' +
           '</div>' +
-
           '<div class="details">' +
             '<div><div class="label">Stock</div><div class="value" style="color:' + stockColor + '">' + Number(p.stock||0) + ' units</div></div>' +
             '<div><div class="label">Delivery</div><div class="value">' + esc(p.delivery||"") + '</div></div>' +
             '<div><div class="label">Warranty</div><div class="value">' + esc(p.warranty||"") + '</div></div>' +
             '<div><div class="label">GST</div><div class="value" style="color:var(--accent)">Included ✓</div></div>' +
           '</div>' +
-
           '<div class="actions">' +
             '<button class="buy" type="button" data-action="buy" data-idx="' + idx + '">BUY NOW</button>' +
             '<button class="add" type="button" data-action="add" data-idx="' + idx + '">ADD TO CART</button>' +
@@ -1202,9 +1137,7 @@ textarea{min-height:120px;resize:vertical}
         '<div class="wrap">' +
           '<div class="h1">PAY VIA UPI</div>' +
           '<div class="p">Pay ' + money(total) + ' → then submit UTR</div>' +
-
           '<div class="demo-note"><b>DEMO:</b> UPI open + UTR flow is for testing.</div>' +
-
           '<div class="payment-box" style="text-align:center">' +
             '<div style="font-size:2.6rem;margin-bottom:10px">📲</div>' +
             '<div style="font-weight:900;font-size:1.4rem;color:var(--brand-orange)">' + money(total) + '</div>' +
@@ -1220,13 +1153,11 @@ textarea{min-height:120px;resize:vertical}
               'Your order is confirmed after seller verifies UTR.' +
             '</div>' +
           '</div>' +
-
           '<button class="secondary" type="button" data-action="cart">← BACK</button>' +
         '</div>';
       return;
     }
 
-    // ecommerce demo (non-UPI)
     $("app").innerHTML =
       '<div class="wrap">' +
         '<div class="h1">PAYMENT</div>' +
@@ -1267,7 +1198,6 @@ textarea{min-height:120px;resize:vertical}
   }
 
   function openUpiApp(){
-    // For demo: use amount including 5% for food
     var subtotal = STATE.cart.reduce(function(s,p){ return s + (Number(p.price)||0) * (Number(p.qty)||1); }, 0);
     var gst = Math.floor(subtotal * 0.05);
     var total = subtotal + gst;
@@ -1277,7 +1207,6 @@ textarea{min-height:120px;resize:vertical}
                   "&pn=" + encodeURIComponent("Decide") +
                   "&am=" + encodeURIComponent(String(total)) +
                   "&cu=INR&tn=" + encodeURIComponent("Decide Food Order");
-
     window.location.href = upiLink;
     toast("Opening UPI app...");
   }
@@ -1305,26 +1234,22 @@ textarea{min-height:120px;resize:vertical}
       '</div>';
   }
 
-  // ✅ hardened UTR validation + ✅ duplicate UTR detection
   function confirmUtr(){
     var el = $("utrNumber");
     var raw = (el && el.value) ? el.value : "";
     var utr = raw.replace(/\s+/g,"").trim();
 
-    // strict numeric 12 digits
     if(!/^\d{12}$/.test(utr)){
       toast("UTR must be exactly 12 digits");
       return;
     }
 
-    // duplicate detection (device-level)
     var idx = loadUtrIndex();
     if(idx[utr]){
       toast("Duplicate UTR detected (already used)");
       return;
     }
 
-    // build order
     var subtotal = STATE.cart.reduce(function(s,p){ return s + (Number(p.price)||0) * (Number(p.qty)||1); }, 0);
     var gst = Math.floor(subtotal * 0.05);
     var total = subtotal + gst;
@@ -1349,16 +1274,13 @@ textarea{min-height:120px;resize:vertical}
       ]
     };
 
-    // save UTR index
     idx[utr] = { orderId: id, ts: now.toISOString() };
     saveUtrIndex(idx);
 
-    // save order
     loadOrders();
     STATE.orders.push(order);
     saveOrders();
 
-    // optional: open WhatsApp with order info (demo)
     var r = getRestaurantById(order.restaurantId);
     if(r && r.whatsapp){
       var msg = "New Order: " + id +
@@ -1370,18 +1292,14 @@ textarea{min-height:120px;resize:vertical}
       }, 300);
     }
 
-    // clear cart
     STATE.cart = [];
 
-    // show next screen
     $("app").innerHTML =
       '<div class="wrap" style="text-align:center;margin-top:24px">' +
         '<div style="font-size:4.2rem;margin-bottom:14px">⏳</div>' +
         '<div class="h1" style="color:var(--accent)">UTR SUBMITTED</div>' +
         '<div class="p">Order ID: <span class="kbd">' + esc(id) + '</span></div>' +
-
         '<div class="demo-note"><b>DEMO:</b> Seller confirmation is simulated for testing.</div>' +
-
         '<div class="payment-box" style="text-align:left">' +
           '<div style="font-weight:900;margin-bottom:10px">Current status</div>' +
           '<div style="background:rgba(255,103,31,0.10);padding:14px;border-radius:14px">' +
@@ -1389,7 +1307,6 @@ textarea{min-height:120px;resize:vertical}
             '<div style="color:#888;font-size:.85rem;margin-top:8px;line-height:1.6">Seller verifies UTR manually. Auto-refresh tracking is available.</div>' +
           '</div>' +
         '</div>' +
-
         '<button class="action" type="button" data-action="trackLive" data-order="' + esc(id) + '">TRACK (LIVE)</button>' +
         '<button class="secondary" type="button" data-action="simulateConfirm" data-order="' + esc(id) + '" style="margin-top:10px;border-color:var(--accent);color:var(--accent)">SIMULATE SELLER CONFIRM</button>' +
         '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
@@ -1418,7 +1335,6 @@ textarea{min-height:120px;resize:vertical}
     renderOrders();
   }
 
-  // ---------- orders + tracking ----------
   function renderOrders(){
     stopLiveTracking();
     loadOrders();
@@ -1520,22 +1436,18 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">LIVE TRACKING</div>' +
         '<div class="p">Order: <span class="kbd">' + esc(orderId) + '</span></div>' +
-
         '<div class="tracking-status" style="text-align:center">' +
           '<div style="font-size:2.2rem">📦</div>' +
           '<div style="font-weight:900;font-size:1.15rem;margin-top:8px;color:var(--brand-orange)">' + esc(statusLabel) + '</div>' +
           '<div style="color:#888;font-size:.85rem;margin-top:8px">Auto refresh: 10s</div>' +
         '</div>' +
-
         '<div class="result">' +
           '<div style="font-weight:900;margin-bottom:14px">Progress</div>' +
           '<div class="tracking-timeline">' + timeline + '</div>' +
         '</div>' +
-
         (order.status === "utr_submitted"
           ? '<button class="action" type="button" data-action="simulateConfirm" data-order="' + esc(orderId) + '" style="background:var(--accent)">SIMULATE SELLER CONFIRM</button>'
           : '') +
-
         '<button class="secondary" type="button" data-action="orders" style="margin-top:10px">← ORDERS</button>' +
         '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
       '</div>';
@@ -1552,9 +1464,8 @@ textarea{min-height:120px;resize:vertical}
     }, 10000);
   }
 
-  // ---------- events ----------
+  // ---------- nav / events ----------
   function goHome(){
-    // always re-check visited flag (fix)
     if(isVisited()) renderLobby();
     else renderLanding();
   }
@@ -1564,14 +1475,11 @@ textarea{min-height:120px;resize:vertical}
     if(!action || action === "disabled") return;
     if(el.getAttribute("aria-disabled") === "true") return;
 
-    // global
     if(action === "home"){ goHome(); return; }
 
-    // landing actions
     if(action === "lobby"){ markVisited(); renderLobby(); return; }
     if(action === "waitlistSubmit"){ submitWaitlist(); return; }
 
-    // lobby / city
     if(action === "module"){
       var mod = el.getAttribute("data-module");
       if(mod === "ecommerce") { renderEcommerce(); return; }
@@ -1581,16 +1489,13 @@ textarea{min-height:120px;resize:vertical}
     }
     if(action === "city"){ renderCity(el.getAttribute("data-city")); return; }
 
-    // seller funnel
     if(action === "seller"){ renderSellerCTA(); return; }
     if(action === "sellerForm"){ renderSellerForm(el.getAttribute("data-type") || "Seller"); return; }
     if(action === "sellerSubmit"){ sellerSubmit(el.getAttribute("data-type") || "Seller"); return; }
 
-    // feedback
     if(action === "feedback"){ renderFeedbackCenter(); return; }
     if(action === "fbSubmit"){ fbSubmit(); return; }
 
-    // ecommerce
     if(action === "ecommerce"){ renderEcommerce(); return; }
     if(action === "category"){ renderFilters(el.getAttribute("data-cat")); return; }
     if(action === "toggle"){ toggleFilter(el.getAttribute("data-filter"), el); return; }
@@ -1598,12 +1503,10 @@ textarea{min-height:120px;resize:vertical}
     if(action === "add"){ add(Number(el.getAttribute("data-idx"))); return; }
     if(action === "buy"){ buy(Number(el.getAttribute("data-idx"))); return; }
 
-    // food
     if(action === "food"){ renderFood(); return; }
     if(action === "restaurant"){ renderRestaurant(el.getAttribute("data-rid")); return; }
     if(action === "addFood"){ addFoodItem(el.getAttribute("data-item")); return; }
 
-    // cart/payment
     if(action === "cart"){ renderCart(); return; }
     if(action === "remove"){ remove(Number(el.getAttribute("data-idx"))); return; }
     if(action === "pay"){ renderPayment(); return; }
@@ -1612,7 +1515,6 @@ textarea{min-height:120px;resize:vertical}
     if(action === "submitUtr"){ submitUtr(); return; }
     if(action === "confirmUtr"){ confirmUtr(); return; }
 
-    // ecommerce payment
     if(action === "pm"){
       var method = el.getAttribute("data-method");
       var opts = document.querySelectorAll(".payment-option");
@@ -1624,7 +1526,6 @@ textarea{min-height:120px;resize:vertical}
     }
     if(action === "place"){ place(); return; }
 
-    // orders/tracking
     if(action === "orders"){ renderOrders(); return; }
     if(action === "trackLive"){ renderLiveTracking(el.getAttribute("data-order")); return; }
     if(action === "simulateConfirm"){ simulateSellerConfirmation(el.getAttribute("data-order")); return; }
@@ -1645,15 +1546,13 @@ textarea{min-height:120px;resize:vertical}
 
   // ---------- init ----------
   function init(){
-    supabase = initSupabase(); // safe: may be null
+    supabase = initSupabase(); // client exists, but we intentionally use Edge Functions above.
     loadOrders();
     loadToMemory(ECOMMERCE_DATA);
     goHome();
   }
 
   window.addEventListener("beforeunload", stopLiveTracking);
-
-  // ensure supabase lib is loaded first (defer usually ok) - run init on DOM ready
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, {once:true});
   else init();
 
