@@ -14,8 +14,8 @@
 <!-- MANIFEST -->
 <link rel="manifest" href="/manifest.json" />
 
-<!-- Supabase (client) -->
-<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!-- Supabase (NO DEFER - CRITICAL FIX) -->
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
 :root{
@@ -249,30 +249,35 @@ textarea{min-height:120px;resize:vertical}
   "use strict";
 
   // ======================
-  // SUPABASE CONFIG (INSERTED)
+  // SUPABASE CONFIG (FIXED)
   // ======================
   const SUPABASE_URL = "https://zdarsygrpqbbcafrqcjt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkYXJzeWdycHFiYmNhZnJxY2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5ODczMTUsImV4cCI6MjA4NjU2MzMxNX0.ut97BRi9_UFkeZuG_6Ue4mXdAAmtH6MFFdi2vUgHiW4";
 
-  let supabase = null;
+  let sbClient = null;
 
   function initSupabase(){
     try{
-      if(window.supabase && window.supabase.createClient){
-        return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      if(typeof window.supabase === 'undefined'){
+        console.warn('⚠ Supabase library not loaded yet');
+        return null;
       }
-    }catch(e){}
+      
+      if(window.supabase.createClient){
+        sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        console.log('✅ Supabase client initialized');
+        return sbClient;
+      }
+    }catch(e){
+      console.error('❌ Supabase init error:', e);
+    }
     return null;
   }
 
   // ======================
-  // "DON'T REVEAL BACKEND LOGIC"
-  // Frontend only calls Edge Functions (no table names / DB logic here).
-  // Create functions in Supabase: feedback, seller-interest, waitlist
+  // Edge Function API calls
   // ======================
   async function apiPost(fnName, payload){
-    // Edge Function URL:
-    // https://<project>.supabase.co/functions/v1/<fnName>
     const url = SUPABASE_URL.replace(/\/+$/,"") + "/functions/v1/" + encodeURIComponent(fnName);
 
     const res = await fetch(url, {
@@ -285,7 +290,6 @@ textarea{min-height:120px;resize:vertical}
       body: JSON.stringify(payload || {})
     });
 
-    // Edge Functions may return non-JSON sometimes; handle both
     const text = await res.text();
     let data = null;
     try{ data = text ? JSON.parse(text) : null; }catch(e){ data = { raw: text }; }
@@ -352,7 +356,7 @@ textarea{min-height:120px;resize:vertical}
         area: "Race Course Road",
         priceHint: 150,
         upiId: "6351537770@yapl",
-        whatsapp: "https://wa.me/91XXXXXXXXXX",
+        whatsapp: "https://wa.me/916351537770",
         hours: "11:00 AM - 3:30 PM, 7:00 PM - 10:30 PM",
         tags: ["veg","family","unlimited"],
         menu: [
@@ -403,7 +407,6 @@ textarea{min-height:120px;resize:vertical}
     try{ localStorage.setItem("order_history", JSON.stringify(STATE.orders)); }catch(e){}
   }
 
-  // UTR index (for duplicate detection)
   function loadUtrIndex(){
     try{
       var x = JSON.parse(localStorage.getItem("utr_index") || "{}");
@@ -414,7 +417,6 @@ textarea{min-height:120px;resize:vertical}
     try{ localStorage.setItem("utr_index", JSON.stringify(idx || {})); }catch(e){}
   }
 
-  // ---------- live tracking ----------
   function stopLiveTracking(){
     if(STATE.liveTrackingInterval){
       clearInterval(STATE.liveTrackingInterval);
@@ -435,7 +437,6 @@ textarea{min-height:120px;resize:vertical}
   }
 
   async function submitFeedback(title, message){
-    // Uses Edge Function: feedback
     try{
       await apiPost("feedback", { title:title||"Feedback", message:message, device_id: DEVICE_ID });
       toast("✅ Feedback saved!");
@@ -458,7 +459,6 @@ textarea{min-height:120px;resize:vertical}
   }
 
   async function submitSellerInterest(type, businessName, city, phone, idea){
-    // Uses Edge Function: seller-interest
     try{
       await apiPost("seller-interest", {
         category:type, business_name:businessName, city:city, phone:phone, idea:idea||null, device_id:DEVICE_ID
@@ -483,7 +483,6 @@ textarea{min-height:120px;resize:vertical}
   }
 
   async function joinWaitlist(email, phone, city, interest){
-    // Uses Edge Function: waitlist
     try{
       const out = await apiPost("waitlist", {
         email: email,
@@ -494,7 +493,6 @@ textarea{min-height:120px;resize:vertical}
         device_id: DEVICE_ID
       });
 
-      // if your function returns {already:true}
       if(out && out.already){
         toast("Already registered!");
         return false;
@@ -511,7 +509,7 @@ textarea{min-height:120px;resize:vertical}
   }
 
   // ======================
-  // LANDING (no inline onclick)
+  // LANDING
   // ======================
   function isVisited(){ return localStorage.getItem("decide_visited") === "true"; }
   function markVisited(){ localStorage.setItem("decide_visited","true"); }
@@ -593,7 +591,7 @@ textarea{min-height:120px;resize:vertical}
         '<button class="btn" type="button" data-action="home">HOME</button>' +
       '</div>' +
 
-      '<div class="demo-note">⚠ <b>Demo build</b> — Payments & confirmations are for testing UX. Data saved locally (unless Edge Functions are live).</div>' +
+      '<div class="demo-note">⚠ <b>Demo build</b> — Payments & confirmations are for testing UX. Data saved locally.</div>' +
 
       '<div class="two-col-grid">' +
         '<div class="left-col">' +
@@ -695,7 +693,7 @@ textarea{min-height:120px;resize:vertical}
     $("app").innerHTML =
       '<div class="wrap">' +
         '<div class="h1">Seller Interest</div>' +
-        '<div class="p">Fast onboarding. You’ll be manually verified first.</div>' +
+        '<div class="p">Fast onboarding. You will be manually verified first.</div>' +
         '<div class="payment-box">' +
           '<div class="label">Category</div>' +
           '<div class="value" style="margin:6px 0 12px">' + esc(type) + '</div>' +
@@ -1284,7 +1282,7 @@ textarea{min-height:120px;resize:vertical}
     var r = getRestaurantById(order.restaurantId);
     if(r && r.whatsapp){
       var msg = "New Order: " + id +
-                "%0AAmount: " + total +
+                "%0AAmount: ₹" + total +
                 "%0AUTR: " + utr +
                 "%0AStatus: Awaiting confirmation.";
       setTimeout(function(){
@@ -1546,15 +1544,27 @@ textarea{min-height:120px;resize:vertical}
 
   // ---------- init ----------
   function init(){
-    supabase = initSupabase(); // client exists, but we intentionally use Edge Functions above.
+    sbClient = initSupabase();
+    
     loadOrders();
     loadToMemory(ECOMMERCE_DATA);
-    goHome();
+    
+    if(isVisited()) {
+      renderLobby();
+    } else {
+      renderLanding();
+    }
   }
 
   window.addEventListener("beforeunload", stopLiveTracking);
-  if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, {once:true});
-  else init();
+  
+  if(document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", function(){
+      setTimeout(init, 100);
+    }, {once:true});
+  } else {
+    setTimeout(init, 100);
+  }
 
 })();
 </script>
