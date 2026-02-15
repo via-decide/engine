@@ -3,11 +3,18 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Decide (DEMO) - India's Smart Marketplace</title>
+<title>Decide - India's Smart Marketplace</title>
+<meta name="description" content="India's first commission-free marketplace. Compare products by YOUR priorities. Starting in Gujarat - Gandhidham & Rajkot." />
 <meta name="theme-color" content="#ff671f" />
-<link rel="manifest" href="manifest-ondc.json" />
 
-<!-- Supabase (optional later) -->
+<!-- FAVICON -->
+<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+<link rel="icon" type="image/x-icon" href="/favicon.ico" />
+
+<!-- MANIFEST (use the one that exists in your repo; your screenshot shows manifest.json) -->
+<link rel="manifest" href="/manifest.json" />
+
+<!-- Supabase (optional - will fallback to localStorage if not configured) -->
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <!-- jsPDF (optional later) -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
@@ -31,33 +38,20 @@ button:focus{outline:none}
 
 /* ===== DEMO LABELS ===== */
 .demo-ribbon{
-  position:fixed;
-  top:18px;
-  right:-52px;
-  background:#ff3b3b;
-  color:#fff;
+  position:fixed;top:18px;right:-52px;
+  background:#ff3b3b;color:#fff;
   padding:10px 78px;
-  font-weight:900;
-  font-size:12px;
-  letter-spacing:2px;
-  text-transform:uppercase;
+  font-weight:900;font-size:12px;letter-spacing:2px;text-transform:uppercase;
   transform:rotate(45deg);
   z-index:9999;
-  box-shadow:0 10px 25px rgba(0,0,0,.35);
+  box-shadow:0 10px 25px rgba(0,0,0,.35)
 }
 .demo-pill{
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
-  padding:6px 10px;
-  border-radius:999px;
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 10px;border-radius:999px;
   border:1px solid rgba(255,59,59,.45);
   background:rgba(255,59,59,.12);
-  color:#ff6b6b;
-  font-weight:900;
-  letter-spacing:1px;
-  font-size:.75rem;
-  text-transform:uppercase;
+  color:#ff6b6b;font-weight:900;letter-spacing:1px;font-size:.75rem;text-transform:uppercase
 }
 .demo-note{
   background:rgba(255,255,255,0.04);
@@ -66,21 +60,15 @@ button:focus{outline:none}
   padding:14px 16px;
   margin:0 0 16px;
   color:#bbb;
-  line-height:1.65;
+  line-height:1.65
 }
 .demo-note b{color:#fff}
 .demo-watermark{
-  position:fixed;
-  bottom:calc(14px + var(--safe-bottom));
-  left:14px;
+  position:fixed;bottom:calc(14px + var(--safe-bottom));left:14px;
   z-index:999;
   opacity:.18;
   pointer-events:none;
-  font-weight:900;
-  letter-spacing:6px;
-  text-transform:uppercase;
-  font-size:12px;
-  color:#fff;
+  font-weight:900;letter-spacing:6px;text-transform:uppercase;font-size:12px;color:#fff
 }
 
 /* HEADER */
@@ -191,6 +179,14 @@ button:focus{outline:none}
   padding:18px;
   margin-bottom:14px;
 }
+.payment-option{
+  display:flex;align-items:center;gap:12px;
+  padding:14px;border-radius:14px;border:1px solid var(--border);
+  margin-bottom:10px;
+  cursor:pointer;transition:.2s
+}
+.payment-option:hover{background:rgba(255,255,255,0.05)}
+.payment-option.selected{border-color:var(--brand-orange);background:rgba(255,103,31,0.10)}
 .kbd{
   display:inline-flex;align-items:center;justify-content:center;
   padding:6px 10px;border-radius:10px;
@@ -230,6 +226,11 @@ textarea{min-height:120px;resize:vertical}
 }
 .toast.show{opacity:1}
 
+/* Footer links */
+.footer{text-align:center;margin-top:30px;padding-top:20px;border-top:1px solid var(--border);color:#666;font-size:.85rem}
+.footer a{color:#888;margin:0 10px;text-decoration:none}
+.footer a:hover{color:var(--brand-orange)}
+
 @media (max-width:600px){
   .two-col-grid{grid-template-columns:1fr}
   .details{grid-template-columns:1fr}
@@ -248,6 +249,28 @@ textarea{min-height:120px;resize:vertical}
 <script>
 (function(){
   "use strict";
+
+  // ======================
+  // SUPABASE CONFIG
+  // ======================
+  // Leave as-is for DEMO (localStorage fallback).
+  // When ready, replace with real values.
+  const SUPABASE_URL = "YOUR_SUPABASE_URL";
+  const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+
+  let supabase = null;
+
+  function initSupabase(){
+    try{
+      if(window.supabase && window.supabase.createClient){
+        if(!SUPABASE_URL || !SUPABASE_ANON_KEY) return null;
+        if(String(SUPABASE_URL).includes("YOUR_SUPABASE")) return null;
+        if(String(SUPABASE_ANON_KEY).includes("YOUR_SUPABASE")) return null;
+        return window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      }
+    }catch(e){}
+    return null;
+  }
 
   // ---------- helpers ----------
   function $(id){ return document.getElementById(id); }
@@ -303,7 +326,7 @@ textarea{min-height:120px;resize:vertical}
         city: "Rajkot",
         area: "Race Course Road",
         priceHint: 150,
-        // ✅ CHANGE THIS LINE for UPI ID
+        // ✅ CHANGE THIS LINE for real UPI ID later
         upiId: "6351537770@yapl",
         whatsapp: "https://wa.me/91XXXXXXXXXX",
         hours: "11:00 AM - 3:30 PM, 7:00 PM - 10:30 PM",
@@ -375,6 +398,212 @@ textarea{min-height:120px;resize:vertical}
     }
   }
 
+  // ======================
+  // SUPABASE: Safe wrappers (fallback to local)
+  // ======================
+  async function submitFeedbackSupabase(title, message){
+    if(!supabase){
+      saveFeedbackLocal(title, message);
+      toast("Saved locally (demo)");
+      return true;
+    }
+    try{
+      const { error } = await supabase.from("feedback").insert([{
+        title: title || "Feedback",
+        message: message,
+        device_id: DEVICE_ID
+      }]);
+      if(error) throw error;
+      toast("✅ Feedback saved!");
+      return true;
+    }catch(err){
+      console.error("Feedback error:", err);
+      saveFeedbackLocal(title, message);
+      toast("Saved locally (demo)");
+      return true;
+    }
+  }
+
+  function saveFeedbackLocal(title, message){
+    try{
+      var arr = JSON.parse(localStorage.getItem("feedback_items") || "[]");
+      if(!Array.isArray(arr)) arr = [];
+      arr.push({ id:safeId(), title:title||"Feedback", message:message, ts:new Date().toISOString(), device:DEVICE_ID });
+      localStorage.setItem("feedback_items", JSON.stringify(arr));
+    }catch(e){}
+  }
+
+  async function submitSellerInterestSupabase(type, businessName, city, phone, idea){
+    var payload = {
+      category: type,
+      business_name: businessName,
+      city: city,
+      phone: phone,
+      idea: idea || null,
+      device_id: DEVICE_ID
+    };
+
+    if(!supabase){
+      saveSellerInterestLocal(type, businessName, city, phone, idea);
+      toast("Submitted (local demo)");
+      return true;
+    }
+
+    try{
+      const { error } = await supabase.from("seller_interest").insert([payload]);
+      if(error) throw error;
+      toast("✅ Submitted!");
+      return true;
+    }catch(err){
+      console.error("Seller interest error:", err);
+      saveSellerInterestLocal(type, businessName, city, phone, idea);
+      toast("Submitted (local demo)");
+      return true;
+    }
+  }
+
+  function saveSellerInterestLocal(type, businessName, city, phone, idea){
+    try{
+      var arr = JSON.parse(localStorage.getItem("seller_interest") || "[]");
+      if(!Array.isArray(arr)) arr = [];
+      arr.push({ id:safeId(), type:type, businessName:businessName, city:city, phone:phone, idea:idea, device:DEVICE_ID, ts:new Date().toISOString() });
+      localStorage.setItem("seller_interest", JSON.stringify(arr));
+    }catch(e){}
+  }
+
+  async function joinWaitlistSupabase(email, phone, city, interest){
+    if(!supabase){
+      saveWaitlistLocal(email, phone, city, interest);
+      toast("Saved locally (demo)");
+      return true;
+    }
+
+    try{
+      // soft duplicate check
+      const { data: exists } = await supabase
+        .from("waitlist")
+        .select("id")
+        .ilike("email", email)
+        .maybeSingle();
+
+      if(exists && exists.id){
+        toast("Already registered!");
+        return false;
+      }
+
+      const { error } = await supabase.from("waitlist").insert([{
+        email: email,
+        phone: phone || null,
+        city: city || null,
+        interest: interest || null,
+        source: "website",
+        device_id: DEVICE_ID
+      }]);
+
+      if(error) throw error;
+      toast("✅ Added to waitlist!");
+      return true;
+    }catch(err){
+      console.error("Waitlist error:", err);
+      saveWaitlistLocal(email, phone, city, interest);
+      toast("Saved locally (demo)");
+      return true;
+    }
+  }
+
+  function saveWaitlistLocal(email, phone, city, interest){
+    try{
+      var arr = JSON.parse(localStorage.getItem("waitlist_local") || "[]");
+      if(!Array.isArray(arr)) arr = [];
+      arr.push({ id:safeId(), email:email, phone:phone||"", city:city||"", interest:interest||"", device:DEVICE_ID, ts:new Date().toISOString() });
+      localStorage.setItem("waitlist_local", JSON.stringify(arr));
+    }catch(e){}
+  }
+
+  // ======================
+  // LANDING (fixed: no inline onclick)
+  // ======================
+  function isVisited(){
+    return localStorage.getItem("decide_visited") === "true";
+  }
+  function markVisited(){
+    localStorage.setItem("decide_visited","true");
+  }
+
+  function renderLanding(){
+    stopLiveTracking();
+    $("app").innerHTML =
+      '<div class="wrap" style="text-align:center;padding-top:26px">' +
+        '<div class="header" style="margin-bottom:10px">' +
+          '<div class="header-badge">DECIDE INDIA <span class="status-dot" aria-hidden="true"></span> <span class="demo-pill">DEMO</span></div>' +
+          '<button class="btn" type="button" data-action="home">HOME</button>' +
+        '</div>' +
+
+        '<div class="demo-note">⚠ <b>Demo build</b> — UX testing only. Payments/UTR are demo flows.</div>' +
+
+        '<h1 style="font-size:3rem;margin:10px 0 10px;color:var(--brand-orange);letter-spacing:2px">DECIDE</h1>' +
+        '<div class="p" style="font-size:1.05rem;margin-bottom:18px;color:#bbb">India\'s Smart Marketplace (Commission-free)</div>' +
+
+        '<div class="payment-box" style="max-width:760px;margin:0 auto 14px;text-align:left">' +
+          '<div style="font-size:1.05rem;font-weight:900;margin-bottom:10px">🎯 What is Decide?</div>' +
+          '<div style="color:#ccc;line-height:1.7">' +
+            '• <b>Smart comparison:</b> Compare products by YOUR priorities<br>' +
+            '• <b>Zero commission:</b> No seller commission / no paid rank<br>' +
+            '• <b>Local-first:</b> City-first discovery (starting Gujarat)<br>' +
+            '• <b>Transparent ranking:</b> No algorithm suppression' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="payment-box" style="max-width:760px;margin:0 auto 14px;text-align:left">' +
+          '<div style="font-size:1.05rem;font-weight:900;margin-bottom:10px">🚀 What\'s Live Now?</div>' +
+          '<div style="color:#ccc;line-height:1.7">' +
+            '✅ <b>Gandhidham:</b> E-commerce (phones, laptops, audio)<br>' +
+            '✅ <b>Rajkot:</b> Food (UPI → UTR flow for UX)<br>' +
+            '⏳ <b>Next:</b> Ahmedabad → Surat → All India' +
+          '</div>' +
+        '</div>' +
+
+        '<div class="payment-box" style="max-width:760px;margin:0 auto 18px;text-align:left">' +
+          '<div style="font-size:1.05rem;font-weight:900;margin-bottom:10px">📧 Join Waitlist</div>' +
+          '<div class="label">Email</div>' +
+          '<input id="wl_email" type="email" placeholder="you@gmail.com" style="margin:8px 0 10px" />' +
+          '<div class="label">City (optional)</div>' +
+          '<input id="wl_city" placeholder="e.g. Rajkot" style="margin:8px 0 10px" />' +
+          '<div class="label">I am (optional)</div>' +
+          '<input id="wl_interest" placeholder="buyer / seller / developer" style="margin:8px 0 12px" />' +
+          '<button class="action" type="button" data-action="waitlistSubmit">GET EARLY ACCESS</button>' +
+          '<div style="color:#777;font-size:.85rem;margin-top:10px;line-height:1.6">We store only minimal info. You can request removal anytime.</div>' +
+        '</div>' +
+
+        '<button class="secondary" type="button" data-action="lobby">SKIP TO DEMO →</button>' +
+
+        '<div class="footer">' +
+          '<a href="/privacy.html">Privacy</a> • ' +
+          '<a href="/terms.html">Terms</a> • ' +
+          '<a href="/contact.html">Contact</a>' +
+        '</div>' +
+      '</div>';
+  }
+
+  function submitWaitlist(){
+    var email = (($("wl_email")||{}).value || "").trim();
+    var city = (($("wl_city")||{}).value || "").trim();
+    var interest = (($("wl_interest")||{}).value || "").trim();
+
+    if(!email || email.indexOf("@") < 1){
+      toast("Enter valid email");
+      return;
+    }
+
+    joinWaitlistSupabase(email, null, city, interest || "landing")
+      .then(function(ok){
+        if(ok){
+          markVisited();
+          setTimeout(function(){ renderLobby(); }, 700);
+        }
+      });
+  }
+
   // ---------- lobby ----------
   function renderLobby(){
     stopLiveTracking();
@@ -387,11 +616,7 @@ textarea{min-height:120px;resize:vertical}
         '<button class="btn" type="button" data-action="home">HOME</button>' +
       '</div>' +
 
-      '<div class="demo-note">' +
-        '⚠ <b>Demo build</b> — payments & confirmations are for testing UX. ' +
-        'Food module uses UPI + UTR flow (manual verification). ' +
-        'Data is saved locally in your browser.' +
-      '</div>' +
+      '<div class="demo-note">⚠ <b>Demo build</b> — Payments & confirmations are for testing UX. Data saved locally (unless Supabase connected).</div>' +
 
       '<div class="two-col-grid">' +
 
@@ -463,10 +688,16 @@ textarea{min-height:120px;resize:vertical}
         '</div>' +
       '</div>' +
 
-      '<div style="text-align:center;margin-top:18px;color:#888;font-size:.85rem">Session: ' + esc(STATE.session) + ' • Device: ' + esc(DEVICE_ID.slice(0,8)) + '…</div>';
+      '<div style="text-align:center;margin-top:18px;color:#888;font-size:.85rem">Session: ' + esc(STATE.session) + '</div>' +
+
+      '<div class="footer">' +
+        '<a href="/privacy.html">Privacy</a> • ' +
+        '<a href="/terms.html">Terms</a> • ' +
+        '<a href="/contact.html">Contact</a>' +
+      '</div>';
   }
 
-  // ---------- seller onboarding CTA (apple style) ----------
+  // ---------- seller onboarding CTA ----------
   function renderSellerCTA(){
     stopLiveTracking();
     $("app").innerHTML =
@@ -474,7 +705,7 @@ textarea{min-height:120px;resize:vertical}
         '<div class="h1">Join Decide</div>' +
         '<div class="p">A clean, local-first way to get customers — without commission.</div>' +
 
-        '<div class="demo-note">This flow is <b>DEMO</b>. Your submission is saved locally for now.</div>' +
+        '<div class="demo-note"><b>DEMO:</b> Seller interest is saved (Supabase if connected, otherwise local).</div>' +
 
         '<div class="payment-box">' +
           '<div style="font-weight:900;font-size:1.1rem;margin-bottom:10px">Why join Decide?</div>' +
@@ -506,8 +737,6 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">Seller Interest</div>' +
         '<div class="p">Fast onboarding. You’ll be manually verified first.</div>' +
-
-        '<div class="demo-note">DEMO note: This submission is stored in <b>localStorage</b> only.</div>' +
 
         '<div class="payment-box">' +
           '<div class="label">Category</div>' +
@@ -546,17 +775,9 @@ textarea{min-height:120px;resize:vertical}
     if(c.length < 2){ toast("Enter city"); return; }
     if(p.length < 8){ toast("Enter valid phone"); return; }
 
-    // store locally for now (easy to send to server later)
-    var payload = { id: safeId(), type:type, businessName:b, city:c, phone:p, idea:idea.trim(), device:DEVICE_ID, ts:new Date().toISOString() };
-    try{
-      var arr = JSON.parse(localStorage.getItem("seller_interest") || "[]");
-      if(!Array.isArray(arr)) arr = [];
-      arr.push(payload);
-      localStorage.setItem("seller_interest", JSON.stringify(arr));
-    }catch(e){}
-
-    toast("Submitted! We'll contact you.");
-    renderLobby();
+    submitSellerInterestSupabase(type, b, c, p, idea.trim()).then(function(){
+      renderLobby();
+    });
   }
 
   // ---------- feedback center ----------
@@ -583,7 +804,7 @@ textarea{min-height:120px;resize:vertical}
         '<div class="h1">Feedback Center</div>' +
         '<div class="p">Tell your ideas. This builds real UX connection.</div>' +
 
-        '<div class="demo-note">DEMO note: feedback is stored locally (browser) for now.</div>' +
+        '<div class="demo-note"><b>DEMO:</b> Feedback saves to Supabase if configured, otherwise local.</div>' +
 
         '<div class="payment-box">' +
           '<div class="label">Title</div>' +
@@ -606,17 +827,9 @@ textarea{min-height:120px;resize:vertical}
     var title = (($("fb_title")||{}).value || "").trim();
     var msg = (($("fb_msg")||{}).value || "").trim();
     if(msg.length < 5){ toast("Write a longer message"); return; }
-
-    var item = { id: safeId(), title: title || "Feedback", message: msg, ts: new Date().toISOString(), device: DEVICE_ID };
-    try{
-      var arr = JSON.parse(localStorage.getItem("feedback_items") || "[]");
-      if(!Array.isArray(arr)) arr = [];
-      arr.push(item);
-      localStorage.setItem("feedback_items", JSON.stringify(arr));
-    }catch(e){}
-
-    toast("Saved. Thank you!");
-    renderFeedbackCenter();
+    submitFeedbackSupabase(title, msg).then(function(){
+      renderFeedbackCenter();
+    });
   }
 
   // ---------- city view ----------
@@ -637,7 +850,6 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">' + esc(city) + '</div>' +
         '<div class="p">Available modules</div>' +
-        '<div class="demo-note"><b>DEMO:</b> only limited modules are enabled.</div>' +
         cards +
         '<button class="secondary" type="button" data-action="home">← HOME</button>' +
       '</div>';
@@ -659,8 +871,6 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">E-COMMERCE</div>' +
         '<div class="p">Gandhidham MVP • Choose category</div>' +
-
-        '<div class="demo-note"><b>DEMO:</b> Orders are simulated. Use this to test ranking + cart flow.</div>' +
 
         '<div class="card" role="button" tabindex="0" data-action="category" data-cat="smartphones" style="margin-bottom:12px">' +
           '<div class="icon">📱</div><div class="title">SMARTPHONES</div><div class="tag tag-live">AVAILABLE</div>' +
@@ -703,7 +913,6 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">' + esc(cat) + '</div>' +
         '<div class="p">Pick priorities (tap)</div>' +
-        '<div class="demo-note"><b>DEMO:</b> Ranking is based on your selected priorities (no commission bias).</div>' +
         '<div class="filter-grid">' + btns + '</div>' +
         '<button class="action" type="button" data-action="search">FIND BEST DEALS</button>' +
         '<button class="secondary" type="button" data-action="ecommerce" style="margin-top:10px">← BACK</button>' +
@@ -770,7 +979,6 @@ textarea{min-height:120px;resize:vertical}
                 '<span class="badge">' + esc(p.seller) + '</span>' +
                 '<span class="rating">⭐ ' + Number(p.rating||0).toFixed(1) + '</span>' +
                 '<span class="badge">' + esc(p.city) + '</span>' +
-                '<span class="badge" style="background:rgba(255,59,59,.12);color:#ff6b6b;border:1px solid rgba(255,59,59,.25)">DEMO</span>' +
               '</div>' +
             '</div>' +
             '<div class="price">' +
@@ -800,9 +1008,6 @@ textarea{min-height:120px;resize:vertical}
         '<div style="text-align:center;margin-bottom:16px">' +
           '<h2 style="margin:0;font-size:1.6rem">BEST DEALS</h2>' +
           '<div class="p" style="margin:8px 0 0">Comparing ' + RESULTS.length + ' options</div>' +
-          '<div class="demo-note" style="max-width:760px;margin:14px auto 0;text-align:left">' +
-            '<b>DEMO:</b> This list uses your priorities (score) + lower price tie-break. No paid ranking.' +
-          '</div>' +
         '</div>' +
         list +
         '<button class="secondary" type="button" data-action="category" data-cat="' + esc(STATE.lastEcomCategory || "smartphones") + '">← REFINE</button>' +
@@ -825,7 +1030,6 @@ textarea{min-height:120px;resize:vertical}
                 '<span class="badge">' + esc(r.city) + '</span>' +
                 '<span class="rating">⭐ 4.8</span>' +
                 '<span class="badge">UPI</span>' +
-                '<span class="badge" style="background:rgba(255,59,59,.12);color:#ff6b6b;border:1px solid rgba(255,59,59,.25)">DEMO</span>' +
               '</div>' +
               '<div style="color:#888;margin-top:8px;font-size:.9rem">' + esc(r.brand) + ' • From ' + money(r.priceHint) + '</div>' +
               '<div style="color:#888;margin-top:6px;font-size:.85rem">' + esc(r.hours) + '</div>' +
@@ -839,8 +1043,8 @@ textarea{min-height:120px;resize:vertical}
     $("app").innerHTML =
       '<div class="wrap">' +
         '<div class="h1">FOOD</div>' +
-        '<div class="p">Rajkot MVP • Pay via UPI → submit UTR</div>' +
-        '<div class="demo-note"><b>DEMO:</b> UTR is validated + duplicate-checked locally (browser). Seller confirmation is simulated.</div>' +
+        '<div class="p">Rajkot MVP • Pay via UPI → submit UTR (demo flow)</div>' +
+        '<div class="demo-note"><b>DEMO:</b> UTR is validated & stored locally for now.</div>' +
         cards +
         '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
       '</div>';
@@ -882,9 +1086,8 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">' + esc(r.name) + '</div>' +
         '<div class="p">' + esc(r.city) + ' • ' + esc(r.brand) + '</div>' +
-        '<div class="demo-note"><b>DEMO:</b> This restaurant is for testing UPI + UTR flow. Not a real checkout.</div>' +
         '<div class="payment-box">' +
-          '<div class="label">UPI ID (test)</div>' +
+          '<div class="label">UPI ID (demo)</div>' +
           '<div class="value" style="font-size:1.05rem;margin-top:6px;word-break:break-all">' + esc(r.upiId) + '</div>' +
         '</div>' +
         '<div class="h1" style="font-size:1.1rem;margin-bottom:10px">MENU</div>' +
@@ -964,7 +1167,6 @@ textarea{min-height:120px;resize:vertical}
     $("app").innerHTML =
       '<div class="wrap">' +
         '<div class="h1">CART</div>' +
-        '<div class="demo-note"><b>DEMO:</b> Totals shown for UX testing only.</div>' +
         '<div class="result">' +
           '<div style="font-weight:900;margin-bottom:12px">Items (' + STATE.cart.length + ')</div>' +
           items +
@@ -1001,7 +1203,7 @@ textarea{min-height:120px;resize:vertical}
           '<div class="h1">PAY VIA UPI</div>' +
           '<div class="p">Pay ' + money(total) + ' → then submit UTR</div>' +
 
-          '<div class="demo-note"><b>DEMO:</b> UPI deep link may not open on all devices/browsers. If it fails, copy UPI and pay manually.</div>' +
+          '<div class="demo-note"><b>DEMO:</b> UPI open + UTR flow is for testing.</div>' +
 
           '<div class="payment-box" style="text-align:center">' +
             '<div style="font-size:2.6rem;margin-bottom:10px">📲</div>' +
@@ -1029,13 +1231,13 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">PAYMENT</div>' +
         '<div class="p">Total: ' + money(total) + '</div>' +
-        '<div class="demo-note"><b>DEMO:</b> Payment methods are simulated for testing order creation.</div>' +
+        '<div class="demo-note"><b>DEMO:</b> E-commerce checkout is demo.</div>' +
         '<div class="payment-box">' +
           '<div style="font-weight:900;margin-bottom:12px">Choose Payment</div>' +
-          '<div class="payment-option" role="button" tabindex="0" data-action="pm" data-method="upi" style="padding:14px;border-radius:14px;border:1px solid var(--border);margin-bottom:10px">' +
+          '<div class="payment-option" role="button" tabindex="0" data-action="pm" data-method="upi">' +
             '<div style="font-size:2rem">📱</div><div><div style="font-weight:900">UPI</div><div style="color:#888;font-size:.85rem">GPay / PhonePe / Paytm</div></div>' +
           '</div>' +
-          '<div class="payment-option" role="button" tabindex="0" data-action="pm" data-method="cod" style="padding:14px;border-radius:14px;border:1px solid var(--border)">' +
+          '<div class="payment-option" role="button" tabindex="0" data-action="pm" data-method="cod">' +
             '<div style="font-size:2rem">💵</div><div><div style="font-weight:900">Cash on Delivery</div><div style="color:#888;font-size:.85rem">Demo mode</div></div>' +
           '</div>' +
         '</div>' +
@@ -1090,7 +1292,7 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">Submit UTR</div>' +
         '<div class="p">Amount: <span class="kbd">' + money(total) + '</span></div>' +
-        '<div class="demo-note"><b>DEMO:</b> UTR is validated (12 digits) + duplicate blocked (local).</div>' +
+        '<div class="demo-note"><b>DEMO:</b> We validate 12-digit UTR and detect duplicates (device-level).</div>' +
         '<div class="payment-box">' +
           '<div style="font-weight:900;margin-bottom:10px">Enter 12-digit UTR</div>' +
           '<div style="color:#888;font-size:.85rem;line-height:1.6;margin-bottom:12px">UTR is shown in your UPI transaction details.</div>' +
@@ -1162,8 +1364,7 @@ textarea{min-height:120px;resize:vertical}
       var msg = "New Order: " + id +
                 "%0AAmount: " + total +
                 "%0AUTR: " + utr +
-                "%0AStatus: Awaiting confirmation." +
-                "%0A%0A(DEMO build)";
+                "%0AStatus: Awaiting confirmation.";
       setTimeout(function(){
         try{ window.open(r.whatsapp + "?text=" + msg, "_blank"); }catch(e){}
       }, 300);
@@ -1179,7 +1380,7 @@ textarea{min-height:120px;resize:vertical}
         '<div class="h1" style="color:var(--accent)">UTR SUBMITTED</div>' +
         '<div class="p">Order ID: <span class="kbd">' + esc(id) + '</span></div>' +
 
-        '<div class="demo-note" style="text-align:left"><b>DEMO:</b> Seller confirmation is simulated. UTR duplicate protection works per device/browser.</div>' +
+        '<div class="demo-note"><b>DEMO:</b> Seller confirmation is simulated for testing.</div>' +
 
         '<div class="payment-box" style="text-align:left">' +
           '<div style="font-weight:900;margin-bottom:10px">Current status</div>' +
@@ -1204,9 +1405,10 @@ textarea{min-height:120px;resize:vertical}
     var total = subtotal + gst;
 
     var id = "ORD-" + Math.random().toString(36).slice(2,10).toUpperCase();
-    var order = { id:id, items:STATE.cart.slice(), subtotal:subtotal, tax:gst, total:total, payment:payMethod, status:"confirmed", timestamp:new Date().toISOString(), updates:[
-      {status:"placed", time:new Date().toISOString(), label:"Order Placed", completed:true},
-      {status:"confirmed", time:new Date().toISOString(), label:"Payment Confirmed", completed:true}
+    var now = new Date();
+    var order = { id:id, items:STATE.cart.slice(), subtotal:subtotal, tax:gst, total:total, payment:payMethod, status:"confirmed", timestamp:now.toISOString(), updates:[
+      {status:"placed", time:now.toISOString(), label:"Order Placed", completed:true},
+      {status:"confirmed", time:now.toISOString(), label:"Payment Confirmed", completed:true}
     ]};
 
     loadOrders(); STATE.orders.push(order); saveOrders();
@@ -1230,7 +1432,6 @@ textarea{min-height:120px;resize:vertical}
             '<div>' +
               '<div class="name" style="font-size:1.05rem">' + esc(o.id) + '</div>' +
               '<div style="color:#888;font-size:.85rem;margin-top:6px">' + esc(new Date(o.timestamp).toLocaleString("en-IN")) + '</div>' +
-              '<div style="color:#666;font-size:.8rem;margin-top:6px">DEMO order</div>' +
             '</div>' +
             '<div style="text-align:right">' +
               '<div style="font-weight:900;color:var(--brand-orange)">' + money(o.total||0) + '</div>' +
@@ -1245,7 +1446,6 @@ textarea{min-height:120px;resize:vertical}
       '<div class="wrap">' +
         '<div class="h1">MY ORDERS</div>' +
         '<div class="p">Tap any order to track live</div>' +
-        '<div class="demo-note"><b>DEMO:</b> Tracking timeline is simulated. Useful for testing UX.</div>' +
         list +
         '<button class="secondary" type="button" data-action="home">← HOME</button>' +
       '</div>';
@@ -1321,8 +1521,6 @@ textarea{min-height:120px;resize:vertical}
         '<div class="h1">LIVE TRACKING</div>' +
         '<div class="p">Order: <span class="kbd">' + esc(orderId) + '</span></div>' +
 
-        '<div class="demo-note"><b>DEMO:</b> Timeline updates on simulated confirmation. Auto refresh: 10s.</div>' +
-
         '<div class="tracking-status" style="text-align:center">' +
           '<div style="font-size:2.2rem">📦</div>' +
           '<div style="font-weight:900;font-size:1.15rem;margin-top:8px;color:var(--brand-orange)">' + esc(statusLabel) + '</div>' +
@@ -1355,13 +1553,23 @@ textarea{min-height:120px;resize:vertical}
   }
 
   // ---------- events ----------
+  function goHome(){
+    // always re-check visited flag (fix)
+    if(isVisited()) renderLobby();
+    else renderLanding();
+  }
+
   function handle(el){
     var action = el.getAttribute("data-action");
     if(!action || action === "disabled") return;
     if(el.getAttribute("aria-disabled") === "true") return;
 
     // global
-    if(action === "home"){ renderLobby(); return; }
+    if(action === "home"){ goHome(); return; }
+
+    // landing actions
+    if(action === "lobby"){ markVisited(); renderLobby(); return; }
+    if(action === "waitlistSubmit"){ submitWaitlist(); return; }
 
     // lobby / city
     if(action === "module"){
@@ -1437,12 +1645,15 @@ textarea{min-height:120px;resize:vertical}
 
   // ---------- init ----------
   function init(){
+    supabase = initSupabase(); // safe: may be null
     loadOrders();
     loadToMemory(ECOMMERCE_DATA);
-    renderLobby();
+    goHome();
   }
 
   window.addEventListener("beforeunload", stopLiveTracking);
+
+  // ensure supabase lib is loaded first (defer usually ok) - run init on DOM ready
   if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, {once:true});
   else init();
 
@@ -1450,4 +1661,3 @@ textarea{min-height:120px;resize:vertical}
 </script>
 </body>
 </html>
-```0
