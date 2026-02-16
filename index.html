@@ -78,7 +78,7 @@ img{max-width:100%;display:block}
   transform:rotate(45deg);
   z-index:9999;
   box-shadow:0 10px 25px rgba(0,0,0,.35);
-  display:none; /* Hidden for live version */
+  display:none;
 }
 .demo-pill{
   display:inline-flex;align-items:center;gap:8px;
@@ -622,6 +622,18 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
 .footer a{color:#888;margin:0 10px;text-decoration:none}
 .footer a:hover{color:var(--brand-orange)}
 
+/* INFO BOX */
+.info-box{
+  background:rgba(66,165,245,0.1);
+  border:1px solid rgba(66,165,245,0.3);
+  border-radius:12px;
+  padding:12px 16px;
+  margin:16px 0;
+  color:#90CAF9;
+  font-size:0.875rem;
+  line-height:1.6;
+}
+
 /* RESPONSIVE */
 @media (max-width:768px){
   .hero-title{font-size:2rem}
@@ -644,13 +656,8 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
 </head>
 <body>
 
-<!-- APP CONTAINER -->
 <div id="app"></div>
-
-<!-- TOAST -->
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-
-<!-- FLOATING CART -->
 <div id="floatingCart" class="floating-cart" style="display:none">
   <span class="cart-badge" id="cartCount">0</span>
   <span>View Cart</span>
@@ -660,10 +667,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
 (function(){
   "use strict";
   
-  // ======================
-  // CONFIG
-  // ======================
-  const RAZORPAY_KEY = "rzp_test_YOUR_KEY_ID"; // Replace with your actual Razorpay key
+  const RAZORPAY_KEY = "rzp_test_YOUR_KEY_ID";
   const SUPABASE_URL = "https://zdarsygrpqbbcafrqcjt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkYXJzeWdycHFiYmNhZnJxY2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5ODczMTUsImV4cCI6MjA4NjU2MzMxNX0.ut97BRi9_UFkeZuG_6Ue4mXdAAmtH6MFFdi2vUgHiW4";
   
@@ -682,9 +686,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     return null;
   }
   
-  // ======================
-  // STATE - ✅ ADDED PAYMENT TRACKING
-  // ======================
   const STATE = {
     cart: [],
     orders: [],
@@ -695,18 +696,13 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     session: "SID-" + Math.random().toString(36).slice(2,6).toUpperCase(),
     filters: [],
     lastEcomCategory: null,
-    // ✅ NEW: Track payment amount and transaction reference
     lastPaymentAmount: null,
     lastTxnRef: null
   };
   
-  // Device ID
   var DEVICE_ID = localStorage.getItem("decide_device_id");
   if(!DEVICE_ID){ DEVICE_ID = safeId(); localStorage.setItem("decide_device_id", DEVICE_ID); }
   
-  // ======================
-  // DATA
-  // ======================
   const RESTAURANTS = [
     {
       id: "rajkot-thali-001",
@@ -719,6 +715,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       tags: ["veg", "family", "unlimited"],
       icon: "🍛",
       upiId: "6351537770@yapl",
+      upiAccountName: "Dharam Jitendra Daxini",
       whatsapp: "https://wa.me/916351537770",
       menu: [
         {id:"thali-1",name:"Gujarati Thali",price:150,veg:true,desc:"Unlimited traditional thali with 4 sabzis, dal, rice, roti, papad, pickle, buttermilk",prepMins:20,category:"main",icon:"🍛"},
@@ -730,7 +727,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   ];
   
-  // E-commerce data
   var ECOMMERCE_DATA = [
     {category:"smartphones",name:"iPhone 15 Pro",price:134900,cam:9,gam:9,bat:7,seller:"Apple Store",rating:4.8,stock:50,delivery:"2 days",warranty:"1 year",city:"Gandhidham"},
     {category:"smartphones",name:"Samsung S24 Ultra",price:129999,cam:10,gam:9,bat:8,seller:"Samsung",rating:4.9,stock:40,delivery:"3 days",warranty:"1 year",city:"Gandhidham"},
@@ -741,13 +737,9 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     {category:"laptops",name:"Dell XPS 13",price:139990,perf:8,port:6,scr:9,seller:"Dell",rating:4.7,stock:40,delivery:"4 days",warranty:"1 year",city:"Gandhidham"}
   ];
   
-  // Memory DB for e-commerce
   var DB = { smartphones:{}, earbuds:{}, laptops:{} };
   var RESULTS = [];
   
-  // ======================
-  // HELPERS
-  // ======================
   function $(id){return document.getElementById(id)}
   function esc(s){
     s = String(s == null ? "" : s);
@@ -755,20 +747,16 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
   }
   function money(n){return "₹" + Number(n||0).toLocaleString("en-IN")}
   
-  // ✅ NEW: Calculate cart totals consistently
   function calcCartTotals(){
     const subtotal = STATE.cart.reduce((sum, item) => {
       const price = Number(item.price || 0);
       const qty = Number(item.qty || 1);
       return sum + (price * qty);
     }, 0);
-
     const isFood = (STATE.cart[0] && STATE.cart[0].type === "food");
     const taxRate = isFood ? 0.05 : 0.18;
-
     const gst = Math.round(subtotal * taxRate);
     const total = Number((subtotal + gst).toFixed(2));
-
     return { subtotal, gst, total, isFood, taxRate };
   }
   
@@ -799,18 +787,14 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
   }
   
   function saveCart(){
-    try{
-      localStorage.setItem('decide_cart', JSON.stringify(STATE.cart));
-    }catch(e){}
+    try{ localStorage.setItem('decide_cart', JSON.stringify(STATE.cart)); }catch(e){}
   }
   
   function loadCart(){
     try{
       const data = JSON.parse(localStorage.getItem('decide_cart') || '[]');
       STATE.cart = Array.isArray(data) ? data : [];
-    }catch(e){
-      STATE.cart = [];
-    }
+    }catch(e){ STATE.cart = []; }
   }
   
   function loadOrders(){
@@ -859,7 +843,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     try{ localStorage.setItem("utr_index", JSON.stringify(idx || {})); }catch(e){}
   }
   
-  // Edge Function API calls
   async function apiPost(fnName, payload){
     const url = SUPABASE_URL.replace(/\/+$/,"") + "/functions/v1/" + encodeURIComponent(fnName);
     const res = await fetch(url, {
@@ -960,9 +943,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   }
   
-  // ======================
-  // LANDING & LOBBY
-  // ======================
   function isVisited(){ return localStorage.getItem("decide_visited") === "true"; }
   function markVisited(){ localStorage.setItem("decide_visited","true"); }
   
@@ -1092,9 +1072,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       '</div>';
   }
   
-  // ======================
-  // SELLER
-  // ======================
   function renderSellerCTA(){
     $("app").innerHTML =
       '<div class="wrap">' +
@@ -1158,9 +1135,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     submitSellerInterest(type, b, c, p, idea).then(function(){ renderLobby(); });
   }
   
-  // ======================
-  // FEEDBACK
-  // ======================
   function renderFeedbackCenter(){
     var list = [];
     try{
@@ -1204,9 +1178,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     submitFeedback(title, msg).then(function(){ renderFeedbackCenter(); });
   }
   
-  // ======================
-  // CITY VIEW
-  // ======================
   function renderCity(city){
     var cards = '';
     if(city === "Gandhidham"){
@@ -1236,9 +1207,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   }
   
-  // ======================
-  // E-COMMERCE MODULE
-  // ======================
   function renderEcommerce(){
     STATE.domain = "ecommerce";
     $("app").innerHTML =
@@ -1397,9 +1365,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     viewCart();
   }
   
-  // ======================
-  // FOOD MODULE (RAJKOT)
-  // ======================
   function renderFood(){
     STATE.domain = "food";
     
@@ -1571,7 +1536,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   }
   
-  // ✅ UPDATED: Use calcCartTotals helper
   function viewCart(){
     if(STATE.cart.length === 0){
       renderLobby();
@@ -1661,12 +1625,9 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     viewCart();
   }
   
-  // ✅ UPDATED: Store final amount for payment consistency
   function proceedToPayment(){
     const totals = calcCartTotals();
     const finalAmount = totals.total;
-
-    // ✅ Store final amount so later screens match exactly
     STATE.lastPaymentAmount = finalAmount;
 
     if(totals.isFood){
@@ -1724,7 +1685,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   }
   
-  // ✅ UPDATED: Show merchant name, proper UPI button text
   function initiateManualUPI(amount){
     const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
     if(!restaurant){
@@ -1732,7 +1692,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       return;
     }
 
-    // Debug
     console.log('Initiating UPI for amount:', amount);
     console.log('Restaurant:', restaurant.name);
 
@@ -1752,19 +1711,26 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
           </div>
 
           <div style="background:rgba(255,255,255,0.05);padding:20px;border-radius:16px;margin:24px 0">
-            <div style="color:var(--text-secondary);margin-bottom:8px">Merchant Name</div>
-            <div style="font-size:1.1rem;font-weight:700;margin-bottom:12px">
+            <div style="color:var(--text-secondary);margin-bottom:8px">Restaurant</div>
+            <div style="font-size:1.1rem;font-weight:700;margin-bottom:16px">
               ${esc(restaurant.name)}
             </div>
 
             <div style="color:var(--text-secondary);margin-bottom:8px">UPI ID</div>
-            <div style="font-size:1.25rem;font-weight:700;word-break:break-all">
+            <div style="font-size:1.25rem;font-weight:700;word-break:break-all;margin-bottom:4px">
               ${esc(restaurant.upiId)}
             </div>
+            <div style="font-size:0.85rem;color:#888;margin-bottom:16px">
+              (Account: ${esc(restaurant.upiAccountName || "Restaurant Owner")})
+            </div>
 
-            <button class="secondary" style="margin-top:16px" data-action="copyUPI" data-upi="${esc(restaurant.upiId)}">
+            <button class="secondary" style="margin-top:8px" data-action="copyUPI" data-upi="${esc(restaurant.upiId)}">
               📋 Copy UPI ID
             </button>
+          </div>
+
+          <div class="info-box">
+            ℹ️ <b>Note:</b> Your UPI app will show the account holder's name "${esc(restaurant.upiAccountName || "")}" instead of the restaurant name. This is normal for personal UPI IDs. The payment goes to ${esc(restaurant.name)}.
           </div>
 
           <button class="action" data-action="openUPIApp" data-upi="${esc(restaurant.upiId)}" data-amount="${amount}">
@@ -1803,20 +1769,13 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   }
   
-  // ✅ UPDATED: Proper UPI deeplink with merchant name and transaction ref
   function openUPIApp(upiId, amount){
-    // Get proper restaurant name for payee name
     const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
     const payeeName = restaurant ? restaurant.name : "Decide Food";
-
-    // ✅ Stable txn ref (also used later if needed)
     const orderRef = STATE.lastTxnRef || ('TXN' + Date.now().toString(36).toUpperCase());
     STATE.lastTxnRef = orderRef;
-
-    // Force amount format (some UPI apps prefer 2 decimals)
     const am = Number(amount || 0).toFixed(2);
 
-    // Build proper UPI deeplink
     const params = new URLSearchParams({
       pa: upiId,
       pn: payeeName,
@@ -1837,9 +1796,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     toast('Opening UPI app...', 'success');
   }
   
-  // ✅ UPDATED: Use stored payment amount
   function submitUTRScreen(){
-    // ✅ Always use the stored final amount (prevents mismatch/₹84 issues)
     const amount = Number(STATE.lastPaymentAmount || calcCartTotals().total || 0);
 
     const html = `
@@ -1879,7 +1836,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     setTimeout(() => $("utrInput") && $("utrInput").focus(), 100);
   }
   
-  // ✅ UPDATED: Use stored payment amount
   function confirmUTR(){
     const utr = ($("utrInput")?.value || '').replace(/\s+/g, '');
 
@@ -1888,16 +1844,13 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       return;
     }
 
-    // Check for duplicate UTR
     var idx = loadUtrIndex();
     if(idx[utr]){
       toast('Duplicate UTR detected (already used)', 'error');
       return;
     }
 
-    // ✅ Use the exact amount the user saw on payment page
     const amount = Number(STATE.lastPaymentAmount || calcCartTotals().total || 0);
-
     completeOrder(utr, 'manual_upi', amount);
   }
   
@@ -1916,21 +1869,18 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       timestamp: new Date().toISOString()
     };
     
-    // Save order
     try{
       const orders = JSON.parse(localStorage.getItem('decide_orders') || '[]');
       orders.push(order);
       localStorage.setItem('decide_orders', JSON.stringify(orders));
     }catch(e){}
     
-    // Save UTR index if manual UPI
     if(method === 'manual_upi'){
       var idx = loadUtrIndex();
       idx[paymentId] = { orderId: orderId, ts: new Date().toISOString() };
       saveUtrIndex(idx);
     }
     
-    // Send WhatsApp notification
     const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
     if(restaurant?.whatsapp){
       const msg = `New Order: ${orderId}%0AAmount: ₹${Math.round(amount)}%0APayment: ${method}%0AItems: ${STATE.cart.length}`;
@@ -1941,12 +1891,10 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       }, 500);
     }
     
-    // Clear cart
     STATE.cart = [];
     saveCart();
     updateFloatingCart();
     
-    // Show success
     showSuccess(orderId);
   }
   
@@ -2022,9 +1970,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       '</div>';
   }
   
-  // ======================
-  // NAV / EVENTS
-  // ======================
   function goHome(){
     if(isVisited()) renderLobby();
     else renderLanding();
@@ -2092,9 +2037,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     handle(el);
   });
   
-  // ======================
-  // INIT
-  // ======================
   function init(){
     sbClient = initSupabase();
     loadOrders();
@@ -2102,7 +2044,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     loadToMemory(ECOMMERCE_DATA);
     updateFloatingCart();
     
-    // Floating cart click
     const fc = $("floatingCart");
     if(fc){
       fc.addEventListener('click', viewCart);
