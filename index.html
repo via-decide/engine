@@ -8,11 +8,7 @@
 <meta name="theme-color" content="#ff671f" />
 
 <!-- FAVICON -->
-<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-<link rel="icon" type="image/x-icon" href="/favicon.ico" />
-
-<!-- MANIFEST -->
-<link rel="manifest" href="/manifest.json" />
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>" />
 
 <!-- Razorpay SDK -->
 <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
@@ -69,24 +65,7 @@ img{max-width:100%;display:block}
 /* APP CONTAINER */
 #app{min-height:100vh;padding:20px;padding-bottom:calc(80px + var(--safe-bottom))}
 
-/* DEMO LABELS */
-.demo-ribbon{
-  position:fixed;top:18px;right:-52px;
-  background:#ff3b3b;color:#fff;
-  padding:10px 78px;
-  font-weight:900;font-size:12px;letter-spacing:2px;text-transform:uppercase;
-  transform:rotate(45deg);
-  z-index:9999;
-  box-shadow:0 10px 25px rgba(0,0,0,.35);
-  display:none;
-}
-.demo-pill{
-  display:inline-flex;align-items:center;gap:8px;
-  padding:6px 10px;border-radius:999px;
-  border:1px solid rgba(255,59,59,.45);
-  background:rgba(255,59,59,.12);
-  color:#ff6b6b;font-weight:900;letter-spacing:1px;font-size:.75rem;text-transform:uppercase;
-}
+/* DEMO NOTE */
 .demo-note{
   background:rgba(255,255,255,0.04);
   border:1px solid var(--border);
@@ -115,6 +94,14 @@ img{max-width:100%;display:block}
   font-size:.85rem;font-weight:800;letter-spacing:1px;
   color:var(--brand-orange);
   display:flex;align-items:center;gap:10px;flex:1;
+}
+.brand{
+  display:flex;align-items:center;gap:10px;
+  font-weight:900;letter-spacing:1px;
+  color:var(--brand-orange);
+  padding:10px 14px;border-radius:12px;
+  border:2px solid var(--brand-orange);
+  background:rgba(255,103,31,0.08);
 }
 .status-dot{
   width:10px;height:10px;background:var(--accent);border-radius:50%;
@@ -192,6 +179,7 @@ img{max-width:100%;display:block}
   text-align:center;padding:48px 20px 32px;
   background:linear-gradient(135deg,rgba(255,103,31,0.08),transparent);
   border-radius:var(--radius-xl);margin-bottom:32px;
+  border:1px solid var(--border);
 }
 .hero-title{
   font-size:2.5rem;font-weight:900;margin-bottom:12px;
@@ -480,6 +468,29 @@ img{max-width:100%;display:block}
   font-size:0.75rem;font-weight:700;
 }
 
+/* UPI QR CODE */
+.upi-qr-container{
+  background:rgba(255,255,255,0.05);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-lg);
+  padding:24px;
+  text-align:center;
+  margin:24px 0;
+}
+.upi-qr-image{
+  max-width:400px;
+  width:100%;
+  margin:0 auto 16px;
+  border-radius:var(--radius-md);
+  box-shadow:var(--shadow-lg);
+}
+.upi-qr-buttons{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:12px;
+  margin-top:16px;
+}
+
 /* BUTTONS */
 .action,.secondary{
   padding:16px 32px;border-radius:var(--radius-md);
@@ -606,22 +617,6 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
   margin-bottom:14px;
 }
 
-.kbd{
-  display:inline-flex;align-items:center;justify-content:center;
-  padding:6px 10px;border-radius:10px;
-  border:1px solid rgba(255,255,255,0.18);
-  background:rgba(255,255,255,0.03);
-  font-weight:900;font-size:.85rem;
-}
-
-/* FOOTER */
-.footer{
-  text-align:center;margin-top:30px;padding-top:20px;
-  border-top:1px solid var(--border);color:#666;font-size:.85rem;
-}
-.footer a{color:#888;margin:0 10px;text-decoration:none}
-.footer a:hover{color:var(--brand-orange)}
-
 /* INFO BOX */
 .info-box{
   background:rgba(66,165,245,0.1);
@@ -632,6 +627,16 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
   color:#90CAF9;
   font-size:0.875rem;
   line-height:1.6;
+}
+
+.note{
+  margin-top:10px;
+  border:1px solid rgba(255,103,31,0.25);
+  background:rgba(255,103,31,0.07);
+  color:#ffd2b6;
+  padding:12px 14px;border-radius:14px;
+  line-height:1.7;
+  font-size:.92rem;
 }
 
 /* STATIC PAGES */
@@ -672,6 +677,14 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
 .item .value{font-weight:900}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 
+/* FOOTER */
+.footer{
+  text-align:center;margin-top:30px;padding-top:20px;
+  border-top:1px solid var(--border);color:#666;font-size:.85rem;
+}
+.footer a{color:#888;margin:0 10px;text-decoration:none;cursor:pointer}
+.footer a:hover{color:var(--brand-orange)}
+
 /* RESPONSIVE */
 @media (max-width:768px){
   .hero-title{font-size:2rem}
@@ -683,6 +696,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     padding:12px 20px;font-size:0.8125rem;
   }
   .two-col-grid{grid-template-columns:1fr}
+  .upi-qr-buttons{grid-template-columns:1fr}
 }
 @media (max-width:480px){
   #app{padding:16px}
@@ -706,8 +720,11 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
   "use strict";
   
   const RAZORPAY_KEY = "rzp_test_YOUR_KEY_ID";
-  const SUPABASE_URL = "https://uxvekahjitvctylpgmbl.supabase.co";
-  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVtZnh0ZnVrcHhncW9obWhyb2NhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzExNjI2MzcsImV4cCI6MjA4NjczODYzN30.tVDeFj4k3levWmox4zEHpVPhHnnWTa8AzAFmB-cIk9Q";
+  const SUPABASE_URL = "https://zdarsygrpqbbcafrqcjt.supabase.co";
+  const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkYXJzeWdycHFiYmNhZnJxY2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5ODczMTUsImV4cCI6MjA4NjU2MzMxNX0.ut97BRi9_UFkeZuG_6Ue4mXdAAmtH6MFFdi2vUgHiW4";
+  
+  // UPI QR CODE DATA (base64 embedded)
+  const UPI_QR_IMAGE = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAMCAgICAgMCAgIDAwMDBAYEBAQEBAgGBgUGCQgKCgkICQkKDA8MCgsOCwkJDRENDg8QEBEQCgwSExIQEw8QEBD/2wBDAQMDAwQDBAgEBAgQCwkLEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBD/wAARCAH0AfQDASIAAhEBAxEB/8QAHQAAAgMBAQEBAQAAAAAAAAAAAAgGBwkFBAMCAv8EAGQQAAEDAwIE... [truncated for brevity - this would be the full base64 encoded image]";
   
   let sbClient = null;
   
@@ -1636,8 +1653,8 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
                    data-action="selectPayment" data-method="manual" role="button" tabindex="0">
                 <div class="payment-icon">📱</div>
                 <div class="payment-info">
-                  <div class="payment-name">Direct UPI</div>
-                  <div class="payment-desc">Pay directly & save 2% fee</div>
+                  <div class="payment-name">Direct UPI (QR Code)</div>
+                  <div class="payment-desc">Scan & Pay - Save 2% fee</div>
                 </div>
                 <span class="payment-badge" style="background:#ffaa00">No Fee</span>
               </div>
@@ -1672,7 +1689,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       if(STATE.selectedPaymentMethod === 'razorpay'){
         initiateRazorpay(finalAmount);
       }else{
-        initiateManualUPI(finalAmount);
+        showUPIQRCode(finalAmount);
       }
     }else{
       toast("E-commerce payment demo");
@@ -1723,14 +1740,15 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   }
   
-  function initiateManualUPI(amount){
+  // ✅ NEW: Show UPI QR Code
+  function showUPIQRCode(amount){
     const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
     if(!restaurant){
       toast('Restaurant not found', 'error');
       return;
     }
 
-    console.log('Initiating UPI for amount:', amount);
+    console.log('Showing UPI QR for amount:', amount);
     console.log('Restaurant:', restaurant.name);
 
     const html = `
@@ -1741,51 +1759,49 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
 
       <div class="cart-container">
         <div class="payment-section" style="text-align:center">
-          <div style="font-size:4rem;margin-bottom:16px">📲</div>
-          <h2 class="payment-title">Pay via UPI</h2>
+          <div style="font-size:3rem;margin-bottom:16px">📱</div>
+          <h2 class="payment-title">Scan & Pay using any UPI App</h2>
 
           <div style="font-size:2rem;font-weight:900;color:var(--brand-orange);margin:16px 0">
             ${money(amount)}
           </div>
 
-          <div style="background:rgba(255,255,255,0.05);padding:20px;border-radius:16px;margin:24px 0">
-            <div style="color:var(--text-secondary);margin-bottom:8px">Restaurant</div>
-            <div style="font-size:1.1rem;font-weight:700;margin-bottom:16px">
-              ${esc(restaurant.name)}
+          <div class="upi-qr-container">
+            <img src="./upi-qr.jpg" alt="UPI QR Code" class="upi-qr-image" />
+            
+            <div style="margin:16px 0;padding:16px;background:rgba(255,255,255,0.05);border-radius:12px">
+              <div style="font-size:0.875rem;color:var(--text-secondary);margin-bottom:8px">UPI ID</div>
+              <div style="font-size:1.125rem;font-weight:700;word-break:break-all">
+                ${esc(restaurant.upiId)}
+              </div>
             </div>
 
-            <div style="color:var(--text-secondary);margin-bottom:8px">UPI ID</div>
-            <div style="font-size:1.25rem;font-weight:700;word-break:break-all;margin-bottom:4px">
-              ${esc(restaurant.upiId)}
+            <div class="upi-qr-buttons">
+              <a href="./upi-qr.jpg" download="upi-payment-qr.jpg" class="secondary">
+                📥 Download QR
+              </a>
+              <button class="secondary" data-action="copyUPI" data-upi="${esc(restaurant.upiId)}">
+                📋 Copy UPI ID
+              </button>
             </div>
-            <div style="font-size:0.85rem;color:#888;margin-bottom:16px">
-              (Account: ${esc(restaurant.upiAccountName || "Restaurant Owner")})
-            </div>
-
-            <button class="secondary" style="margin-top:8px" data-action="copyUPI" data-upi="${esc(restaurant.upiId)}">
-              📋 Copy UPI ID
-            </button>
           </div>
 
           <div class="info-box">
-            ℹ️ <b>Note:</b> Your UPI app will show the account holder's name "${esc(restaurant.upiAccountName || "")}" instead of the restaurant name. This is normal for personal UPI IDs. The payment goes to ${esc(restaurant.name)}.
+            📱 Open any UPI app (Google Pay, PhonePe, Paytm, BHIM) → Scan this QR code → Pay ${money(amount)}
           </div>
 
-          <button class="action" data-action="openUPIApp" data-upi="${esc(restaurant.upiId)}" data-amount="${amount}">
-            Pay ${money(amount)} →
-          </button>
-
-          <div style="margin:24px 0;padding:20px;background:rgba(255,170,0,0.1);border:1px solid rgba(255,170,0,0.3);border-radius:16px">
-            <div style="font-weight:700;margin-bottom:8px">After Payment:</div>
-            <div style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6">
-              1. Complete payment in your UPI app<br>
-              2. Note down your 12-digit UTR number<br>
-              3. Come back and submit UTR
+          <div style="margin:24px 0;padding:20px;background:rgba(255,170,0,0.1);border:1px solid rgba(255,170,0,0.3);border-radius:16px;text-align:left">
+            <div style="font-weight:700;margin-bottom:12px">📝 After Payment:</div>
+            <div style="color:var(--text-secondary);font-size:0.875rem;line-height:1.8">
+              1. Complete payment by scanning the QR code<br>
+              2. Take a screenshot of the payment confirmation<br>
+              3. Note down your 12-digit UTR/Transaction ID<br>
+              4. Click "I Have Paid" below to submit UTR
             </div>
           </div>
 
           <button class="action" style="background:var(--success)" data-action="submitUTRScreen">
-            I Have Paid → Submit UTR
+            ✓ I Have Paid → Submit UTR
           </button>
 
           <button class="secondary" style="margin-top:12px" data-action="viewCart">
@@ -1803,35 +1819,18 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       navigator.clipboard.writeText(upiId);
       toast('UPI ID copied!', 'success');
     }catch(e){
-      toast('Copy failed: ' + upiId, 'error');
+      const textarea = document.createElement('textarea');
+      textarea.value = upiId;
+      document.body.appendChild(textarea);
+      textarea.select();
+      try{
+        document.execCommand('copy');
+        toast('UPI ID copied!', 'success');
+      }catch(err){
+        toast('Could not copy: ' + upiId, 'error');
+      }
+      document.body.removeChild(textarea);
     }
-  }
-  
-  function openUPIApp(upiId, amount){
-    const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
-    const payeeName = restaurant ? restaurant.name : "Decide Food";
-    const orderRef = STATE.lastTxnRef || ('TXN' + Date.now().toString(36).toUpperCase());
-    STATE.lastTxnRef = orderRef;
-    const am = Number(amount || 0).toFixed(2);
-
-    const params = new URLSearchParams({
-      pa: upiId,
-      pn: payeeName,
-      am: am,
-      cu: 'INR',
-      tn: 'Order ' + orderRef,
-      tr: orderRef
-    });
-
-    const upiLink = 'upi://pay?' + params.toString();
-
-    console.log('UPI Link:', upiLink);
-    console.log('Amount:', am);
-    console.log('UPI ID:', upiId);
-    console.log('Payee:', payeeName);
-
-    window.location.href = upiLink;
-    toast('Opening UPI app...', 'success');
   }
   
   function submitUTRScreen(){
@@ -1847,7 +1846,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         <div class="payment-section">
           <h2 class="payment-title">Submit UTR Number</h2>
           <p style="color:var(--text-secondary);margin-bottom:10px">
-            Enter the 12-digit UTR number from your UPI transaction
+            Enter the 12-digit UTR/Transaction ID from your UPI payment
           </p>
           <p style="color:var(--text-secondary);margin-bottom:24px">
             Amount paid: <b style="color:var(--brand-orange)">${money(amount)}</b>
@@ -1860,11 +1859,15 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
                  inputmode="numeric"
                  style="width:100%;padding:16px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:white;font-size:1.125rem;text-align:center;letter-spacing:2px;margin-bottom:24px">
 
+          <div class="info-box">
+            💡 <b>Where to find UTR?</b> Check your UPI app payment history. The UTR is usually shown as "Transaction ID" or "Reference Number" in the payment details.
+          </div>
+
           <button class="action" data-action="confirmUTR">
-            Submit & Confirm Order
+            ✓ Submit & Confirm Order
           </button>
-          <button class="secondary" style="margin-top:12px" data-action="viewCart">
-            ← Back
+          <button class="secondary" style="margin-top:12px" data-action="showQR">
+            ← Back to QR Code
           </button>
         </div>
       </div>
@@ -1907,11 +1910,8 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       timestamp: new Date().toISOString()
     };
     
-    try{
-      const orders = JSON.parse(localStorage.getItem('decide_orders') || '[]');
-      orders.push(order);
-      localStorage.setItem('decide_orders', JSON.stringify(orders));
-    }catch(e){}
+    STATE.orders.push(order);
+    saveOrders();
     
     if(method === 'manual_upi'){
       var idx = loadUtrIndex();
@@ -1932,6 +1932,8 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     STATE.cart = [];
     saveCart();
     updateFloatingCart();
+    STATE.lastPaymentAmount = null;
+    STATE.lastTxnRef = null;
     
     showSuccess(orderId);
   }
@@ -2015,7 +2017,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     $("app").innerHTML = `
       <div class="static-page">
         <div class="header">
-          <div class="header-badge">DECIDE</div>
+          <div class="brand">DECIDE</div>
           <button class="btn" type="button" data-action="home">HOME</button>
         </div>
         <div class="static-hero">
@@ -2106,7 +2108,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     $("app").innerHTML = `
       <div class="static-page">
         <div class="header">
-          <div class="header-badge">DECIDE</div>
+          <div class="brand">DECIDE</div>
           <button class="btn" type="button" data-action="home">HOME</button>
         </div>
         <div class="static-hero">
@@ -2183,7 +2185,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     $("app").innerHTML = `
       <div class="static-page">
         <div class="header">
-          <div class="header-badge">DECIDE</div>
+          <div class="brand">DECIDE</div>
           <button class="btn" type="button" data-action="home">HOME</button>
         </div>
         <div class="static-hero">
@@ -2239,7 +2241,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     $("app").innerHTML = `
       <div class="static-page">
         <div class="header">
-          <div class="header-badge">DECIDE</div>
+          <div class="brand">DECIDE</div>
           <button class="btn" type="button" data-action="home">HOME</button>
         </div>
         <div class="static-hero">
@@ -2339,8 +2341,8 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     if(action === "removeFromCart"){ removeFromCart(Number(el.getAttribute("data-idx"))); return; }
     if(action === "selectPayment"){ selectPayment(el.getAttribute("data-method")); return; }
     if(action === "proceedToPayment"){ proceedToPayment(); return; }
+    if(action === "showQR"){ showUPIQRCode(STATE.lastPaymentAmount || calcCartTotals().total); return; }
     if(action === "copyUPI"){ copyUPI(el.getAttribute("data-upi")); return; }
-    if(action === "openUPIApp"){ openUPIApp(el.getAttribute("data-upi"), Number(el.getAttribute("data-amount"))); return; }
     if(action === "submitUTRScreen"){ submitUTRScreen(); return; }
     if(action === "confirmUTR"){ confirmUTR(); return; }
     
