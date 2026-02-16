@@ -683,7 +683,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
   }
   
   // ======================
-  // STATE
+  // STATE - ✅ ADDED PAYMENT TRACKING
   // ======================
   const STATE = {
     cart: [],
@@ -694,7 +694,10 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     domain: null,
     session: "SID-" + Math.random().toString(36).slice(2,6).toUpperCase(),
     filters: [],
-    lastEcomCategory: null
+    lastEcomCategory: null,
+    // ✅ NEW: Track payment amount and transaction reference
+    lastPaymentAmount: null,
+    lastTxnRef: null
   };
   
   // Device ID
@@ -751,6 +754,23 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   }
   function money(n){return "₹" + Number(n||0).toLocaleString("en-IN")}
+  
+  // ✅ NEW: Calculate cart totals consistently
+  function calcCartTotals(){
+    const subtotal = STATE.cart.reduce((sum, item) => {
+      const price = Number(item.price || 0);
+      const qty = Number(item.qty || 1);
+      return sum + (price * qty);
+    }, 0);
+
+    const isFood = (STATE.cart[0] && STATE.cart[0].type === "food");
+    const taxRate = isFood ? 0.05 : 0.18;
+
+    const gst = Math.round(subtotal * taxRate);
+    const total = Number((subtotal + gst).toFixed(2));
+
+    return { subtotal, gst, total, isFood, taxRate };
+  }
   
   function safeId(){
     try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
@@ -1551,17 +1571,14 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   }
   
+  // ✅ UPDATED: Use calcCartTotals helper
   function viewCart(){
     if(STATE.cart.length === 0){
       renderLobby();
       return;
     }
     
-    const subtotal = STATE.cart.reduce((sum, item) => sum + item.price, 0);
-    const isFood = (STATE.cart[0] && STATE.cart[0].type === "food");
-    const taxRate = isFood ? 0.05 : 0.18;
-    const tax = Math.round(subtotal * taxRate);
-    const total = subtotal + tax;
+    const { subtotal, gst: tax, total, isFood } = calcCartTotals();
     
     const html = `
       <div class="header">
@@ -1644,21 +1661,21 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     viewCart();
   }
   
+  // ✅ UPDATED: Store final amount for payment consistency
   function proceedToPayment(){
-    const total = STATE.cart.reduce((sum, item) => sum + item.price, 0);
-    const isFood = (STATE.cart[0] && STATE.cart[0].type === "food");
-    const taxRate = isFood ? 0.05 : 0.18;
-    const tax = Math.round(total * taxRate);
-    const finalAmount = total + tax;
-    
-    if(isFood){
+    const totals = calcCartTotals();
+    const finalAmount = totals.total;
+
+    // ✅ Store final amount so later screens match exactly
+    STATE.lastPaymentAmount = finalAmount;
+
+    if(totals.isFood){
       if(STATE.selectedPaymentMethod === 'razorpay'){
         initiateRazorpay(finalAmount);
       }else{
         initiateManualUPI(finalAmount);
       }
     }else{
-      // E-commerce demo payment
       toast("E-commerce payment demo");
     }
   }
@@ -1707,41 +1724,53 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   }
   
+  // ✅ UPDATED: Show merchant name, proper UPI button text
   function initiateManualUPI(amount){
-    const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0].restaurantId);
+    const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
     if(!restaurant){
       toast('Restaurant not found', 'error');
       return;
     }
-    
+
+    // Debug
+    console.log('Initiating UPI for amount:', amount);
+    console.log('Restaurant:', restaurant.name);
+
     const html = `
       <div class="header">
         <div class="header-badge">DECIDE INDIA <span class="status-dot"></span></div>
         <button class="btn" type="button" data-action="home">HOME</button>
       </div>
-      
+
       <div class="cart-container">
         <div class="payment-section" style="text-align:center">
           <div style="font-size:4rem;margin-bottom:16px">📲</div>
           <h2 class="payment-title">Pay via UPI</h2>
+
           <div style="font-size:2rem;font-weight:900;color:var(--brand-orange);margin:16px 0">
             ${money(amount)}
           </div>
-          
+
           <div style="background:rgba(255,255,255,0.05);padding:20px;border-radius:16px;margin:24px 0">
+            <div style="color:var(--text-secondary);margin-bottom:8px">Merchant Name</div>
+            <div style="font-size:1.1rem;font-weight:700;margin-bottom:12px">
+              ${esc(restaurant.name)}
+            </div>
+
             <div style="color:var(--text-secondary);margin-bottom:8px">UPI ID</div>
             <div style="font-size:1.25rem;font-weight:700;word-break:break-all">
               ${esc(restaurant.upiId)}
             </div>
+
             <button class="secondary" style="margin-top:16px" data-action="copyUPI" data-upi="${esc(restaurant.upiId)}">
               📋 Copy UPI ID
             </button>
           </div>
-          
+
           <button class="action" data-action="openUPIApp" data-upi="${esc(restaurant.upiId)}" data-amount="${amount}">
-            Open UPI App
+            Pay ${money(amount)} →
           </button>
-          
+
           <div style="margin:24px 0;padding:20px;background:rgba(255,170,0,0.1);border:1px solid rgba(255,170,0,0.3);border-radius:16px">
             <div style="font-weight:700;margin-bottom:8px">After Payment:</div>
             <div style="color:var(--text-secondary);font-size:0.875rem;line-height:1.6">
@@ -1750,17 +1779,18 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
               3. Come back and submit UTR
             </div>
           </div>
-          
+
           <button class="action" style="background:var(--success)" data-action="submitUTRScreen">
             I Have Paid → Submit UTR
           </button>
+
           <button class="secondary" style="margin-top:12px" data-action="viewCart">
             ← Back to Cart
           </button>
         </div>
       </div>
     `;
-    
+
     $("app").innerHTML = html;
   }
   
@@ -1773,35 +1803,68 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
   }
   
+  // ✅ UPDATED: Proper UPI deeplink with merchant name and transaction ref
   function openUPIApp(upiId, amount){
-    const upiLink = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=Decide&am=${amount}&cu=INR&tn=Food Order`;
+    // Get proper restaurant name for payee name
+    const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
+    const payeeName = restaurant ? restaurant.name : "Decide Food";
+
+    // ✅ Stable txn ref (also used later if needed)
+    const orderRef = STATE.lastTxnRef || ('TXN' + Date.now().toString(36).toUpperCase());
+    STATE.lastTxnRef = orderRef;
+
+    // Force amount format (some UPI apps prefer 2 decimals)
+    const am = Number(amount || 0).toFixed(2);
+
+    // Build proper UPI deeplink
+    const params = new URLSearchParams({
+      pa: upiId,
+      pn: payeeName,
+      am: am,
+      cu: 'INR',
+      tn: 'Order ' + orderRef,
+      tr: orderRef
+    });
+
+    const upiLink = 'upi://pay?' + params.toString();
+
+    console.log('UPI Link:', upiLink);
+    console.log('Amount:', am);
+    console.log('UPI ID:', upiId);
+    console.log('Payee:', payeeName);
+
     window.location.href = upiLink;
     toast('Opening UPI app...', 'success');
   }
   
+  // ✅ UPDATED: Use stored payment amount
   function submitUTRScreen(){
-    const amount = STATE.cart.reduce((sum, item) => sum + item.price, 0) * 1.05;
-    
+    // ✅ Always use the stored final amount (prevents mismatch/₹84 issues)
+    const amount = Number(STATE.lastPaymentAmount || calcCartTotals().total || 0);
+
     const html = `
       <div class="header">
         <div class="header-badge">DECIDE INDIA <span class="status-dot"></span></div>
         <button class="btn" type="button" data-action="home">HOME</button>
       </div>
-      
+
       <div class="cart-container">
         <div class="payment-section">
           <h2 class="payment-title">Submit UTR Number</h2>
-          <p style="color:var(--text-secondary);margin-bottom:24px">
+          <p style="color:var(--text-secondary);margin-bottom:10px">
             Enter the 12-digit UTR number from your UPI transaction
           </p>
-          
-          <input type="text" 
-                 id="utrInput" 
+          <p style="color:var(--text-secondary);margin-bottom:24px">
+            Amount paid: <b style="color:var(--brand-orange)">${money(amount)}</b>
+          </p>
+
+          <input type="text"
+                 id="utrInput"
                  placeholder="Enter 12-digit UTR"
                  maxlength="12"
                  inputmode="numeric"
                  style="width:100%;padding:16px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,0.05);color:white;font-size:1.125rem;text-align:center;letter-spacing:2px;margin-bottom:24px">
-          
+
           <button class="action" data-action="confirmUTR">
             Submit & Confirm Order
           </button>
@@ -1811,27 +1874,30 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         </div>
       </div>
     `;
-    
+
     $("app").innerHTML = html;
-    setTimeout(() => $("utrInput").focus(), 100);
+    setTimeout(() => $("utrInput") && $("utrInput").focus(), 100);
   }
   
+  // ✅ UPDATED: Use stored payment amount
   function confirmUTR(){
     const utr = ($("utrInput")?.value || '').replace(/\s+/g, '');
-    
+
     if(!/^\d{12}$/.test(utr)){
       toast('UTR must be exactly 12 digits', 'error');
       return;
     }
-    
+
     // Check for duplicate UTR
     var idx = loadUtrIndex();
     if(idx[utr]){
       toast('Duplicate UTR detected (already used)', 'error');
       return;
     }
-    
-    const amount = STATE.cart.reduce((sum, item) => sum + item.price, 0) * 1.05;
+
+    // ✅ Use the exact amount the user saw on payment page
+    const amount = Number(STATE.lastPaymentAmount || calcCartTotals().total || 0);
+
     completeOrder(utr, 'manual_upi', amount);
   }
   
