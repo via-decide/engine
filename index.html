@@ -1,226 +1,274 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Decide Delivery – Rajkot</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Decide Food – Rajkot</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <style>
-:root{
-  --brand:#ff671f;
-  --dark:#0a0a0a;
-  --card:#141414;
-  --border:rgba(255,255,255,0.12);
-  --green:#00e676;
-  --text:#ffffff;
-  --muted:#aaa;
-  --font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-}
-*{box-sizing:border-box;margin:0;padding:0}
 body{
+  margin:0;
   background:#000;
   color:#fff;
-  font-family:var(--font);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
 }
-.container{
-  max-width:900px;
-  margin:auto;
-  padding:24px;
-}
-header{
+
+.topbar{
+  position:sticky;
+  top:0;
+  background:#0a0a0a;
+  padding:14px 18px;
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:20px 0;
+  border-bottom:1px solid rgba(255,255,255,0.1);
+  z-index:100;
 }
-.brand{
-  font-weight:900;
-  font-size:1.4rem;
-  color:var(--brand);
-}
-.live{
-  display:flex;
-  align-items:center;
-  gap:10px;
-  font-weight:700;
-}
-.dot{
+
+.live-dot{
   width:10px;
   height:10px;
+  background:#00e676;
   border-radius:50%;
-  background:var(--green);
-  box-shadow:0 0 10px var(--green);
+  box-shadow:0 0 10px #00e676;
   animation:pulse 2s infinite;
 }
+
 @keyframes pulse{
   0%,100%{opacity:1}
-  50%{opacity:.5}
+  50%{opacity:0.5}
 }
-.hero{
-  text-align:center;
-  padding:40px 0;
-}
-.hero h1{
-  font-size:2.6rem;
-  margin-bottom:12px;
-}
-.hero p{
-  color:var(--muted);
-  line-height:1.6;
-}
-.trust-bar{
-  margin:20px 0;
-  background:#111;
-  border:1px solid var(--border);
-  padding:12px;
-  border-radius:10px;
-  text-align:center;
-  font-weight:600;
-  overflow:hidden;
-}
+
 .ticker{
-  animation:scroll 12s linear infinite;
+  font-size:0.85rem;
+  color:#bbb;
+  overflow:hidden;
   white-space:nowrap;
 }
-@keyframes scroll{
-  0%{transform:translateX(100%)}
-  100%{transform:translateX(-100%)}
-}
-.section{
-  margin:40px 0;
-}
-.card{
-  background:var(--card);
-  border:1px solid var(--border);
+
+.container{
   padding:20px;
-  border-radius:14px;
+  max-width:600px;
+  margin:auto;
+}
+
+.card{
+  background:#141414;
+  padding:18px;
+  border-radius:16px;
   margin-bottom:16px;
+  border:1px solid rgba(255,255,255,0.08);
 }
-.card h3{
-  margin-bottom:10px;
-}
-.btn{
-  display:inline-block;
-  background:var(--brand);
-  color:#000;
-  padding:12px 20px;
-  border-radius:8px;
-  font-weight:800;
-  text-decoration:none;
-  margin-top:12px;
-}
-.secondary{
-  background:#222;
-  color:#fff;
-  border:1px solid var(--border);
-}
-.flow{
-  display:grid;
-  gap:14px;
-}
-.flow-step{
+
+button{
+  width:100%;
   padding:14px;
-  background:#111;
-  border-radius:10px;
-  border:1px solid var(--border);
-}
-footer{
-  margin-top:50px;
-  border-top:1px solid var(--border);
-  padding:20px 0;
-  text-align:center;
-  font-size:.9rem;
-  color:var(--muted);
-}
-.email-list{
+  border-radius:14px;
+  border:none;
+  font-weight:700;
+  cursor:pointer;
   margin-top:10px;
-  line-height:1.8;
+}
+
+.primary{
+  background:#ff671f;
+  color:#000;
+}
+
+.secondary{
+  background:#1a1a1a;
+  color:#fff;
+  border:1px solid rgba(255,255,255,0.2);
+}
+
+input,select{
+  width:100%;
+  padding:12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.2);
+  background:#0f0f0f;
+  color:#fff;
+  margin-top:8px;
+}
+
+.cart-badge{
+  position:fixed;
+  bottom:20px;
+  right:20px;
+  background:#ff671f;
+  padding:14px 18px;
+  border-radius:50px;
+  font-weight:700;
+  color:#000;
+  cursor:pointer;
 }
 </style>
 </head>
+
 <body>
 
-<div class="container">
-
-<header>
-  <div class="brand">DECIDE DELIVERY</div>
-  <div class="live">
-    <div class="dot"></div>
-    Rajkot • Riders Active
+<div class="topbar">
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="live-dot"></div>
+    <div>Rajkot • Riders Active</div>
   </div>
-</header>
-
-<div class="hero">
-  <h1>Rajkot's Commission-Free Delivery Engine</h1>
-  <p>Local-first. Transparent. Fast.<br>
-  Built to empower restaurants & riders — not exploit them.</p>
+  <div class="ticker" id="ticker"></div>
 </div>
 
-<div class="trust-bar">
-  <div class="ticker">
-    🚀 0% Commission Model • 🔥 Fast 30min Option • 🏍️ Riders Hiring • 📍 Rajkot Local Only • 🛡️ Pay After Delivery Available
-  </div>
-</div>
+<div id="app" class="container"></div>
+<div id="cartBadge" class="cart-badge" style="display:none"></div>
 
-<div class="section">
+<script>
+const SUPABASE_URL="YOUR_SUPABASE_URL";
+const SUPABASE_KEY="YOUR_SUPABASE_ANON_KEY";
+const sb = supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+const DELIVERY_CHARGE=25;
+
+let STATE={
+  area:null,
+  urgency:null,
+  preference:null,
+  cart:[]
+};
+
+const RESTAURANTS=[
+  {name:"Rajkot Thali House",area:"Race Course",prep:20,spicy:true},
+  {name:"Kathiyawadi King",area:"Kalavad Road",prep:25,spicy:true},
+  {name:"Light Bites",area:"University Road",prep:15,spicy:false}
+];
+
+function renderStep1(){
+  document.getElementById("app").innerHTML=`
   <div class="card">
-    <h3>How Ordering Works</h3>
-    <div class="flow">
-      <div class="flow-step">📍 Select Area (Rajkot)</div>
-      <div class="flow-step">⏱ Choose Urgency – Fast (Under 30min) / Normal</div>
-      <div class="flow-step">🍽 Select Preference – Spicy / Mild / Light</div>
-      <div class="flow-step">🎯 Optimized Restaurant Suggestions Appear</div>
+    <h2>Select Area</h2>
+    <select id="area">
+      <option>Race Course</option>
+      <option>Kalavad Road</option>
+      <option>University Road</option>
+    </select>
+    <button class="primary" onclick="step2()">Continue</button>
+  </div>
+  <div class="card">
+    <h3>Join Decide</h3>
+    <button class="secondary" onclick="window.location='mailto:dharam@viadecide.com?subject=Seller%20Onboarding'">Become Seller</button>
+    <button class="secondary" onclick="window.location='mailto:dharam@viadecide.com?subject=Rider%20Application'">Become Rider</button>
+  </div>
+  `;
+}
+
+function step2(){
+  STATE.area=document.getElementById("area").value;
+  document.getElementById("app").innerHTML=`
+  <div class="card">
+    <h2>Urgency</h2>
+    <button class="primary" onclick="setUrgency('fast')">🚀 Under 30 mins</button>
+    <button class="secondary" onclick="setUrgency('normal')">🕒 Normal</button>
+  </div>`;
+}
+
+function setUrgency(u){
+  STATE.urgency=u;
+  document.getElementById("app").innerHTML=`
+  <div class="card">
+    <h2>Food Preference</h2>
+    <button class="primary" onclick="setPref('spicy')">🔥 Spicy</button>
+    <button class="secondary" onclick="setPref('mild')">🧈 Mild</button>
+  </div>`;
+}
+
+function setPref(p){
+  STATE.preference=p;
+  renderRestaurants();
+}
+
+function score(r){
+  let s=0;
+  if(r.area===STATE.area) s+=2;
+  if(STATE.urgency==='fast' && r.prep<=20) s+=2;
+  if(STATE.preference==='spicy' && r.spicy) s+=1;
+  return s;
+}
+
+function renderRestaurants(){
+  let filtered=RESTAURANTS.sort((a,b)=>score(b)-score(a));
+  document.getElementById("app").innerHTML=
+  filtered.map(r=>`
+    <div class="card">
+      <h3>${r.name}</h3>
+      <div>Prep: ${r.prep} mins</div>
+      <button class="primary" onclick="addToCart('${r.name}')">Add Thali ₹150</button>
     </div>
-  </div>
-</div>
+  `).join("");
+}
 
-<div class="section">
-  <div class="card">
-    <h3>For Restaurants</h3>
-    <p>If you already have delivery staff → we guarantee more local orders.</p>
-    <p>If not → deliver using Decide Riders.</p>
-    <a href="mailto:sellers@viadecide.com" class="btn">Join as Seller</a>
-  </div>
+function addToCart(name){
+  STATE.cart.push({name,price:150});
+  updateCart();
+}
 
-  <div class="card">
-    <h3>For Delivery Partners</h3>
-    <p>Earn majority share of delivery charge. No middle exploitation.</p>
-    <p>Flexible hours. Local routes.</p>
-    <a href="mailto:riders@viadecide.com" class="btn">Become a Rider</a>
-  </div>
+function updateCart(){
+  if(STATE.cart.length){
+    let total=STATE.cart.reduce((a,b)=>a+b.price,0)+DELIVERY_CHARGE;
+    document.getElementById("cartBadge").style.display="block";
+    document.getElementById("cartBadge").innerHTML=`Cart (${STATE.cart.length}) • ₹${total}`;
+    document.getElementById("cartBadge").onclick=viewCart;
+  }
+}
 
-  <div class="card">
-    <h3>Join Early Access</h3>
-    <p>Be first to experience Decide Delivery.</p>
-    <a href="mailto:support@viadecide.com" class="btn secondary">Join Waitlist</a>
-  </div>
-</div>
+function viewCart(){
+  let subtotal=STATE.cart.reduce((a,b)=>a+b.price,0);
+  let total=subtotal+DELIVERY_CHARGE;
+  document.getElementById("app").innerHTML=`
+    <div class="card">
+      <h2>Your Cart</h2>
+      ${STATE.cart.map(i=>`<div>${i.name} - ₹${i.price}</div>`).join("")}
+      <hr>
+      <div>Delivery: ₹${DELIVERY_CHARGE}</div>
+      <h3>Total: ₹${total}</h3>
+      <button class="primary" onclick="placeOrder(${total})">Place Order (Pay After Delivery)</button>
+    </div>
+  `;
+}
 
-<div class="section">
-  <div class="card">
-    <h3>Coming Soon</h3>
-    <p>🛍 Electronics</p>
-    <p>🛒 Groceries</p>
-    <p>🧰 On-demand Services</p>
-  </div>
-</div>
+async function placeOrder(total){
+  const {error}=await sb.from("rajkot_orders").insert([{
+    area:STATE.area,
+    urgency:STATE.urgency,
+    preference:STATE.preference,
+    items:STATE.cart,
+    total_amount:total,
+    status:"pending"
+  }]);
+  
+  if(error){
+    alert("Error placing order");
+    return;
+  }
 
-<footer>
-  <div>Contact Us</div>
-  <div class="email-list">
-    support@viadecide.com<br>
-    orders@viadecide.com<br>
-    sellers@viadecide.com<br>
-    riders@viadecide.com<br>
-    privacy@viadecide.com<br>
-    📞 +91 6351537770
-  </div>
-  <div style="margin-top:14px;">
-    © 2026 Decide Delivery – Rajkot
-  </div>
-</footer>
+  alert("Order placed. We will call you to confirm.");
+  STATE.cart=[];
+  renderStep1();
+  document.getElementById("cartBadge").style.display="none";
+}
 
-</div>
+const TRUST_LINES=[
+  "No commission for restaurants",
+  "Flat ₹25 delivery",
+  "Rajkot local riders",
+  "Pay after delivery available"
+];
+
+let tIndex=0;
+setInterval(()=>{
+  document.getElementById("ticker").innerText=TRUST_LINES[tIndex%TRUST_LINES.length];
+  tIndex++;
+},2500);
+
+renderStep1();
+</script>
 
 </body>
 </html>
