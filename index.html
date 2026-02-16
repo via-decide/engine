@@ -78,7 +78,7 @@ img{max-width:100%;display:block}
   transform:rotate(45deg);
   z-index:9999;
   box-shadow:0 10px 25px rgba(0,0,0,.35);
-  display:none; /* Hidden for live version */
+  display:none;
 }
 .demo-pill{
   display:inline-flex;align-items:center;gap:8px;
@@ -622,6 +622,56 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
 .footer a{color:#888;margin:0 10px;text-decoration:none}
 .footer a:hover{color:var(--brand-orange)}
 
+/* INFO BOX */
+.info-box{
+  background:rgba(66,165,245,0.1);
+  border:1px solid rgba(66,165,245,0.3);
+  border-radius:12px;
+  padding:12px 16px;
+  margin:16px 0;
+  color:#90CAF9;
+  font-size:0.875rem;
+  line-height:1.6;
+}
+
+/* STATIC PAGES */
+.static-page{max-width:860px;margin:0 auto}
+.static-hero{
+  background:linear-gradient(135deg,rgba(255,103,31,0.10),transparent);
+  border:1px solid var(--border);
+  border-radius:32px;
+  padding:26px 20px;
+  box-shadow:var(--shadow-lg);
+  margin-bottom:16px;
+}
+.static-meta{color:var(--text-secondary);font-size:.95rem;line-height:1.6}
+.static-card{
+  background:rgba(20,20,20,0.65);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:18px;
+  margin:12px 0;
+}
+.static-card h2{font-size:1.15rem;margin:0 0 10px}
+.static-card p,.static-card li{color:var(--text-secondary);line-height:1.75}
+.static-card ul{padding-left:18px}
+.kv{display:flex;flex-wrap:wrap;gap:10px;margin-top:10px}
+.pill{
+  border:1px solid var(--border-strong);
+  background:rgba(255,255,255,0.04);
+  padding:8px 12px;border-radius:999px;
+  color:#ddd;font-weight:700;font-size:.85rem;
+}
+.pill strong{color:var(--brand-orange)}
+.item{
+  border:1px solid var(--border-strong);
+  background:rgba(255,255,255,0.04);
+  padding:14px;border-radius:16px;
+}
+.item .label{color:var(--text-tertiary);font-weight:800;font-size:.85rem;letter-spacing:.6px;text-transform:uppercase;margin-bottom:6px}
+.item .value{font-weight:900}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+
 /* RESPONSIVE */
 @media (max-width:768px){
   .hero-title{font-size:2rem}
@@ -644,13 +694,8 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
 </head>
 <body>
 
-<!-- APP CONTAINER -->
 <div id="app"></div>
-
-<!-- TOAST -->
 <div id="toast" class="toast" role="status" aria-live="polite" aria-atomic="true"></div>
-
-<!-- FLOATING CART -->
 <div id="floatingCart" class="floating-cart" style="display:none">
   <span class="cart-badge" id="cartCount">0</span>
   <span>View Cart</span>
@@ -659,16 +704,13 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
 <script>
 (function(){
   "use strict";
-
-  // ======================
-  // CONFIG
-  // ======================
-  const RAZORPAY_KEY = "rzp_test_YOUR_KEY_ID"; // Replace with your actual Razorpay key
+  
+  const RAZORPAY_KEY = "rzp_test_YOUR_KEY_ID";
   const SUPABASE_URL = "https://zdarsygrpqbbcafrqcjt.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkYXJzeWdycHFiYmNhZnJxY2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5ODczMTUsImV4cCI6MjA4NjU2MzMxNX0.ut97BRi9_UFkeZuG_6Ue4mXdAAmtH6MFFdi2vUgHiW4";
-
+  
   let sbClient = null;
-
+  
   function initSupabase(){
     try{
       if(typeof window.supabase !== 'undefined' && window.supabase.createClient){
@@ -681,10 +723,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
     return null;
   }
-
-  // ======================
-  // STATE
-  // ======================
+  
   const STATE = {
     cart: [],
     orders: [],
@@ -695,19 +734,13 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     session: "SID-" + Math.random().toString(36).slice(2,6).toUpperCase(),
     filters: [],
     lastEcomCategory: null,
-
-    // ✅ PATCH: keep payment consistent across screens
     lastPaymentAmount: null,
     lastTxnRef: null
   };
-
-  // Device ID
+  
   var DEVICE_ID = localStorage.getItem("decide_device_id");
   if(!DEVICE_ID){ DEVICE_ID = safeId(); localStorage.setItem("decide_device_id", DEVICE_ID); }
-
-  // ======================
-  // DATA
-  // ======================
+  
   const RESTAURANTS = [
     {
       id: "rajkot-thali-001",
@@ -720,6 +753,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       tags: ["veg", "family", "unlimited"],
       icon: "🍛",
       upiId: "6351537770@yapl",
+      upiAccountName: "Dharam Jitendra Daxini",
       whatsapp: "https://wa.me/916351537770",
       menu: [
         {id:"thali-1",name:"Gujarati Thali",price:150,veg:true,desc:"Unlimited traditional thali with 4 sabzis, dal, rice, roti, papad, pickle, buttermilk",prepMins:20,category:"main",icon:"🍛"},
@@ -730,8 +764,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       ]
     }
   ];
-
-  // E-commerce data
+  
   var ECOMMERCE_DATA = [
     {category:"smartphones",name:"iPhone 15 Pro",price:134900,cam:9,gam:9,bat:7,seller:"Apple Store",rating:4.8,stock:50,delivery:"2 days",warranty:"1 year",city:"Gandhidham"},
     {category:"smartphones",name:"Samsung S24 Ultra",price:129999,cam:10,gam:9,bat:8,seller:"Samsung",rating:4.9,stock:40,delivery:"3 days",warranty:"1 year",city:"Gandhidham"},
@@ -741,26 +774,35 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     {category:"laptops",name:"MacBook Air M3",price:113900,perf:9,port:7,scr:9,seller:"Apple Store",rating:4.8,stock:55,delivery:"2 days",warranty:"1 year",city:"Gandhidham"},
     {category:"laptops",name:"Dell XPS 13",price:139990,perf:8,port:6,scr:9,seller:"Dell",rating:4.7,stock:40,delivery:"4 days",warranty:"1 year",city:"Gandhidham"}
   ];
-
-  // Memory DB for e-commerce
+  
   var DB = { smartphones:{}, earbuds:{}, laptops:{} };
   var RESULTS = [];
-
-  // ======================
-  // HELPERS
-  // ======================
+  
   function $(id){return document.getElementById(id)}
   function esc(s){
     s = String(s == null ? "" : s);
     return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
   }
   function money(n){return "₹" + Number(n||0).toLocaleString("en-IN")}
-
+  
+  function calcCartTotals(){
+    const subtotal = STATE.cart.reduce((sum, item) => {
+      const price = Number(item.price || 0);
+      const qty = Number(item.qty || 1);
+      return sum + (price * qty);
+    }, 0);
+    const isFood = (STATE.cart[0] && STATE.cart[0].type === "food");
+    const taxRate = isFood ? 0.05 : 0.18;
+    const gst = Math.round(subtotal * taxRate);
+    const total = Number((subtotal + gst).toFixed(2));
+    return { subtotal, gst, total, isFood, taxRate };
+  }
+  
   function safeId(){
     try{ if(window.crypto && crypto.randomUUID) return crypto.randomUUID(); }catch(e){}
     return "dev-" + Math.random().toString(36).slice(2) + "-" + Date.now().toString(36);
   }
-
+  
   function toast(msg, type = 'success'){
     const t = $("toast");
     if(!t) return;
@@ -770,7 +812,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     clearTimeout(toast._t);
     toast._t = setTimeout(() => t.classList.remove("show"), 3000);
   }
-
+  
   function updateFloatingCart(){
     const fc = $("floatingCart");
     const count = STATE.cart.length;
@@ -781,33 +823,29 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       fc.style.display = 'none';
     }
   }
-
+  
   function saveCart(){
-    try{
-      localStorage.setItem('decide_cart', JSON.stringify(STATE.cart));
-    }catch(e){}
+    try{ localStorage.setItem('decide_cart', JSON.stringify(STATE.cart)); }catch(e){}
   }
-
+  
   function loadCart(){
     try{
       const data = JSON.parse(localStorage.getItem('decide_cart') || '[]');
       STATE.cart = Array.isArray(data) ? data : [];
-    }catch(e){
-      STATE.cart = [];
-    }
+    }catch(e){ STATE.cart = []; }
   }
-
+  
   function loadOrders(){
     try{
       var x = JSON.parse(localStorage.getItem("order_history") || "[]");
       STATE.orders = Array.isArray(x) ? x : [];
     }catch(e){ STATE.orders = []; }
   }
-
+  
   function saveOrders(){
     try{ localStorage.setItem("order_history", JSON.stringify(STATE.orders)); }catch(e){}
   }
-
+  
   function loadToMemory(arr){
     DB = { smartphones:{}, earbuds:{}, laptops:{} };
     (arr || []).forEach(function(p){
@@ -831,35 +869,18 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       });
     });
   }
-
+  
   function loadUtrIndex(){
     try{
       var x = JSON.parse(localStorage.getItem("utr_index") || "{}");
       return (x && typeof x === "object") ? x : {};
     }catch(e){ return {}; }
   }
-
+  
   function saveUtrIndex(idx){
     try{ localStorage.setItem("utr_index", JSON.stringify(idx || {})); }catch(e){}
   }
-
-  // ✅ PATCH: single source of truth for totals (prevents ₹84 / mismatches)
-  function calcCartTotals(){
-    const subtotal = STATE.cart.reduce((sum, item) => {
-      const price = Number(item.price || 0);
-      const qty = Number(item.qty || 1);
-      return sum + (price * qty);
-    }, 0);
-
-    const isFood = (STATE.cart[0] && STATE.cart[0].type === "food");
-    const taxRate = isFood ? 0.05 : 0.18;
-    const gst = Math.round(subtotal * taxRate);
-    const total = Number((subtotal + gst).toFixed(2));
-
-    return { subtotal, gst, total, isFood, taxRate };
-  }
-
-  // Edge Function API calls
+  
   async function apiPost(fnName, payload){
     const url = SUPABASE_URL.replace(/\/+$/,"") + "/functions/v1/" + encodeURIComponent(fnName);
     const res = await fetch(url, {
@@ -880,7 +901,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     }
     return data;
   }
-
+  
   function saveFeedbackLocal(title, message){
     try{
       var arr = JSON.parse(localStorage.getItem("feedback_items") || "[]");
@@ -889,7 +910,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       localStorage.setItem("feedback_items", JSON.stringify(arr));
     }catch(e){}
   }
-
+  
   async function submitFeedback(title, message){
     try{
       await apiPost("feedback", { title:title||"Feedback", message:message, device_id: DEVICE_ID });
@@ -902,7 +923,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       return true;
     }
   }
-
+  
   function saveSellerInterestLocal(type, businessName, city, phone, idea){
     try{
       var arr = JSON.parse(localStorage.getItem("seller_interest") || "[]");
@@ -911,7 +932,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       localStorage.setItem("seller_interest", JSON.stringify(arr));
     }catch(e){}
   }
-
+  
   async function submitSellerInterest(type, businessName, city, phone, idea){
     try{
       await apiPost("seller-interest", {
@@ -926,7 +947,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       return true;
     }
   }
-
+  
   function saveWaitlistLocal(email, phone, city, interest){
     try{
       var arr = JSON.parse(localStorage.getItem("waitlist_local") || "[]");
@@ -935,7 +956,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       localStorage.setItem("waitlist_local", JSON.stringify(arr));
     }catch(e){}
   }
-
+  
   async function joinWaitlist(email, phone, city, interest){
     try{
       const out = await apiPost("waitlist", {
@@ -959,13 +980,10 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       return true;
     }
   }
-
-  // ======================
-  // LANDING & LOBBY
-  // ======================
+  
   function isVisited(){ return localStorage.getItem("decide_visited") === "true"; }
   function markVisited(){ localStorage.setItem("decide_visited","true"); }
-
+  
   function renderLanding(){
     $("app").innerHTML =
       '<div class="wrap" style="text-align:center;padding-top:26px">' +
@@ -1006,13 +1024,13 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '</div>' +
         '<button class="secondary" type="button" data-action="lobby">SKIP TO APP →</button>' +
         '<div class="footer">' +
-          '<a href="/privacy.html">Privacy</a> • ' +
-          '<a href="/terms.html">Terms</a> • ' +
-          '<a href="/contact.html">Contact</a>' +
+          '<a data-action="privacy">Privacy</a> • ' +
+          '<a data-action="terms">Terms</a> • ' +
+          '<a data-action="contact">Contact</a>' +
         '</div>' +
       '</div>';
   }
-
+  
   function submitWaitlist(){
     var email = (($("wl_email")||{}).value || "").trim();
     var city = (($("wl_city")||{}).value || "").trim();
@@ -1022,7 +1040,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       if(ok){ markVisited(); setTimeout(function(){ renderLobby(); }, 500); }
     });
   }
-
+  
   function renderLobby(){
     var cartCount = STATE.cart.length;
     $("app").innerHTML =
@@ -1086,15 +1104,12 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       '</div>' +
       '<div style="text-align:center;margin-top:18px;color:#888;font-size:.85rem">Session: ' + esc(STATE.session) + '</div>' +
       '<div class="footer">' +
-        '<a href="/privacy.html">Privacy</a> • ' +
-        '<a href="/terms.html">Terms</a> • ' +
-        '<a href="/contact.html">Contact</a>' +
+        '<a data-action="privacy">Privacy</a> • ' +
+        '<a data-action="terms">Terms</a> • ' +
+        '<a data-action="contact">Contact</a>' +
       '</div>';
   }
-
-  // ======================
-  // SELLER
-  // ======================
+  
   function renderSellerCTA(){
     $("app").innerHTML =
       '<div class="wrap">' +
@@ -1121,7 +1136,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '<button class="secondary" type="button" data-action="home">← HOME</button>' +
       '</div>';
   }
-
+  
   function renderSellerForm(type){
     $("app").innerHTML =
       '<div class="wrap">' +
@@ -1146,7 +1161,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '<button class="secondary" type="button" data-action="seller">← BACK</button>' +
       '</div>';
   }
-
+  
   function sellerSubmit(type){
     var b = (($("s_bname")||{}).value || "").trim();
     var c = (($("s_city")||{}).value || "").trim();
@@ -1157,17 +1172,14 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     if(p.length < 8){ toast("Enter valid phone"); return; }
     submitSellerInterest(type, b, c, p, idea).then(function(){ renderLobby(); });
   }
-
-  // ======================
-  // FEEDBACK
-  // ======================
+  
   function renderFeedbackCenter(){
     var list = [];
     try{
       list = JSON.parse(localStorage.getItem("feedback_items") || "[]");
       if(!Array.isArray(list)) list = [];
     }catch(e){ list = []; }
-
+    
     var itemsHtml = list.slice().reverse().map(function(it){
       return (
         '<div class="result">' +
@@ -1177,7 +1189,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '</div>'
       );
     }).join("");
-
+    
     $("app").innerHTML =
       '<div class="wrap">' +
         '<div class="hero-title" style="font-size:2rem">Feedback Center</div>' +
@@ -1196,17 +1208,14 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         (itemsHtml || '<div class="p">No feedback yet.</div>') +
       '</div>';
   }
-
+  
   function fbSubmit(){
     var title = (($("fb_title")||{}).value || "").trim();
     var msg = (($("fb_msg")||{}).value || "").trim();
     if(msg.length < 5){ toast("Write a longer message"); return; }
     submitFeedback(title, msg).then(function(){ renderFeedbackCenter(); });
   }
-
-  // ======================
-  // CITY VIEW
-  // ======================
+  
   function renderCity(city){
     var cards = '';
     if(city === "Gandhidham"){
@@ -1218,7 +1227,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       renderLobby();
       return;
     }
-
+    
     $("app").innerHTML =
       '<div class="wrap">' +
         '<div class="hero-title" style="font-size:2rem">' + esc(city) + '</div>' +
@@ -1226,7 +1235,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         cards +
         '<button class="secondary" type="button" data-action="home">← HOME</button>' +
       '</div>';
-
+    
     function cardLink(icon,title,status,tagClass,action){
       return (
         '<div class="card" role="button" tabindex="0" data-action="' + esc(action) + '" style="margin-bottom:12px">' +
@@ -1235,10 +1244,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       );
     }
   }
-
-  // ======================
-  // E-COMMERCE MODULE
-  // ======================
+  
   function renderEcommerce(){
     STATE.domain = "ecommerce";
     $("app").innerHTML =
@@ -1257,12 +1263,12 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '<button class="secondary" type="button" data-action="home">← HOME</button>' +
       '</div>';
   }
-
+  
   function renderFilters(cat){
     STATE.domain = cat;
     STATE.lastEcomCategory = cat;
     STATE.filters = [];
-
+    
     var filters = {
       smartphones:["cam","gam","bat"],
       earbuds:["snd","anc","mic"],
@@ -1273,11 +1279,11 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       snd:"SOUND",anc:"NOISE",mic:"MIC",
       perf:"POWER",port:"TRAVEL",scr:"SCREEN"
     };
-
+    
     var btns = (filters[cat] || []).map(function(f){
       return '<div class="filter-btn" role="button" tabindex="0" data-action="toggle" data-filter="' + f + '">' + labels[f] + '</div>';
     }).join("");
-
+    
     $("app").innerHTML =
       '<div class="wrap">' +
         '<div class="hero-title" style="font-size:2rem">' + esc(cat) + '</div>' +
@@ -1287,18 +1293,18 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '<button class="secondary" type="button" data-action="ecommerce" style="margin-top:10px">← BACK</button>' +
       '</div>';
   }
-
+  
   function toggleFilter(key, el){
     var i = STATE.filters.indexOf(key);
     if(i >= 0){ STATE.filters.splice(i, 1); el.classList.remove("active"); }
     else { STATE.filters.push(key); el.classList.add("active"); }
   }
-
+  
   function search(){
     var cat = STATE.domain;
     var db = DB[cat];
     if(!db || !Object.keys(db).length){ toast("No items"); return; }
-
+    
     var all = [];
     Object.keys(db).forEach(function(name){
       (db[name] || []).forEach(function(seller){
@@ -1320,24 +1326,24 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         });
       });
     });
-
+    
     all.sort(function(a,b){
       if(b.score !== a.score) return b.score - a.score;
       return a.price - b.price;
     });
-
+    
     RESULTS = all.slice(0,10);
     renderMarketplace();
   }
-
+  
   function renderMarketplace(){
     if(!RESULTS.length){ toast("No results"); return; }
-
+    
     var list = RESULTS.map(function(p, idx){
       var discount = Math.floor(Math.random()*20)+5;
       var original = p.price ? Math.floor(p.price/(1-discount/100)) : p.price;
       var stockColor = (p.stock > 50) ? "var(--accent)" : "#FFA726";
-
+      
       return (
         '<div class="result">' +
           '<div class="row">' +
@@ -1368,7 +1374,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '</div>'
       );
     }).join("");
-
+    
     $("app").innerHTML =
       '<div class="results">' +
         '<div style="text-align:center;margin-bottom:16px">' +
@@ -1380,7 +1386,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '<button class="secondary" type="button" data-action="home" style="margin-top:10px">← HOME</button>' +
       '</div>';
   }
-
+  
   function addEcom(idx){
     var p = RESULTS[idx]; if(!p) return;
     STATE.cart.push({ type:"ecommerce", name:p.name, seller:p.seller, price:Number(p.price)||0, qty:1 });
@@ -1388,7 +1394,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     updateFloatingCart();
     toast("Added to cart");
   }
-
+  
   function buyEcom(idx){
     var p = RESULTS[idx]; if(!p) return;
     STATE.cart = [{ type:"ecommerce", name:p.name, seller:p.seller, price:Number(p.price)||0, qty:1 }];
@@ -1396,24 +1402,21 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     updateFloatingCart();
     viewCart();
   }
-
-  // ======================
-  // FOOD MODULE (RAJKOT)
-  // ======================
+  
   function renderFood(){
     STATE.domain = "food";
-
+    
     const html = `
       <div class="header">
         <div class="header-badge">DECIDE INDIA <span class="status-dot"></span></div>
         <button class="btn" type="button" data-action="home">HOME</button>
       </div>
-
+      
       <div class="hero">
         <h1 class="hero-title">Order Food in Rajkot</h1>
         <p class="hero-subtitle">Fresh, Fast & Zero Commission. Support your local businesses.</p>
       </div>
-
+      
       <div class="restaurant-grid">
         ${RESTAURANTS.map(r => `
           <div class="restaurant-card" data-action="restaurant" data-rid="${r.id}" role="button" tabindex="0">
@@ -1445,24 +1448,24 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         `).join('')}
       </div>
     `;
-
+    
     $("app").innerHTML = html;
   }
-
+  
   function viewRestaurant(id){
     const restaurant = RESTAURANTS.find(r => r.id === id);
     if(!restaurant) return;
-
+    
     STATE.currentRestaurant = restaurant;
-
+    
     const categories = ['all', ...new Set(restaurant.menu.map(item => item.category))];
-
+    
     const html = `
       <div class="header">
         <div class="header-badge">DECIDE INDIA <span class="status-dot"></span></div>
         <button class="btn" type="button" data-action="home">HOME</button>
       </div>
-
+      
       <div class="menu-header">
         <h1 class="menu-restaurant-name">${esc(restaurant.name)}</h1>
         <div class="menu-restaurant-meta">
@@ -1473,7 +1476,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
           <span>📍 ${esc(restaurant.area)}</span>
         </div>
       </div>
-
+      
       <div class="menu-categories">
         ${categories.map(cat => `
           <button class="category-btn ${STATE.filterCategory === cat ? 'active' : ''}"
@@ -1482,22 +1485,22 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
           </button>
         `).join('')}
       </div>
-
+      
       <div class="menu-grid" id="menuGrid">
         ${renderMenuItems(restaurant.menu)}
       </div>
-
+      
       <button class="secondary" data-action="food">← Back to Restaurants</button>
     `;
-
+    
     $("app").innerHTML = html;
   }
-
+  
   function renderMenuItems(items){
-    const filtered = STATE.filterCategory === 'all'
-      ? items
+    const filtered = STATE.filterCategory === 'all' 
+      ? items 
       : items.filter(item => item.category === STATE.filterCategory);
-
+    
     return filtered.map(item => `
       <div class="menu-item">
         <div class="menu-item-header">
@@ -1522,7 +1525,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       </div>
     `).join('');
   }
-
+  
   function filterCategory(category){
     STATE.filterCategory = category;
     if(STATE.currentRestaurant){
@@ -1538,13 +1541,13 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       });
     }
   }
-
+  
   function addToCart(itemId){
     if(!STATE.currentRestaurant) return;
-
+    
     const item = STATE.currentRestaurant.menu.find(m => m.id === itemId);
     if(!item) return;
-
+    
     STATE.cart.push({
       type: "food",
       restaurantId: STATE.currentRestaurant.id,
@@ -1552,15 +1555,14 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       name: item.name,
       price: item.price,
       icon: item.icon,
-      upiId: STATE.currentRestaurant.upiId,
-      qty: 1
+      upiId: STATE.currentRestaurant.upiId
     });
-
+    
     saveCart();
     updateFloatingCart();
     toast('Added to cart!', 'success');
   }
-
+  
   function removeFromCart(index){
     STATE.cart.splice(index, 1);
     saveCart();
@@ -1571,21 +1573,21 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       viewCart();
     }
   }
-
+  
   function viewCart(){
     if(STATE.cart.length === 0){
       renderLobby();
       return;
     }
-
+    
     const { subtotal, gst: tax, total, isFood } = calcCartTotals();
-
+    
     const html = `
       <div class="header">
         <div class="header-badge">DECIDE INDIA <span class="status-dot"></span></div>
         <button class="btn" type="button" data-action="home">HOME</button>
       </div>
-
+      
       <div class="cart-container">
         <div class="cart-items">
           <h2 class="cart-title">Your Cart (${STATE.cart.length} items)</h2>
@@ -1596,12 +1598,12 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
                 <div class="cart-item-name">${esc(item.name)}</div>
                 <div class="cart-item-seller">${esc(item.restaurantName || item.seller || '')}</div>
               </div>
-              <div class="cart-item-price">${money(Number(item.price||0))}</div>
+              <div class="cart-item-price">${money(item.price)}</div>
               <button class="remove-btn" data-action="removeFromCart" data-idx="${idx}">Remove</button>
             </div>
           `).join('')}
         </div>
-
+        
         <div class="cart-summary">
           <div class="summary-row">
             <span class="summary-label">Subtotal</span>
@@ -1616,7 +1618,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
             <span>${money(total)}</span>
           </div>
         </div>
-
+        
         ${isFood ? `
           <div class="payment-section">
             <h3 class="payment-title">Payment Method</h3>
@@ -1642,7 +1644,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
             </div>
           </div>
         ` : ''}
-
+        
         <button class="action" data-action="proceedToPayment">
           <span>Pay ${money(total)}</span>
           <span>→</span>
@@ -1652,20 +1654,18 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         </button>
       </div>
     `;
-
+    
     $("app").innerHTML = html;
   }
-
+  
   function selectPayment(method){
     STATE.selectedPaymentMethod = method;
     viewCart();
   }
-
-  // ✅ PATCHED: consistent final amount + stored for UTR screen
+  
   function proceedToPayment(){
     const totals = calcCartTotals();
     const finalAmount = totals.total;
-
     STATE.lastPaymentAmount = finalAmount;
 
     if(totals.isFood){
@@ -1678,42 +1678,42 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       toast("E-commerce payment demo");
     }
   }
-
+  
   function initiateRazorpay(amount){
     if(typeof Razorpay === 'undefined'){
       toast('Razorpay not loaded. Please refresh.', 'error');
       return;
     }
-
+    
     const options = {
       key: RAZORPAY_KEY,
       amount: amount * 100,
       currency: 'INR',
       name: 'Decide - Rajkot Food',
       description: 'Food Order Payment',
-
+      
       prefill: {
         name: 'Customer',
         email: 'customer@email.com',
         contact: '9876543210'
       },
-
+      
       theme: {
         color: '#ff671f'
       },
-
+      
       handler: function(response){
         const paymentId = response.razorpay_payment_id;
         completeOrder(paymentId, 'razorpay', amount);
       },
-
+      
       modal: {
         ondismiss: function(){
           toast('Payment cancelled', 'error');
         }
       }
     };
-
+    
     try{
       const rzp = new Razorpay(options);
       rzp.open();
@@ -1722,8 +1722,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       toast('Payment failed. Try manual UPI.', 'error');
     }
   }
-
-  // ✅ PATCHED: merchant name + correct amount display + better UI copy
+  
   function initiateManualUPI(amount){
     const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
     if(!restaurant){
@@ -1744,22 +1743,32 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         <div class="payment-section" style="text-align:center">
           <div style="font-size:4rem;margin-bottom:16px">📲</div>
           <h2 class="payment-title">Pay via UPI</h2>
+
           <div style="font-size:2rem;font-weight:900;color:var(--brand-orange);margin:16px 0">
             ${money(amount)}
           </div>
 
           <div style="background:rgba(255,255,255,0.05);padding:20px;border-radius:16px;margin:24px 0">
-            <div style="color:var(--text-secondary);margin-bottom:8px">Merchant Name</div>
-            <div style="font-size:1.1rem;font-weight:700;margin-bottom:12px">
+            <div style="color:var(--text-secondary);margin-bottom:8px">Restaurant</div>
+            <div style="font-size:1.1rem;font-weight:700;margin-bottom:16px">
               ${esc(restaurant.name)}
             </div>
+
             <div style="color:var(--text-secondary);margin-bottom:8px">UPI ID</div>
-            <div style="font-size:1.25rem;font-weight:700;word-break:break-all">
+            <div style="font-size:1.25rem;font-weight:700;word-break:break-all;margin-bottom:4px">
               ${esc(restaurant.upiId)}
             </div>
-            <button class="secondary" style="margin-top:16px" data-action="copyUPI" data-upi="${esc(restaurant.upiId)}">
+            <div style="font-size:0.85rem;color:#888;margin-bottom:16px">
+              (Account: ${esc(restaurant.upiAccountName || "Restaurant Owner")})
+            </div>
+
+            <button class="secondary" style="margin-top:8px" data-action="copyUPI" data-upi="${esc(restaurant.upiId)}">
               📋 Copy UPI ID
             </button>
+          </div>
+
+          <div class="info-box">
+            ℹ️ <b>Note:</b> Your UPI app will show the account holder's name "${esc(restaurant.upiAccountName || "")}" instead of the restaurant name. This is normal for personal UPI IDs. The payment goes to ${esc(restaurant.name)}.
           </div>
 
           <button class="action" data-action="openUPIApp" data-upi="${esc(restaurant.upiId)}" data-amount="${amount}">
@@ -1778,6 +1787,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
           <button class="action" style="background:var(--success)" data-action="submitUTRScreen">
             I Have Paid → Submit UTR
           </button>
+
           <button class="secondary" style="margin-top:12px" data-action="viewCart">
             ← Back to Cart
           </button>
@@ -1787,7 +1797,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
 
     $("app").innerHTML = html;
   }
-
+  
   function copyUPI(upiId){
     try{
       navigator.clipboard.writeText(upiId);
@@ -1796,15 +1806,12 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       toast('Copy failed: ' + upiId, 'error');
     }
   }
-
-  // ✅ PATCHED: proper deeplink with pn/tn/tr and restaurant name
+  
   function openUPIApp(upiId, amount){
     const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
     const payeeName = restaurant ? restaurant.name : "Decide Food";
-
     const orderRef = STATE.lastTxnRef || ('TXN' + Date.now().toString(36).toUpperCase());
     STATE.lastTxnRef = orderRef;
-
     const am = Number(amount || 0).toFixed(2);
 
     const params = new URLSearchParams({
@@ -1826,8 +1833,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     window.location.href = upiLink;
     toast('Opening UPI app...', 'success');
   }
-
-  // ✅ PATCHED: use stored final amount (no mismatch)
+  
   function submitUTRScreen(){
     const amount = Number(STATE.lastPaymentAmount || calcCartTotals().total || 0);
 
@@ -1867,8 +1873,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     $("app").innerHTML = html;
     setTimeout(() => $("utrInput") && $("utrInput").focus(), 100);
   }
-
-  // ✅ PATCHED: confirm uses same stored amount and checks duplicates
+  
   function confirmUTR(){
     const utr = ($("utrInput")?.value || '').replace(/\s+/g, '');
 
@@ -1886,10 +1891,10 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     const amount = Number(STATE.lastPaymentAmount || calcCartTotals().total || 0);
     completeOrder(utr, 'manual_upi', amount);
   }
-
+  
   function completeOrder(paymentId, method, amount){
     const orderId = 'DEC' + Date.now().toString(36).toUpperCase();
-
+    
     const order = {
       id: orderId,
       items: STATE.cart.slice(),
@@ -1901,19 +1906,19 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       status: 'confirmed',
       timestamp: new Date().toISOString()
     };
-
-    // ✅ save into the same history system used by "MY ORDERS"
-    STATE.orders.push(order);
-    saveOrders();
-
-    // Save UTR index if manual UPI
+    
+    try{
+      const orders = JSON.parse(localStorage.getItem('decide_orders') || '[]');
+      orders.push(order);
+      localStorage.setItem('decide_orders', JSON.stringify(orders));
+    }catch(e){}
+    
     if(method === 'manual_upi'){
       var idx = loadUtrIndex();
       idx[paymentId] = { orderId: orderId, ts: new Date().toISOString() };
       saveUtrIndex(idx);
     }
-
-    // Send WhatsApp notification
+    
     const restaurant = RESTAURANTS.find(r => r.id === STATE.cart[0]?.restaurantId);
     if(restaurant?.whatsapp){
       const msg = `New Order: ${orderId}%0AAmount: ₹${Math.round(amount)}%0APayment: ${method}%0AItems: ${STATE.cart.length}`;
@@ -1923,27 +1928,21 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         }catch(e){}
       }, 500);
     }
-
-    // Clear cart
+    
     STATE.cart = [];
     saveCart();
     updateFloatingCart();
-
-    // Clear last payment cache
-    STATE.lastPaymentAmount = null;
-    STATE.lastTxnRef = null;
-
-    // Show success
+    
     showSuccess(orderId);
   }
-
+  
   function showSuccess(orderId){
     const html = `
       <div class="header">
         <div class="header-badge">DECIDE INDIA <span class="status-dot"></span></div>
         <button class="btn" type="button" data-action="home">HOME</button>
       </div>
-
+      
       <div class="success-screen">
         <div class="success-icon">✓</div>
         <h1 class="success-title">Order Placed!</h1>
@@ -1962,22 +1961,22 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         </button>
       </div>
     `;
-
+    
     $("app").innerHTML = html;
-
+    
     setTimeout(() => {
       toast('🎉 Order confirmed!', 'success');
     }, 500);
   }
-
+  
   function renderOrders(){
     loadOrders();
-    if(!STATE.orders.length){
-      toast("No orders yet");
-      renderLobby();
-      return;
+    if(!STATE.orders.length){ 
+      toast("No orders yet"); 
+      renderLobby(); 
+      return; 
     }
-
+    
     var list = STATE.orders.slice().reverse().map(function(o){
       var statusColor = (o.status === "delivered") ? "var(--accent)" : (o.status === "confirmed" || o.status === "preparing") ? "var(--brand-orange)" : "#888";
       return (
@@ -1995,7 +1994,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '</div>'
       );
     }).join("");
-
+    
     $("app").innerHTML =
       '<div class="header">' +
         '<div class="header-badge">DECIDE INDIA <span class="status-dot"></span></div>' +
@@ -2008,24 +2007,306 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
         '<button class="secondary" type="button" data-action="home">← HOME</button>' +
       '</div>';
   }
+  
+  // ======================
+  // STATIC PAGES
+  // ======================
+  function renderPrivacy(){
+    $("app").innerHTML = `
+      <div class="static-page">
+        <div class="header">
+          <div class="header-badge">DECIDE</div>
+          <button class="btn" type="button" data-action="home">HOME</button>
+        </div>
+        <div class="static-hero">
+          <h1>Privacy Policy</h1>
+          <div class="static-meta">
+            Last updated: <code>February 2026</code><br/>
+            Decide ("we", "our", "platform") is a technology platform enabling users to discover, compare, and transact with independent sellers.
+          </div>
+          <div class="note">
+            We do <b>not</b> store full card details. Payments are processed by certified third-party providers.
+          </div>
+          <div class="kv">
+            <div class="pill"><strong>Email:</strong> privacy@decide.app</div>
+            <div class="pill"><strong>Support:</strong> support@decide.app</div>
+          </div>
+        </div>
+        
+        <div class="static-card">
+          <h2>1) Information We Collect</h2>
+          <ul>
+            <li>Contact details (email, phone if provided)</li>
+            <li>Order and transaction metadata</li>
+            <li>Device and usage analytics</li>
+            <li>Communication records (support, feedback)</li>
+          </ul>
+        </div>
 
-  // ======================
-  // NAV / EVENTS
-  // ======================
+        <div class="static-card">
+          <h2>2) Purpose of Processing</h2>
+          <ul>
+            <li>Enable transactions and order fulfillment</li>
+            <li>Customer support</li>
+            <li>Improve platform performance and recommendations</li>
+            <li>Fraud prevention and abuse control</li>
+          </ul>
+        </div>
+
+        <div class="static-card">
+          <h2>3) Legal Basis (India)</h2>
+          <ul>
+            <li>User consent</li>
+            <li>Contractual necessity (orders and services)</li>
+            <li>Legitimate business interest</li>
+          </ul>
+        </div>
+
+        <div class="static-card">
+          <h2>4) Data Sharing</h2>
+          <p>We may share limited data with sellers fulfilling orders, logistics partners, payment processors, and infrastructure/analytics providers. We do not sell personal data.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>5) Retention</h2>
+          <p>We retain data only as long as necessary for transactions, legal obligations, and fraud prevention.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>6) Your Rights</h2>
+          <p>You may request access, correction, or deletion via <code>privacy@decide.app</code>.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>7) Security</h2>
+          <p>We implement standard technical and organizational safeguards appropriate for an early-stage platform.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>8) Children</h2>
+          <p>Decide is not intended for users under 18.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>9) Updates</h2>
+          <p>We may update this policy periodically. Continued use means you accept the updated policy.</p>
+        </div>
+
+        <div class="footer">
+          <a data-action="privacy">Privacy</a> •
+          <a data-action="terms">Terms</a> •
+          <a data-action="contact">Contact</a> •
+          <a data-action="cookies">Cookies</a>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderTerms(){
+    $("app").innerHTML = `
+      <div class="static-page">
+        <div class="header">
+          <div class="header-badge">DECIDE</div>
+          <button class="btn" type="button" data-action="home">HOME</button>
+        </div>
+        <div class="static-hero">
+          <h1>Terms of Service</h1>
+          <div class="static-meta">
+            Last updated: <code>February 2026</code><br/>
+            By using Decide, you agree to these terms.
+          </div>
+          <div class="note">
+            Decide is a technology intermediary. Sellers are responsible for fulfillment.
+          </div>
+        </div>
+
+        <div class="static-card">
+          <h2>1) Platform Role</h2>
+          <p>Decide connects buyers and independent sellers. We do not own or manufacture listed products.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>2) Orders and Payments</h2>
+          <p>Payments are processed via third-party providers. Order fulfillment is the responsibility of sellers and/or logistics partners.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>3) ONDC / Network Transactions</h2>
+          <p>For network-enabled transactions (including ONDC), Decide facilitates communication between parties as a participant node. Contractual obligations remain between buyer and seller.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>4) Pricing and Listings</h2>
+          <p>Product information is provided by sellers. We strive for accuracy but do not guarantee completeness.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>5) User Conduct</h2>
+          <ul>
+            <li>No misuse of the platform</li>
+            <li>No unauthorized access attempts</li>
+            <li>No interference with services</li>
+          </ul>
+        </div>
+
+        <div class="static-card">
+          <h2>6) Limitation of Liability</h2>
+          <p>To the maximum extent permitted by law, Decide is not liable for seller performance issues, delivery delays, or indirect or consequential damages.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>7) Termination</h2>
+          <p>We may suspend or terminate access for violations or risk activity.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>8) Governing Law</h2>
+          <p>These terms are governed by the laws of India.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>9) Contact</h2>
+          <p>Email: <code>legal@decide.app</code></p>
+        </div>
+
+        <div class="footer">
+          <a data-action="privacy">Privacy</a> •
+          <a data-action="terms">Terms</a> •
+          <a data-action="contact">Contact</a> •
+          <a data-action="cookies">Cookies</a>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderContact(){
+    $("app").innerHTML = `
+      <div class="static-page">
+        <div class="header">
+          <div class="header-badge">DECIDE</div>
+          <button class="btn" type="button" data-action="home">HOME</button>
+        </div>
+        <div class="static-hero">
+          <h1>Contact</h1>
+          <div class="static-meta">Support, partnerships, seller onboarding, and legal requests.</div>
+        </div>
+
+        <div class="static-card">
+          <h2>Reach us</h2>
+          <div style="display:grid;gap:10px;margin-top:10px">
+            <div class="item">
+              <div class="label">Support</div>
+              <div class="value"><code>support@decide.app</code></div>
+              <p style="margin-top:8px;color:var(--text-secondary)">For order issues, refunds (as applicable), and app support.</p>
+            </div>
+
+            <div class="item">
+              <div class="label">Seller onboarding</div>
+              <div class="value"><code>sellers@decide.app</code></div>
+              <p style="margin-top:8px;color:var(--text-secondary)">For restaurants and local businesses joining Rajkot and Gujarat launch.</p>
+            </div>
+
+            <div class="item">
+              <div class="label">Legal & policy</div>
+              <div class="value"><code>legal@decide.app</code></div>
+              <p style="margin-top:8px;color:var(--text-secondary)">For compliance, notices, and policy questions.</p>
+            </div>
+
+            <div class="item">
+              <div class="label">Privacy</div>
+              <div class="value"><code>privacy@decide.app</code></div>
+              <p style="margin-top:8px;color:var(--text-secondary)">For data access, correction, or deletion requests.</p>
+            </div>
+          </div>
+
+          <div class="actions">
+            <a class="action" href="mailto:support@decide.app?subject=Decide%20Support">Email Support</a>
+            <a class="secondary" href="mailto:sellers@decide.app?subject=Seller%20Onboarding">Become a Seller</a>
+          </div>
+        </div>
+
+        <div class="footer">
+          <a data-action="privacy">Privacy</a> •
+          <a data-action="terms">Terms</a> •
+          <a data-action="contact">Contact</a> •
+          <a data-action="cookies">Cookies</a>
+        </div>
+      </div>
+    `;
+  }
+
+  function renderCookies(){
+    $("app").innerHTML = `
+      <div class="static-page">
+        <div class="header">
+          <div class="header-badge">DECIDE</div>
+          <button class="btn" type="button" data-action="home">HOME</button>
+        </div>
+        <div class="static-hero">
+          <h1>Cookie Policy</h1>
+          <div class="static-meta">Last updated: <code>February 2026</code></div>
+        </div>
+
+        <div class="static-card">
+          <h2>1) What are cookies</h2>
+          <p>Cookies are small files stored on your device to improve performance and user experience.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>2) How we use cookies</h2>
+          <ul>
+            <li>Session management</li>
+            <li>Analytics</li>
+            <li>Security</li>
+            <li>Preferences</li>
+          </ul>
+        </div>
+
+        <div class="static-card">
+          <h2>3) Third-party cookies</h2>
+          <p>Some cookies may be placed by analytics providers or payment processors.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>4) Your choices</h2>
+          <p>You can disable cookies via browser settings, though some features may not work correctly.</p>
+        </div>
+
+        <div class="static-card">
+          <h2>5) Contact</h2>
+          <p>Email: <code>privacy@decide.app</code></p>
+        </div>
+
+        <div class="footer">
+          <a data-action="privacy">Privacy</a> •
+          <a data-action="terms">Terms</a> •
+          <a data-action="contact">Contact</a> •
+          <a data-action="cookies">Cookies</a>
+        </div>
+      </div>
+    `;
+  }
+  
   function goHome(){
     if(isVisited()) renderLobby();
     else renderLanding();
   }
-
+  
   function handle(el){
     var action = el.getAttribute("data-action");
     if(!action || action === "disabled") return;
     if(el.getAttribute("aria-disabled") === "true") return;
-
+    
+    // Static pages routing
+    if(action === "privacy"){ renderPrivacy(); return; }
+    if(action === "terms"){ renderTerms(); return; }
+    if(action === "contact"){ renderContact(); return; }
+    if(action === "cookies"){ renderCookies(); return; }
+    
     if(action === "home"){ goHome(); return; }
     if(action === "lobby"){ markVisited(); renderLobby(); return; }
     if(action === "waitlistSubmit"){ submitWaitlist(); return; }
-
+    
     if(action === "module"){
       var mod = el.getAttribute("data-module");
       if(mod === "ecommerce") { renderEcommerce(); return; }
@@ -2034,26 +2315,26 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
       return;
     }
     if(action === "city"){ renderCity(el.getAttribute("data-city")); return; }
-
+    
     if(action === "seller"){ renderSellerCTA(); return; }
     if(action === "sellerForm"){ renderSellerForm(el.getAttribute("data-type") || "Seller"); return; }
     if(action === "sellerSubmit"){ sellerSubmit(el.getAttribute("data-type") || "Seller"); return; }
-
+    
     if(action === "feedback"){ renderFeedbackCenter(); return; }
     if(action === "fbSubmit"){ fbSubmit(); return; }
-
+    
     if(action === "ecommerce"){ renderEcommerce(); return; }
     if(action === "category"){ renderFilters(el.getAttribute("data-cat")); return; }
     if(action === "toggle"){ toggleFilter(el.getAttribute("data-filter"), el); return; }
     if(action === "search"){ search(); return; }
     if(action === "addEcom"){ addEcom(Number(el.getAttribute("data-idx"))); return; }
     if(action === "buyEcom"){ buyEcom(Number(el.getAttribute("data-idx"))); return; }
-
+    
     if(action === "food"){ renderFood(); return; }
     if(action === "restaurant"){ viewRestaurant(el.getAttribute("data-rid")); return; }
     if(action === "filterCategory"){ filterCategory(el.getAttribute("data-cat")); return; }
     if(action === "addToCart"){ addToCart(el.getAttribute("data-item")); return; }
-
+    
     if(action === "viewCart"){ viewCart(); return; }
     if(action === "removeFromCart"){ removeFromCart(Number(el.getAttribute("data-idx"))); return; }
     if(action === "selectPayment"){ selectPayment(el.getAttribute("data-method")); return; }
@@ -2062,15 +2343,15 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     if(action === "openUPIApp"){ openUPIApp(el.getAttribute("data-upi"), Number(el.getAttribute("data-amount"))); return; }
     if(action === "submitUTRScreen"){ submitUTRScreen(); return; }
     if(action === "confirmUTR"){ confirmUTR(); return; }
-
+    
     if(action === "orders"){ renderOrders(); return; }
   }
-
+  
   document.addEventListener("click", function(e){
     var el = e.target.closest("[data-action]");
     if(el) handle(el);
   });
-
+  
   document.addEventListener("keydown", function(e){
     if(e.key !== "Enter" && e.key !== " ") return;
     var el = e.target.closest("[data-action][role='button']");
@@ -2078,30 +2359,26 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
     e.preventDefault();
     handle(el);
   });
-
-  // ======================
-  // INIT
-  // ======================
+  
   function init(){
     sbClient = initSupabase();
     loadOrders();
     loadCart();
     loadToMemory(ECOMMERCE_DATA);
     updateFloatingCart();
-
-    // Floating cart click
+    
     const fc = $("floatingCart");
     if(fc){
       fc.addEventListener('click', viewCart);
     }
-
+    
     if(isVisited()) {
       renderLobby();
     } else {
       renderLanding();
     }
   }
-
+  
   if(document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", function(){
       setTimeout(init, 100);
@@ -2109,7 +2386,7 @@ input:focus,textarea:focus{border-color:var(--brand-orange)}
   } else {
     setTimeout(init, 100);
   }
-
+  
 })();
 </script>
 
