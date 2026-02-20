@@ -1,74 +1,17 @@
 {
-  "id": "/?app=decide",
-  "name": "DECIDE — Commission-Free Marketplace",
-  "short_name": "DECIDE",
-  "description": "Commission-free marketplace demo. Compare products by your priorities. Starting in Gujarat (Gandhidham & Rajkot).",
-  "lang": "en",
-  "dir": "ltr",
-
-  "start_url": "/?source=pwa",
-  "scope": "/",
-
+  "name": "decide.engine | India AI",
+  "short_name": "decide.engine",
+  "description": "India's decision research engine — aligned with IndiaAI Mission. Policy-grade intelligence for every citizen.",
+  "start_url": "/index.html",
   "display": "standalone",
-  "display_override": ["standalone", "fullscreen", "minimal-ui", "browser"],
+  "background_color": "#060c16",
+  "theme_color": "#FF9933",
   "orientation": "portrait",
-
-  "background_color": "#000000",
-  "theme_color": "#ff671f",
-
-  "categories": ["shopping", "business", "productivity"],
-  "prefer_related_applications": false,
-
   "icons": [
-    {
-      "src": "/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-192-maskable.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icon-512-maskable.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
-    }
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
   ],
-
-  "screenshots": [
-    {
-      "src": "/screenshot1.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
-    }
-  ],
-
-  "shortcuts": [
-    {
-      "name": "Browse",
-      "short_name": "Browse",
-      "description": "Browse the marketplace demo",
-      "url": "/?view=browse&source=shortcut",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
-    },
-    {
-      "name": "Orders",
-      "short_name": "Orders",
-      "description": "Track your demo orders",
-      "url": "/?view=orders&source=shortcut",
-      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
-    }
-  ]
+  "categories": ["productivity", "education"],
+  "lang": "en-IN",
+  "scope": "/"
 }
