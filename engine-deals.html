@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -22,11 +23,6 @@
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0a0a0a" />
   <meta name="background-color" content="#0a0a0a" />
-
-  <!-- jsPDF is unused in this build; keeping it can be fine, but removing reduces risk of any
-       accidental "download PDF" behavior if later wired. Uncomment if needed.
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  -->
 
   <style>
     :root {
@@ -227,6 +223,9 @@
     const EARBUD_REVIEW_URL = "https://youtu.be/ceuEz96MMEY";
     const WINNER_VIDEO = "https://static.videezy.com/system/resources/previews/000/012/628/original/Abstract_Blue_Background.mp4";
 
+    // ✅ Subpage file (put cashback-rules.html in same folder as this index.html)
+    const CASHBACK_RULES_PAGE = "cashback-rules.html";
+
     const PHONE_DB = {
       "Poco F7": { attr: { camera: 6.0, gaming: 10.0, battery: 9.0, ui: 4.0 }, tags: ["heavy", "bloatware", "performance"], price: 29999, video: null },
       "iQOO Neo 10R": { attr: { camera: 7.0, gaming: 9.5, battery: 9.0, ui: 6.0 }, tags: ["balanced", "value", "144hz"], price: 30999, video: null },
@@ -259,6 +258,7 @@
       }
     };
 
+    // ✅ MODULES (Added CASHBACK RULES)
     const MODULES = {
       smartphones: {
         label: "SMARTPHONES",
@@ -293,6 +293,15 @@
         init: () => renderExternalModule("https://via-decide.github.io/food.decider/"),
         categories: []
       },
+
+      // ✅ NEW: Cashback Rules subpage
+      cashback_rules: {
+        label: "CASHBACK RULES",
+        database: null,
+        init: () => renderExternalModule(CASHBACK_RULES_PAGE),
+        categories: []
+      },
+
       review: {
         label: "ENGINE REVIEW ↗",
         database: null,
@@ -477,6 +486,10 @@
                 <div class="final-actions">
                   <button class="btn btn-amazon" onclick="redirect('amazon')">BUY NOW ↗</button>
                   <button class="btn btn-yt" onclick="openReview()">▶ REVIEW</button>
+
+                  <!-- ✅ NEW: Cashback Rules shortcut -->
+                  <button class="btn" onclick="renderExternalModule(CASHBACK_RULES_PAGE)">CASHBACK RULES</button>
+
                   <button class="btn btn-speak" onclick="triggerVerdictSpeech()">🔊 VERDICT</button>
                   <button class="btn btn-full" onclick="location.reload()">RESTART</button>
                 </div>
