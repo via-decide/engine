@@ -19,6 +19,7 @@
       --accent-go: #00e676;
       --accent-skip: #ff3333;
       --accent-yt: #FF0000;
+      --accent-blinkit: #f7e000;
       --font-tech: 'Courier New', monospace;
       --font-ui: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
@@ -174,6 +175,25 @@
        KUTCH AUTOMATION | UNIVERSAL OS v67.3 (AFFILIATE EDITION)
        ========================================= */
 
+    // ✅ ROUTE FIX: if the site is hosted as a folder (e.g. /engine-deals/),
+    // some servers / static hosts treat the no-trailing-slash path as a file
+    // which can be served as a download. Force the canonical trailing-slash route.
+    (function enforceTrailingSlashRoute() {
+      try {
+        const p = window.location.pathname || '';
+        // Match exact "/engine-deals" at end (case-insensitive)
+        if (/\/engine-deals$/i.test(p)) {
+          window.location.replace(p + '/');
+          return;
+        }
+        // Optional: if someone hits "/engine-deals/index" normalize
+        if (/\/engine-deals\/index$/i.test(p)) {
+          window.location.replace(p.replace(/\/index$/i, '/'));
+          return;
+        }
+      } catch (e) {}
+    })();
+
     // 🔴 CONFIGURATION
     const BACKEND_URL = "https://script.google.com/macros/s/AKfycbxxh1ZwNRwqsSW1Lf62eh2wiwaNKzHWX8Icq472NQVj7-yEvOYuTDuiEGmelW_DG2Zs/exec";
     const YOUTUBE_CHANNEL = "https://www.youtube.com/@decide.engine";
@@ -209,7 +229,9 @@
       "Shure Aonic 215": { attr: { anc: 8.0, sound: 10.0, mic: 7.0, latency: 7.0, battery: 7.0 }, tags: ["audiophile", "eq_master"], price: 18999, video: null }
     };
 
-    const DEAL_BREAKERS = { "Lightweight": "heavy", "Clean UI": "bloatware" };
+    // Deal breakers: add missing mapping for fast charge to avoid undefined bans
+    const DEAL_BREAKERS = { "Fast Charging": "slow_charge", "Lightweight": "heavy", "Clean UI": "bloatware" };
+
     const ECOM_DEEP_LINKS = {
       amazon: {
         app: q => `intent://www.amazon.in/s?k=${q}&tag=${AMZN_TAG}#Intent;scheme=https;package=in.amazon.mShop.android.shopping;end`,
@@ -228,8 +250,6 @@
           { label: "PRO GAMER", type: "gaming", items: [{"name": "Poco F7"}, {"name": "iQOO Neo 10R"}] },
           { label: "CLEAN UI", type: "ui", items: [{"name": "Nothing 3a Pro"}, {"name": "Samsung Galaxy F07"}] },
           { label: "▶ DEV REVIEW", type: "external", link: PHONE_REVIEW_URL },
-          // NOTE: You had "Samsung Galaxy M07" in original categories but DB uses "Samsung Galaxy F07".
-          // Kept the original label intent but corrected item name to avoid mismatches.
           { label: "BATTERY KING", type: "battery", items: [{"name": "Realme GT 7T"}, {"name": "Samsung Galaxy F07"}] },
           { label: "MUST HAVE: FAST CHARGE", type: "fast_charge", items: [] },
           { label: "MUST HAVE: LIGHTWEIGHT", type: "lightweight", items: [] }
