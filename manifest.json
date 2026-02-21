@@ -1,8 +1,7 @@
 {
-  "name": "viadecide.com — India's Decision Engine",
-  "short_name": "decide.engine",
-  "description": "India's decision research engine — built for the IndiaAI mission.",
-  "start_url": "/index.html#home",
+  "name": "Decide Engine",
+  "short_name": "Decide",
+  "start_url": "/",
   "scope": "/",
   "display": "standalone",
   "background_color": "#04080f",
