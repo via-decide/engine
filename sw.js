@@ -1,13 +1,9 @@
 const CACHE = "decide-v1";
 
-self.addEventListener("install", e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.add("/"))
-  );
+self.addEventListener("install", (event) => {
+  self.skipWaiting();
 });
 
-self.addEventListener("fetch", e => {
-  e.respondWith(
-    fetch(e.request).catch(() => caches.match("/"))
-  );
+self.addEventListener("activate", (event) => {
+  event.waitUntil(self.clients.claim());
 });
