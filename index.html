@@ -888,11 +888,23 @@
         <textarea id="notes-text" placeholder="Capture policy insights, decision options, stakeholder notes..."></textarea>
         <div class="notes-meta"><span id="notes-count">0 chars</span><span id="notes-saved">Not saved</span></div>
       </div>
-      <div class="panel-actions">
-        <button class="btn btn-mini btn-pro" onclick="saveNotes()">SAVE</button>
-        <button class="btn btn-mini" onclick="clearNotes()">CLEAR</button>
-      </div>
-    </div>
+   <div class="panel-actions">
+  <button class="btn btn-mini" onclick="goHome()">HOME</button>
+  <button class="btn btn-mini" onclick="tryGoBack()">BACK</button>
+
+  <!-- INSTALL (PWA) -->
+  <button
+    class="btn btn-mini btn-india"
+    id="install-btn"
+    style="display:none"
+    onclick="triggerAppInstall()"
+  >
+    INSTALL APP
+  </button>
+
+  <button class="btn btn-mini btn-pdf" onclick="safeCall('generateResearchPDF')">PDF</button>
+  <button class="btn btn-mini btn-pro" onclick="safeCall('generateDecisionProUIPDF')">DECISION PDF</button>
+</div>
     <div class="panel-footer">
       <div class="panel-note"><span>Stored on this device</span><span id="notes-time">--:--</span></div>
     </div>
@@ -1372,6 +1384,9 @@ function launchAlchemistQuiz() {
   try { const payload=buildAlchemistPayloadFromResearch(nodes,{maxQ:12}); localStorage.setItem(ALCHEMIST_LS_KEY, JSON.stringify(payload)); showToast("QUIZ READY"); window.open("alchemist.html","_blank"); }
   catch(e) { console.error(e); showToast("QUIZ FAILED"); }
 }
+
+
+
 
 /* Wiki Engine */
 const WIKI_ENGINE = {
@@ -1891,6 +1906,60 @@ async function generateDecisionProUIPDF() {
   } catch(e) { console.error("Decision PDF error:",e); showToast("DECISION PDF FAILED"); }
 }
 
+
+/* ═══════════════════════════════════════
+   PWA INSTALL BUTTON LOGIC
+═══════════════════════════════════════ */
+
+let deferredInstallPrompt = null;
+
+// Fired on Chrome/Edge/Android when the app is installable
+window.addEventListener("beforeinstallprompt", (e) => {
+  // Prevent automatic mini-infobar
+  e.preventDefault();
+  deferredInstallPrompt = e;
+
+  // Show install button
+  const btn = document.getElementById("install-btn");
+  if (btn) btn.style.display = "block";
+
+  // Optional toast
+  if (typeof showToast === "function") showToast("APP INSTALL READY");
+});
+
+// Fired after successful installation
+window.addEventListener("appinstalled", () => {
+  deferredInstallPrompt = null;
+
+  const btn = document.getElementById("install-btn");
+  if (btn) btn.style.display = "none";
+
+  if (typeof showToast === "function") showToast("APP INSTALLED");
+});
+
+// Called by the INSTALL button
+async function triggerAppInstall() {
+  if (!deferredInstallPrompt) {
+    if (typeof showToast === "function") showToast("INSTALL NOT AVAILABLE");
+    return;
+  }
+
+  deferredInstallPrompt.prompt();
+
+  try {
+    const choice = await deferredInstallPrompt.userChoice;
+    if (typeof showToast === "function") {
+      showToast(choice.outcome === "accepted" ? "INSTALLING..." : "INSTALL CANCELLED");
+    }
+  } catch (err) {
+    console.error(err);
+    if (typeof showToast === "function") showToast("INSTALL FAILED");
+  }
+
+  deferredInstallPrompt = null;
+  const btn = document.getElementById("install-btn");
+  if (btn) btn.style.display = "none";
+}
 /* App swipe navigation */
 let startY=null, startX=null, isSwiping=false;
 function onTouchStart(e) {
