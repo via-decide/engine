@@ -4,7 +4,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>viadecide.com | India's Decision Engine</title>
-  <link rel="manifest" href="manifest.json" />
+<link rel="manifest" href="/manifest.json" />
   <meta name="theme-color" content="#04080f" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -1936,7 +1936,16 @@ window.addEventListener("appinstalled", () => {
 
   if (typeof showToast === "function") showToast("APP INSTALLED");
 });
+function isStandalone() {
+  return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+}
 
+window.addEventListener("load", () => {
+  if (isStandalone()) {
+    const btn = document.getElementById("install-btn");
+    if (btn) btn.style.display = "none";
+  }
+});
 // Called by the INSTALL button
 async function triggerAppInstall() {
   if (!deferredInstallPrompt) {
