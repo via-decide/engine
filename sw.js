@@ -1,166 +1,104 @@
-/* ════════════════════════════════════════════════════
-   viadecide.com — Service Worker
-   PWA: Offline support, caching, background sync
-════════════════════════════════════════════════════ */
+/* sw.js — ViaDecide PWA Service Worker (cache-first for app shell, network-first for APIs)
+   Place at: /sw.js
+*/
+const VERSION = "viadecide-pwa-v1.0.0";
+const APP_SHELL_CACHE = `${VERSION}-shell`;
+const RUNTIME_CACHE = `${VERSION}-runtime`;
 
-const CACHE_VERSION = "v2";
-const CACHE_NAME = `decide-engine-${CACHE_VERSION}`;
-const OFFLINE_URL = "/offline.html";
-
-// Core app shell to cache immediately
 const APP_SHELL = [
-  "/",
+  "/",               // if your hosting maps / -> index.html
   "/index.html",
   "/manifest.json",
-  "/offline.html",
   "/icons/icon-192.png",
   "/icons/icon-512.png",
+  // Add your alchemist page if it exists at root:
+  "/alchemist.html",
 ];
 
-// External resources to cache when first fetched
-const EXTERNAL_ALLOWLIST = [
-  "fonts.googleapis.com",
-  "fonts.gstatic.com",
-  "cdnjs.cloudflare.com",
-  "cdn.jsdelivr.net",
-];
+// Cache only same-origin GET requests (avoid caching wikipedia responses etc.)
+function isSameOrigin(reqUrl) {
+  try {
+    return new URL(reqUrl).origin === self.location.origin;
+  } catch {
+    return false;
+  }
+}
 
-// ── Install: cache app shell
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(APP_SHELL).catch((err) => {
-        console.warn("[SW] App shell cache partial failure:", err);
-      });
-    }).then(() => self.skipWaiting())
+    caches.open(APP_SHELL_CACHE).then((cache) => cache.addAll(APP_SHELL))
   );
+  self.skipWaiting();
 });
 
-// ── Activate: clean old caches
 self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(
-        keys
-          .filter((k) => k.startsWith("decide-engine-") && k !== CACHE_NAME)
-          .map((k) => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
-  );
-});
-
-// ── Fetch: serve from cache, fall back to network
-self.addEventListener("fetch", (event) => {
-  const { request } = event;
-  const url = new URL(request.url);
-
-  // Skip non-GET requests and browser extensions
-  if (request.method !== "GET") return;
-  if (url.protocol === "chrome-extension:") return;
-  if (url.protocol === "moz-extension:") return;
-
-  // Skip Wikipedia/Wikivoyage API calls — always fresh
-  const isWikiAPI = [
-    "wikipedia.org/w/api.php",
-    "wikivoyage.org/w/api.php",
-    "wikibooks.org/w/api.php",
-    "wikinews.org/w/api.php",
-  ].some((pattern) => url.href.includes(pattern));
-
-  if (isWikiAPI) {
-    event.respondWith(
-      fetch(request).catch(() => new Response(JSON.stringify({ error: "offline" }), {
-        headers: { "Content-Type": "application/json" },
-      }))
-    );
-    return;
-  }
-
-  // External allowed assets: cache-first with network fallback
-  const isExternal = EXTERNAL_ALLOWLIST.some((h) => url.hostname.includes(h));
-  if (isExternal) {
-    event.respondWith(
-      caches.match(request).then((cached) => {
-        if (cached) return cached;
-        return fetch(request).then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(request, clone));
-          }
-          return response;
-        }).catch(() => new Response("", { status: 503 }));
+  event.waitUntil((async () => {
+    const keys = await caches.keys();
+    await Promise.all(
+      keys.map((k) => {
+        if (![APP_SHELL_CACHE, RUNTIME_CACHE].includes(k)) return caches.delete(k);
       })
     );
+    await self.clients.claim();
+  })());
+});
+
+// Strategy:
+// - App shell (same-origin html/css/js/icons): cache-first, then network
+// - Runtime same-origin assets: stale-while-revalidate
+// - Cross-origin (Wikipedia/Wikivoyage APIs): network-only (avoid opaque cache issues)
+self.addEventListener("fetch", (event) => {
+  const req = event.request;
+  if (req.method !== "GET") return;
+
+  const url = new URL(req.url);
+
+  // Do not interfere with cross-origin API calls (Wikipedia etc.)
+  if (url.origin !== self.location.origin) {
+    // network-only
+    event.respondWith(fetch(req).catch(() => new Response("", { status: 504 })));
     return;
   }
 
-  // App navigation: network-first, fall back to cache, then offline page
-  if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const clone = response.clone();
-            caches.open(CACHE_NAME).then((c) => c.put(request, clone));
-          }
-          return response;
-        })
-        .catch(() =>
-          caches.match(request).then(
-            (cached) => cached || caches.match(OFFLINE_URL)
-          )
-        )
-    );
-    return;
-  }
-
-  // Static assets: cache-first
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((c) => c.put(request, clone));
-        }
-        return response;
-      }).catch(() => new Response("", { status: 503 }));
-    })
-  );
-});
-
-// ── Background Sync (for future use)
-self.addEventListener("sync", (event) => {
-  if (event.tag === "sync-notes") {
-    // Future: sync notes to server
-    console.log("[SW] Background sync: notes");
-  }
-});
-
-// ── Push Notifications (for future use)
-self.addEventListener("push", (event) => {
-  const data = event.data?.json() || {};
-  event.waitUntil(
-    self.registration.showNotification(data.title || "decide.engine", {
-      body: data.body || "New decision intelligence available.",
-      icon: "/icons/icon-192.png",
-      badge: "/icons/icon-96.png",
-      data: { url: data.url || "/" },
-    })
-  );
-});
-
-self.addEventListener("notificationclick", (event) => {
-  event.notification.close();
-  event.waitUntil(
-    clients.matchAll({ type: "window" }).then((clientList) => {
-      const url = event.notification.data?.url || "/";
-      for (const client of clientList) {
-        if (client.url === url && "focus" in client) return client.focus();
+  // HTML navigations => cache-first for offline, fallback to cache
+  if (req.mode === "navigate" || (req.headers.get("accept") || "").includes("text/html")) {
+    event.respondWith((async () => {
+      const cache = await caches.open(APP_SHELL_CACHE);
+      const cached = await cache.match("/index.html");
+      try {
+        const fresh = await fetch(req);
+        // keep latest index cached
+        cache.put("/index.html", fresh.clone());
+        return fresh;
+      } catch {
+        return cached || new Response("Offline", { status: 200, headers: { "Content-Type": "text/plain" } });
       }
-      if (clients.openWindow) return clients.openWindow(url);
-    })
-  );
-});
+    })());
+    return;
+  }
 
-console.log(`[SW] decide.engine service worker ${CACHE_VERSION} loaded`);
+  // App shell assets => cache-first
+  if (APP_SHELL.includes(url.pathname)) {
+    event.respondWith((async () => {
+      const cache = await caches.open(APP_SHELL_CACHE);
+      const cached = await cache.match(req);
+      if (cached) return cached;
+      const fresh = await fetch(req);
+      cache.put(req, fresh.clone());
+      return fresh;
+    })());
+    return;
+  }
+
+  // Other same-origin requests => stale-while-revalidate
+  event.respondWith((async () => {
+    const cache = await caches.open(RUNTIME_CACHE);
+    const cached = await cache.match(req);
+    const fetchPromise = fetch(req).then((fresh) => {
+      cache.put(req, fresh.clone());
+      return fresh;
+    }).catch(() => null);
+
+    return cached || (await fetchPromise) || new Response("", { status: 504 });
+  })());
+});
