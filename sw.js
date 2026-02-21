@@ -1,159 +1,159 @@
-// =====================================================
-// DECIDE OS v2.0 - SERVICE WORKER
-// Enables offline functionality and caching
-// =====================================================
+/* ═══════════════════════════════════════
+   decide.engine — Service Worker
+   viadecide.com | IndiaAI Mission
+═══════════════════════════════════════ */
 
-const CACHE_NAME = 'decide-os-v2.0.0';
-const RUNTIME_CACHE = 'decide-os-runtime';
-
-// Files to cache on installation
-const PRECACHE_URLS = [
+const CACHE_NAME = 'decide-engine-v1';
+const STATIC_ASSETS = [
   '/',
   '/index.html',
-  '/manifest-ondc.json',
-  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2',
-  'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'
+  '/alchemist.html',
+  '/manifest.json',
+  'https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap',
 ];
 
-// Install event - cache core assets
+// CDN assets to cache on first use
+const CDN_HOSTS = [
+  'cdnjs.cloudflare.com',
+  'cdn.jsdelivr.net',
+  'fonts.googleapis.com',
+  'fonts.gstatic.com',
+];
+
+// Wiki API hosts — always network-first
+const WIKI_HOSTS = [
+  'en.wikipedia.org',
+  'en.wikivoyage.org',
+  'en.wikibooks.org',
+  'en.wikinews.org',
+];
+
+/* ── Install ── */
 self.addEventListener('install', event => {
-  console.log('[ServiceWorker] Install');
-  
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('[ServiceWorker] Pre-caching app shell');
-        return cache.addAll(PRECACHE_URLS);
+        // Cache what we can; ignore failures for CDN assets
+        return Promise.allSettled(
+          STATIC_ASSETS.map(url =>
+            cache.add(url).catch(err => {
+              console.warn('[SW] Failed to cache:', url, err);
+            })
+          )
+        );
       })
       .then(() => self.skipWaiting())
   );
 });
 
-// Activate event - clean up old caches
+/* ── Activate ── */
 self.addEventListener('activate', event => {
-  console.log('[ServiceWorker] Activate');
-  
   event.waitUntil(
-    caches.keys().then(cacheNames => {
-      return Promise.all(
-        cacheNames.map(cacheName => {
-          if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
-            console.log('[ServiceWorker] Removing old cache:', cacheName);
-            return caches.delete(cacheName);
-          }
-        })
-      );
-    })
-    .then(() => self.clients.claim())
+    caches.keys().then(keys =>
+      Promise.all(
+        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
+      )
+    ).then(() => self.clients.claim())
   );
 });
 
-// Fetch event - serve from cache, fallback to network
+/* ── Fetch Strategy ── */
 self.addEventListener('fetch', event => {
-  const { request } = event;
-  const url = new URL(request.url);
+  const url = new URL(event.request.url);
 
-  // Skip cross-origin requests
-  if (url.origin !== location.origin && !url.hostname.includes('supabase')) {
+  // Skip non-GET
+  if (event.request.method !== 'GET') return;
+
+  // Skip chrome-extension / non-http
+  if (!url.protocol.startsWith('http')) return;
+
+  // Wiki APIs — network only (real-time data)
+  if (WIKI_HOSTS.some(h => url.hostname.includes(h))) {
+    event.respondWith(networkOnly(event.request));
     return;
   }
 
-  // API requests - network first, fallback to cache
-  if (url.hostname.includes('supabase.co')) {
-    event.respondWith(
-      fetch(request)
-        .then(response => {
-          // Cache successful responses
-          if (response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(RUNTIME_CACHE).then(cache => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        })
-        .catch(() => {
-          // Fallback to cache if network fails
-          return caches.match(request);
-        })
-    );
+  // CDN assets — cache first, then network
+  if (CDN_HOSTS.some(h => url.hostname.includes(h))) {
+    event.respondWith(cacheFirst(event.request));
     return;
   }
 
-  // App shell - cache first, fallback to network
-  event.respondWith(
-    caches.match(request)
-      .then(response => {
-        if (response) {
-          return response;
-        }
-
-        return fetch(request).then(response => {
-          // Cache new resources
-          if (request.method === 'GET' && response.status === 200) {
-            const responseClone = response.clone();
-            caches.open(RUNTIME_CACHE).then(cache => {
-              cache.put(request, responseClone);
-            });
-          }
-          return response;
-        });
-      })
-  );
+  // App shell — stale while revalidate
+  event.respondWith(staleWhileRevalidate(event.request));
 });
 
-// Background sync for analytics
-self.addEventListener('sync', event => {
-  if (event.tag === 'sync-analytics') {
-    event.waitUntil(syncAnalytics());
-  }
-});
+/* ── Strategy helpers ── */
 
-// Sync analytics when back online
-async function syncAnalytics() {
+async function networkOnly(request) {
   try {
-    // This will be handled by the main app
-    console.log('[ServiceWorker] Analytics sync triggered');
-  } catch (error) {
-    console.error('[ServiceWorker] Analytics sync failed:', error);
+    return await fetch(request);
+  } catch (err) {
+    return new Response(JSON.stringify({ error: 'Offline — network unavailable', offline: true }), {
+      status: 503,
+      headers: { 'Content-Type': 'application/json' }
+    });
   }
 }
 
-// Push notification support (future feature)
-self.addEventListener('push', event => {
-  const options = {
-    body: event.data ? event.data.text() : 'New update available!',
-    icon: '/icons/icon-192x192.png',
-    badge: '/icons/icon-72x72.png',
-    vibrate: [200, 100, 200]
-  };
+async function cacheFirst(request) {
+  const cached = await caches.match(request);
+  if (cached) return cached;
+  try {
+    const response = await fetch(request);
+    if (response && response.status === 200) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    return new Response('Offline', { status: 503 });
+  }
+}
 
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+
+  const networkFetch = fetch(request)
+    .then(response => {
+      if (response && response.status === 200 && response.type !== 'opaque') {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => null);
+
+  return cached || networkFetch || new Response('Offline', { status: 503 });
+}
+
+/* ── Background Sync (future) ── */
+self.addEventListener('sync', event => {
+  if (event.tag === 'decide-engine-sync') {
+    console.log('[SW] Background sync triggered');
+  }
+});
+
+/* ── Push Notifications (future) ── */
+self.addEventListener('push', event => {
+  const data = event.data?.json() || {};
   event.waitUntil(
-    self.registration.showNotification('Decide OS', options)
+    self.registration.showNotification(data.title || 'decide.engine', {
+      body: data.body || 'India\'s Decision Engine',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-72.png',
+      data: data.url || '/',
+      tag: 'decide-engine-notification',
+      renotify: true,
+    })
   );
 });
 
-// Notification click handler
 self.addEventListener('notificationclick', event => {
   event.notification.close();
-  
   event.waitUntil(
-    clients.openWindow('/')
+    clients.openWindow(event.notification.data || '/')
   );
 });
 
-// Message handler for communication with main app
-self.addEventListener('message', event => {
-  if (event.data && event.data.type === 'SKIP_WAITING') {
-    self.skipWaiting();
-  }
-  
-  if (event.data && event.data.type === 'CACHE_URLS') {
-    event.waitUntil(
-      caches.open(RUNTIME_CACHE)
-        .then(cache => cache.addAll(event.data.urls))
-    );
-  }
-});
-
-console.log('[ServiceWorker] Loaded successfully');
+console.log('[SW] decide.engine Service Worker loaded — viadecide.com');
