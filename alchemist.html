@@ -3,594 +3,242 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Alchemist Quiz — decide.engine</title>
-  <link rel="manifest" href="manifest.json" />
-  <meta name="theme-color" content="#04080f" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="description" content="Alchemist — Adaptive skill-assessment quiz engine powered by decide.engine research nodes." />
+  <title>Alchemist Quiz | decide.engine India</title>
+  <meta name="theme-color" content="#060c16" />
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800;900&family=Space+Mono:wght@400;700&family=Noto+Sans:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=Noto+Sans:wght@400;600&display=swap" rel="stylesheet">
   <style>
     :root {
       --saffron: #FF9933;
-      --green: #138808;
-      --go: #00d68f;
-      --blue: #3b82f6;
-      --red: #f87171;
-      --bg: #04080f;
-      --card: #0d1825;
-      --deep: #060c16;
-      --text: #e8edf5;
-      --dim: #7a90a8;
+      --india-green: #138808;
+      --brand-bg: #060c16;
+      --bg-card: #0d1825;
+      --text-main: #e8edf5;
+      --text-dim: #7a90a8;
+      --accent-go: #00d68f;
+      --accent-wrong: #ef4444;
       --border: rgba(255,255,255,0.08);
-      --fn: 'Syne', sans-serif;
-      --fm: 'Space Mono', monospace;
-      --fb: 'Noto Sans', sans-serif;
-      --shadow: 0 8px 32px rgba(0,0,0,0.5);
+      --font-display: 'Syne', sans-serif;
+      --font-mono: 'Space Mono', monospace;
+      --font-body: 'Noto Sans', sans-serif;
     }
-
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    html, body {
-      background: var(--bg); color: var(--text);
-      font-family: var(--fb); height: 100%; width: 100%;
-      overflow: hidden; -webkit-user-select: none; user-select: none;
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; min-height: 100vh; background: var(--brand-bg); color: var(--text-main); font-family: var(--font-body); }
+    .tricolor-bar { height: 3px; background: linear-gradient(90deg, #FF9933 33.33%, #FFFFFF 33.33%, #FFFFFF 66.66%, #138808 66.66%); }
+    .header {
+      padding: 16px 20px; border-left: 3px solid var(--saffron);
+      display: flex; align-items: center; justify-content: space-between;
+      background: rgba(6,12,22,.96); backdrop-filter: blur(8px);
+      position: sticky; top: 3px; z-index: 100;
     }
+    .header-title { font-family: var(--font-display); font-size: .78rem; color: var(--saffron); letter-spacing: 2px; font-weight: 700; text-transform: uppercase; }
+    .header-badge { font-family: var(--font-mono); font-size: .58rem; color: var(--text-dim); background: var(--bg-card); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); }
 
-    body::before {
-      content: ''; position: fixed; inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-      pointer-events: none; z-index: 9999; opacity: 0.4;
+    .container { max-width: 600px; margin: 0 auto; padding: 24px 20px 60px; }
+    h1 { font-family: var(--font-display); font-size: 1.8rem; color: var(--saffron); margin: 0 0 8px; letter-spacing: -.02em; }
+
+    .progress-bar { height: 4px; background: rgba(255,255,255,.08); border-radius: 2px; margin: 16px 0; overflow: hidden; }
+    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--saffron), var(--accent-go)); border-radius: 2px; transition: width .4s ease; }
+    .progress-label { font-family: var(--font-mono); font-size: .65rem; color: var(--text-dim); margin-bottom: 4px; }
+
+    .question-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 18px; padding: 22px; margin-bottom: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.4);
     }
+    .q-meta { font-family: var(--font-mono); font-size: .62rem; color: var(--text-dim); margin-bottom: 12px; display: flex; gap: 12px; flex-wrap: wrap; }
+    .q-text { font-size: 1rem; color: var(--text-main); line-height: 1.65; font-weight: 500; }
 
-    .tribar {
-      position: fixed; top: 0; left: 0; right: 0; height: 3px;
-      background: linear-gradient(90deg, #FF9933 33.33%, #fff 33.33%, #fff 66.66%, #138808 66.66%);
-      z-index: 100;
+    .options { display: grid; gap: 10px; margin-top: 18px; }
+    .option-btn {
+      background: rgba(255,255,255,.04); border: 1px solid var(--border);
+      color: var(--text-main); padding: 14px 16px; border-radius: 12px;
+      font-size: .9rem; font-family: var(--font-body); cursor: pointer;
+      text-align: left; transition: all .18s;
+      -webkit-tap-highlight-color: transparent;
     }
+    .option-btn:hover { border-color: rgba(255,153,51,.3); background: rgba(255,153,51,.06); }
+    .option-btn.correct { background: rgba(0,214,143,.1); border-color: var(--accent-go); color: var(--accent-go); }
+    .option-btn.wrong { background: rgba(239,68,68,.1); border-color: var(--accent-wrong); color: var(--accent-wrong); }
+    .option-btn:disabled { cursor: default; }
 
-    /* ── SCREENS ── */
-    .screen {
-      position: fixed; inset: 0; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; padding: 24px 20px;
-      transition: opacity .3s ease, transform .3s ease;
+    .explanation {
+      background: rgba(0,214,143,.06); border: 1px solid rgba(0,214,143,.2);
+      border-radius: 12px; padding: 14px; margin-top: 12px;
+      font-size: .88rem; color: var(--text-dim); line-height: 1.65;
     }
-    .screen.hidden { opacity: 0; pointer-events: none; transform: scale(.98); }
+    .explanation strong { color: var(--accent-go); }
 
-    /* ── SPLASH ── */
-    #splash { background: var(--bg); }
-    .splash-logo {
-      font-family: var(--fn); font-weight: 900; font-size: clamp(2.5rem,9vw,5rem);
-      letter-spacing: -.05em; line-height: 1; text-align: center; margin-bottom: 8px;
-    }
-    .splash-sub {
-      font-family: var(--fm); font-size: .65rem; letter-spacing: 2px;
-      color: var(--saffron); text-transform: uppercase; margin-bottom: 32px;
-      display: flex; align-items: center; gap: 10px; justify-content: center;
-    }
-    .splash-sub .line { width: 28px; height: 1px; background: rgba(255,153,51,.4); }
-
-    .quiz-meta-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 18px;
-      padding: 20px; margin-bottom: 24px; width: 100%; max-width: 480px;
-      box-shadow: var(--shadow);
-    }
-    .qm-row { display: flex; justify-content: space-between; padding: 8px 0;
-      border-bottom: 1px dashed rgba(255,255,255,.05); font-family: var(--fm); font-size: .72rem; }
-    .qm-row:last-child { border-bottom: none; padding-bottom: 0; }
-    .qm-k { color: var(--dim); text-transform: uppercase; }
-    .qm-v { color: var(--text); font-weight: 700; }
-
-    .btn-start {
-      background: linear-gradient(135deg, rgba(255,153,51,.2), rgba(19,136,8,.1));
-      border: 1px solid rgba(255,153,51,.5); color: var(--saffron);
-      font-family: var(--fn); font-weight: 800; font-size: 1rem; letter-spacing: 1px;
-      padding: 16px 40px; border-radius: 14px; cursor: pointer; width: 100%; max-width: 480px;
-      transition: all .2s; text-transform: uppercase;
-    }
-    .btn-start:hover { box-shadow: 0 0 24px rgba(255,153,51,.2); }
-    .btn-start:active { transform: scale(.98); opacity: .9; }
-
-    .no-data-msg {
-      text-align: center; max-width: 400px;
-      font-size: .95rem; color: var(--dim); line-height: 1.7;
-    }
-    .no-data-msg strong { color: var(--text); }
-    .no-data-msg a { color: var(--saffron); text-decoration: none; font-family: var(--fn); font-weight: 800; }
-
-    /* ── QUIZ SCREEN ── */
-    #quiz { background: var(--deep); padding: 0; justify-content: flex-start; }
-
-    .quiz-header {
-      width: 100%; padding: 18px 20px 14px; margin-top: 3px;
-      border-left: 3px solid var(--saffron);
-      background: linear-gradient(180deg, rgba(6,12,22,.98), rgba(6,12,22,.80));
-      backdrop-filter: blur(10px);
-      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
-    }
-    .quiz-header-title { font-family: var(--fn); font-size: .78rem; color: var(--saffron); letter-spacing: 2px; font-weight: 700; text-transform: uppercase; }
-    .quiz-header-right { display: flex; gap: 8px; align-items: center; }
-    .q-badge { font-family: var(--fm); font-size: .58rem; color: var(--dim); background: var(--card); padding: 4px 10px; border-radius: 20px; border: 1px solid var(--border); letter-spacing: 1px; }
-
-    /* Progress bar */
-    .progress-wrap { width: 100%; height: 3px; background: rgba(255,255,255,.06); flex-shrink: 0; }
-    .progress-fill { height: 100%; background: linear-gradient(90deg, var(--saffron), var(--go)); transition: width .4s ease; border-radius: 2px; }
-
-    .quiz-body { flex: 1; overflow-y: auto; padding: 20px 20px 120px; width: 100%; max-width: 640px; margin: 0 auto; -webkit-overflow-scrolling: touch; touch-action: pan-y; }
-
-    .question-num { font-family: var(--fm); font-size: .6rem; color: var(--saffron); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 10px; }
-    .question-domain { font-family: var(--fm); font-size: .58rem; color: var(--dim); letter-spacing: 1px; margin-bottom: 14px; }
-    .question-text {
-      font-family: var(--fn); font-weight: 700; font-size: clamp(1rem,3.5vw,1.5rem);
-      line-height: 1.4; color: var(--text); margin-bottom: 24px; user-select: text; -webkit-user-select: text;
-    }
-
-    /* Swipe target cards */
-    .swipe-grid {
-      display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px;
-    }
-    .swipe-card {
-      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-      padding: 14px 12px; cursor: pointer; transition: all .15s ease;
-      display: flex; flex-direction: column; align-items: center; gap: 6px;
-      -webkit-tap-highlight-color: transparent; touch-action: manipulation;
-    }
-    .swipe-card:active { transform: scale(.97); opacity: .9; }
-    .swipe-card.selected-correct { background: rgba(0,214,143,.12); border-color: rgba(0,214,143,.5); }
-    .swipe-card.selected-wrong { background: rgba(248,113,113,.12); border-color: rgba(248,113,113,.5); }
-    .swipe-card.reveal-correct { background: rgba(0,214,143,.08); border-color: rgba(0,214,143,.35); }
-    .swipe-card.reveal-wrong { background: rgba(248,113,113,.06); border-color: rgba(248,113,113,.25); opacity: .6; }
-    .swipe-dir { font-family: var(--fm); font-size: .55rem; color: var(--dim); letter-spacing: 1.5px; text-transform: uppercase; }
-    .swipe-answer { font-family: var(--fn); font-weight: 800; font-size: .88rem; color: var(--text); text-align: center; line-height: 1.3; }
-    .swipe-check { font-size: 1.2rem; }
-
-    /* Feedback panel */
-    .feedback-panel {
-      background: var(--card); border: 1px solid var(--border); border-radius: 14px;
-      padding: 14px; margin-bottom: 14px; display: none;
-    }
-    .feedback-panel.visible { display: block; }
-    .feedback-panel.correct { border-color: rgba(0,214,143,.4); }
-    .feedback-panel.wrong { border-color: rgba(248,113,113,.4); }
-    .feedback-verdict { font-family: var(--fn); font-weight: 900; font-size: 1.1rem; margin-bottom: 6px; }
-    .feedback-verdict.c { color: var(--go); }
-    .feedback-verdict.w { color: var(--red); }
-    .feedback-explanation { font-size: .85rem; color: var(--dim); line-height: 1.6; }
-    .feedback-explanation strong { color: var(--text); }
-
-    .quiz-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    .nav-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
     .btn {
-      background: var(--card); color: var(--text); border: 1px solid var(--border);
-      padding: 13px 12px; border-radius: 12px; font-weight: 700; text-align: center;
-      font-size: .78rem; cursor: pointer; display: block; width: 100%;
-      transition: transform .1s ease, opacity .18s ease;
-      font-family: var(--fn); letter-spacing: .5px; -webkit-tap-highlight-color: transparent;
+      background: var(--bg-card); color: var(--text-main); border: 1px solid var(--border);
+      padding: 13px; border-radius: 12px; font-weight: 700; font-size: .82rem;
+      cursor: pointer; width: 100%; font-family: var(--font-display); letter-spacing: .5px;
+      transition: all .15s;
     }
-    .btn:active { transform: scale(.98); opacity: .9; }
+    .btn:active { transform: scale(.98); }
     .btn-full { grid-column: span 2; }
-    .btn-go { background: linear-gradient(135deg, rgba(0,214,143,.15), rgba(0,214,143,.06)); border-color: rgba(0,214,143,.45); color: var(--go); }
-    .btn-muted { background: var(--deep); border-color: var(--border); color: var(--dim); }
-    .btn-india { background: linear-gradient(135deg, rgba(255,153,51,.15), rgba(19,136,8,.1)); border-color: rgba(255,153,51,.45); color: var(--saffron); }
+    .btn-pro { background: rgba(0,214,143,.1); border-color: rgba(0,214,143,.4); color: var(--accent-go); }
+    .btn-india { background: rgba(255,153,51,.1); border-color: rgba(255,153,51,.4); color: var(--saffron); }
 
-    /* ── RESULTS SCREEN ── */
-    #results { background: var(--bg); }
-    .results-header { text-align: center; margin-bottom: 24px; }
-    .results-score { font-family: var(--fn); font-weight: 900; font-size: clamp(3rem,12vw,6rem); line-height: 1; color: var(--saffron); }
-    .results-label { font-family: var(--fm); font-size: .65rem; letter-spacing: 2px; color: var(--dim); text-transform: uppercase; margin-top: 6px; }
-    .results-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 16px; margin-bottom: 14px; width: 100%; max-width: 480px; }
-    .r-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-    .r-stat { text-align: center; }
-    .r-num { font-family: var(--fn); font-weight: 900; font-size: 1.8rem; line-height: 1; }
-    .r-num.green { color: var(--go); }
-    .r-num.red { color: var(--red); }
-    .r-num.blue { color: #93c5fd; }
-    .r-lbl { font-family: var(--fm); font-size: .58rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; margin-top: 4px; }
-    .rank-badge { text-align: center; padding: 16px; background: linear-gradient(135deg, rgba(255,153,51,.1), rgba(19,136,8,.06)); border: 1px solid rgba(255,153,51,.25); border-radius: 14px; margin-bottom: 14px; width: 100%; max-width: 480px; }
-    .rank-label { font-family: var(--fn); font-weight: 900; font-size: 1.3rem; color: var(--saffron); }
-    .rank-sub { font-family: var(--fm); font-size: .6rem; color: var(--dim); margin-top: 4px; letter-spacing: 1px; }
-    .results-actions { display: grid; gap: 10px; width: 100%; max-width: 480px; }
-
-    /* Toast */
-    .toast {
-      position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
-      background: var(--card); color: var(--go); padding: 10px 20px;
-      border: 1px solid rgba(0,214,143,.4); border-radius: 999px; font-size: .72rem;
-      opacity: 0; pointer-events: none; transition: opacity .25s; z-index: 3000;
-      font-family: var(--fm); letter-spacing: .8px; box-shadow: 0 8px 24px rgba(0,0,0,.4);
-      white-space: nowrap;
+    .score-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 28px; text-align: center; margin-top: 20px;
     }
-    .toast.on { opacity: 1; }
+    .score-number { font-family: var(--font-display); font-size: 4rem; font-weight: 900; color: var(--saffron); line-height: 1; }
+    .score-label { font-family: var(--font-mono); font-size: .7rem; color: var(--text-dim); margin-top: 8px; letter-spacing: 1px; text-transform: uppercase; }
+    .score-msg { font-size: 1rem; color: var(--text-main); margin-top: 16px; line-height: 1.6; }
 
-    /* Orb */
-    .orb { position: fixed; border-radius: 50%; filter: blur(80px); pointer-events: none; z-index: 0; animation: orbf 8s ease-in-out infinite; }
-    @keyframes orbf { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-16px)} }
-
-    @keyframes pop { 0%{transform:scale(.8);opacity:0} 60%{transform:scale(1.06)} 100%{transform:scale(1);opacity:1} }
-    .pop { animation: pop .35s ease both; }
-
-    @media (max-width: 380px) {
-      .swipe-answer { font-size: .78rem; }
-      .question-text { font-size: .95rem; }
-    }
+    .empty-state { text-align: center; padding: 60px 20px; }
+    .empty-state p { color: var(--text-dim); line-height: 1.7; margin-bottom: 20px; }
   </style>
 </head>
 <body>
-<div class="tribar"></div>
-
-<!-- Ambient orbs -->
-<div class="orb" style="width:400px;height:300px;background:rgba(255,153,51,.05);top:30%;left:40%"></div>
-<div class="orb" style="width:300px;height:300px;background:rgba(0,214,143,.04);bottom:20%;right:10%;animation-delay:3s"></div>
-
-<!-- Toast -->
-<div class="toast" id="toast"></div>
-
-<!-- ═══════════ SPLASH SCREEN ═══════════ -->
-<div class="screen" id="splash">
-  <div class="splash-logo">
-    <span style="color:#FF9933">Al</span><span style="color:#fff">chem</span><span style="color:#00d68f">ist</span>
-  </div>
-  <div class="splash-sub"><span class="line"></span>QUIZ ENGINE · DECIDE.ENGINE<span class="line"></span></div>
-
-  <div id="splash-content"></div>
+<div class="tricolor-bar"></div>
+<div class="header">
+  <span class="header-title">ALCHEMIST QUIZ</span>
+  <span class="header-badge" id="quiz-badge">LOADING</span>
 </div>
-
-<!-- ═══════════ QUIZ SCREEN ═══════════ -->
-<div class="screen hidden" id="quiz">
-  <div class="quiz-header">
-    <span class="quiz-header-title">ALCHEMIST</span>
-    <div class="quiz-header-right">
-      <span class="q-badge" id="q-counter">Q 1 / 1</span>
-      <span class="q-badge" id="q-score-live">0 pts</span>
-    </div>
-  </div>
-  <div class="progress-wrap"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
-  <div class="quiz-body" id="quiz-body"></div>
-</div>
-
-<!-- ═══════════ RESULTS SCREEN ═══════════ -->
-<div class="screen hidden" id="results">
-  <div class="results-header">
-    <div class="results-score" id="res-score">0</div>
-    <div class="results-label">POINTS EARNED</div>
-  </div>
-  <div class="results-card">
-    <div class="r-grid" id="res-grid"></div>
-  </div>
-  <div class="rank-badge" id="res-rank"></div>
-  <div class="results-actions" id="res-actions"></div>
-</div>
+<div class="container" id="app"></div>
 
 <script>
 const ALCHEMIST_LS_KEY = "ALCHEMIST_INJECTED_DATA";
-
-/* ── Helpers ── */
-function $(id){ return document.getElementById(id); }
-function showToast(msg, dur=1800){
-  const el=$('toast'); el.textContent=msg; el.classList.add('on');
-  setTimeout(()=>el.classList.remove('on'), dur);
-}
-function showScreen(id){
-  ['splash','quiz','results'].forEach(s=>{
-    const el=$(s); if(!el) return;
-    if(s===id){el.classList.remove('hidden');}else{el.classList.add('hidden');}
-  });
-}
-function escHtml(str){ return (str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;"); }
-
-/* ── State ── */
-let QUESTIONS = [];
-let qIdx = 0;
+let questions = [];
+let currentQ = 0;
 let score = 0;
-let correct = 0;
-let wrong = 0;
-let skipped = 0;
 let answered = false;
-let streak = 0;
-let maxStreak = 0;
 
-/* ── Scoring ── */
-const DIFFICULTY_PTS = { 1:10, 2:15, 3:20, 4:30, 5:50 };
-function pointsFor(q){ return DIFFICULTY_PTS[parseInt(q.Difficulty)||1] || 10; }
-function streakBonus(s){ if(s>=5)return 3; if(s>=3)return 2; if(s>=2)return 1; return 0; }
-
-/* ── Ranks ── */
-function getRank(pct){
-  if(pct>=95) return {label:"⚡ SUPREME ANALYST", sub:"Top 1% — Policy-grade mastery"};
-  if(pct>=85) return {label:"🏛️ POLICY ADVISOR", sub:"Top 5% — Expert decision-maker"};
-  if(pct>=70) return {label:"🔬 RESEARCH SCHOLAR", sub:"Top 20% — Strong analytical ability"};
-  if(pct>=55) return {label:"📚 KNOWLEDGE BUILDER", sub:"Top 40% — Growing research skills"};
-  if(pct>=40) return {label:"🌱 DECISION APPRENTICE", sub:"Keep researching and reviewing"};
-  return {label:"🔍 EXPLORER", sub:"Return to decide.engine to build more nodes"};
-}
-
-/* ── Shuffle ── */
-function shuffle(arr){ const a=[...arr]; for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-
-/* ── Load Data ── */
-function loadData(){
+function loadQuestions() {
   try {
     const raw = localStorage.getItem(ALCHEMIST_LS_KEY);
-    if(!raw) return null;
-    const data = JSON.parse(raw);
-    if(!Array.isArray(data)||!data.length) return null;
-    return data;
-  } catch(e){ return null; }
+    if (!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) { return null; }
 }
 
-/* ── Splash ── */
-function renderSplash(){
-  const data = loadData();
-  const el = $('splash-content');
-
-  if(!data){
-    el.innerHTML = `
-      <div class="no-data-msg">
-        <p style="margin-bottom:14px;font-size:1.1rem;color:var(--text);font-family:var(--fn);font-weight:800;">No quiz data found.</p>
-        <p>Open <a href="index.html">decide.engine</a>, research any topic to build nodes, then click <strong>QUIZ (ALCHEMIST)</strong> to generate questions.</p>
-        <br>
-        <a href="index.html" style="display:inline-block;margin-top:8px;padding:12px 28px;border:1px solid rgba(255,153,51,.5);border-radius:12px;background:rgba(255,153,51,.1);font-family:var(--fn);font-weight:800;font-size:.88rem;">← BACK TO DECIDE.ENGINE</a>
-      </div>
-    `;
-    return;
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i+1));
+    [a[i], a[j]] = [a[j], a[i]];
   }
+  return a;
+}
 
-  QUESTIONS = shuffle(data);
-  const domain = data[0]?.Domain || "Decision Research";
-  const subdomain = data[0]?.Subdomain || "RESEARCH";
-  const setCode = data[0]?.Set_Code || "RESEARCH";
-  const maxPts = QUESTIONS.reduce((s,q)=>s+pointsFor(q),0);
-
-  el.innerHTML = `
-    <div class="quiz-meta-card">
-      <div class="qm-row"><span class="qm-k">Set</span><span class="qm-v">${escHtml(setCode)}</span></div>
-      <div class="qm-row"><span class="qm-k">Domain</span><span class="qm-v">${escHtml(domain)}</span></div>
-      <div class="qm-row"><span class="qm-k">Source</span><span class="qm-v">${escHtml(subdomain)}</span></div>
-      <div class="qm-row"><span class="qm-k">Questions</span><span class="qm-v">${QUESTIONS.length}</span></div>
-      <div class="qm-row"><span class="qm-k">Max Points</span><span class="qm-v">${maxPts} pts</span></div>
-      <div class="qm-row"><span class="qm-k">Format</span><span class="qm-v">4-OPTION SELECT</span></div>
+function renderEmpty() {
+  document.getElementById('quiz-badge').textContent = "NO DATA";
+  document.getElementById('app').innerHTML = `
+    <div class="empty-state">
+      <h1>No Quiz Data</h1>
+      <p>Open decide.engine, build some research nodes, then tap <strong>QUIZ (ALCHEMIST)</strong> in the quick panel or on any node slide.</p>
+      <button class="btn btn-india" onclick="window.location='index.html'">← BACK TO decide.engine</button>
     </div>
-    <button class="btn-start" onclick="startQuiz()">▶ START QUIZ →</button>
-    <div style="height:12px"></div>
-    <button class="btn btn-muted btn-full" style="max-width:480px" onclick="window.location.href='index.html'">← BACK TO DECIDE.ENGINE</button>
   `;
 }
 
-/* ── Start Quiz ── */
-function startQuiz(){
-  qIdx = 0; score = 0; correct = 0; wrong = 0; skipped = 0; answered = false;
-  streak = 0; maxStreak = 0;
-  showScreen('quiz');
-  renderQuestion();
+function buildOptions(q) {
+  return shuffle([q.Correct_Answer, q.Distractor_1, q.Distractor_2].filter(Boolean));
 }
 
-/* ── Render Question ── */
-function renderQuestion(){
-  if(qIdx >= QUESTIONS.length){ endQuiz(); return; }
+function renderQuestion() {
   answered = false;
-  const q = QUESTIONS[qIdx];
-  const total = QUESTIONS.length;
-  const pts = pointsFor(q);
+  const q = questions[currentQ];
+  if (!q) { renderResults(); return; }
+  const pct = Math.round((currentQ / questions.length) * 100);
+  const options = buildOptions(q);
+  document.getElementById('quiz-badge').textContent = `${currentQ+1}/${questions.length}`;
 
-  $('q-counter').textContent = `Q ${qIdx+1} / ${total}`;
-  $('q-score-live').textContent = `${score} pts`;
-  $('progress-fill').style.width = `${(qIdx/total)*100}%`;
-
-  // Build 4 options: correct + up to 3 distractors
-  const answers = buildAnswerSet(q);
-
-  const body = $('quiz-body');
-  body.scrollTop = 0;
-
-  body.innerHTML = `
-    <div class="pop">
-      <div class="question-num">Question ${qIdx+1} of ${total} · ${pts} pts · Difficulty ${q.Difficulty||1}/5</div>
-      <div class="question-domain">${escHtml(q.Domain||"")} › ${escHtml(q.Subdomain||"")}</div>
-      <div class="question-text">${escHtml(q.Question_Text||"")}</div>
-      <div class="swipe-grid" id="answers-grid"></div>
-      <div class="feedback-panel" id="feedback-panel">
-        <div class="feedback-verdict" id="feedback-verdict"></div>
-        <div class="feedback-explanation" id="feedback-explanation"></div>
+  document.getElementById('app').innerHTML = `
+    <h1>Quiz</h1>
+    <div class="progress-label">${currentQ+1} of ${questions.length} — ${pct}% complete</div>
+    <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+    <div class="question-card">
+      <div class="q-meta">
+        <span>${q.Domain||"Research"}</span>
+        <span>${q.Subdomain||""}</span>
+        <span>Difficulty: ${q.Difficulty||"2"}/5</span>
       </div>
-      <div class="quiz-actions">
-        <button class="btn btn-full btn-go" id="btn-next" onclick="nextQuestion()" style="display:none">NEXT QUESTION →</button>
-        <button class="btn btn-muted" onclick="skipQuestion()" id="btn-skip">SKIP</button>
-        <button class="btn btn-muted" onclick="endQuiz()">END QUIZ</button>
+      <div class="q-text">${escapeHTML(q.Question_Text||"")}</div>
+      <div class="options" id="options-list">
+        ${options.map((opt,i) => `<button class="option-btn" data-answer="${escapeHTML(opt)}" onclick="selectAnswer(this, '${escapeHTML(q.Correct_Answer)}', '${escapeHTML(q.Explanation_Short||"")}')">
+          ${String.fromCharCode(65+i)}. ${escapeHTML(opt)}
+        </button>`).join("")}
       </div>
+      <div id="explanation-box"></div>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-full btn-pro" id="next-btn" onclick="nextQuestion()" style="display:none">NEXT QUESTION →</button>
+      <button class="btn btn-full btn-muted" onclick="if(confirm('Quit quiz?')) renderResults()">QUIT & SEE RESULTS</button>
     </div>
   `;
-
-  const grid = $('answers-grid');
-  answers.forEach((ans, i) => {
-    const card = document.createElement('div');
-    card.className = 'swipe-card';
-    card.dataset.answer = ans;
-    card.dataset.correct = (ans === q.Correct_Answer) ? '1' : '0';
-    card.innerHTML = `
-      <div class="swipe-dir">${['↑ A','→ B','← C','↓ D'][i]||''}</div>
-      <div class="swipe-answer">${escHtml(ans)}</div>
-    `;
-    card.addEventListener('click', ()=> selectAnswer(card, q));
-    card.addEventListener('touchend', (e)=>{ e.preventDefault(); selectAnswer(card, q); }, {passive:false});
-    grid.appendChild(card);
-  });
 }
 
-function buildAnswerSet(q){
-  const correct = q.Correct_Answer || "?";
-  const d1 = q.Distractor_1 || "—";
-  const d2 = q.Distractor_2 || "—";
-  const d3 = q.Distractor_3 || `Option ${Math.floor(Math.random()*100)}`;
-  const all = shuffle([correct, d1, d2, d3]);
-  return all.slice(0,4);
+function escapeHTML(str) {
+  return (str||"").replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;").replaceAll("'","&#39;");
 }
 
-/* ── Select Answer ── */
-function selectAnswer(card, q){
-  if(answered) return;
+function selectAnswer(btn, correct, explanation) {
+  if (answered) return;
   answered = true;
-
-  const isCorrect = card.dataset.correct === '1';
-  const pts = pointsFor(q);
-
-  // Style all cards
-  document.querySelectorAll('.swipe-card').forEach(c => {
-    if(c === card){
-      c.classList.add(isCorrect ? 'selected-correct' : 'selected-wrong');
-      c.querySelector('.swipe-answer').innerHTML += `<div class="swipe-check">${isCorrect?'✅':'❌'}</div>`;
-    } else {
-      if(c.dataset.correct === '1') {
-        c.classList.add('reveal-correct');
-        c.querySelector('.swipe-answer').innerHTML += '<div class="swipe-check">✅</div>';
-      } else {
-        c.classList.add('reveal-wrong');
-      }
-    }
-  });
-
-  // Update score
-  if(isCorrect){
-    correct++;
-    streak++;
-    maxStreak = Math.max(maxStreak, streak);
-    const bonus = streakBonus(streak);
-    const earned = pts + bonus;
-    score += earned;
-    showToast(streak >= 3 ? `🔥 STREAK x${streak}! +${earned} pts` : `✅ CORRECT! +${earned} pts`);
-  } else {
-    wrong++;
-    streak = 0;
-    showToast(`❌ WRONG — 0 pts`);
+  const isCorrect = btn.dataset.answer === correct;
+  if (isCorrect) { score++; btn.classList.add('correct'); }
+  else {
+    btn.classList.add('wrong');
+    document.querySelectorAll('.option-btn').forEach(b => {
+      if (b.dataset.answer === correct) b.classList.add('correct');
+    });
   }
-
-  // Feedback
-  const fp = $('feedback-panel');
-  const fv = $('feedback-verdict');
-  const fe = $('feedback-explanation');
-  fp.classList.add('visible', isCorrect ? 'correct' : 'wrong');
-  fv.className = 'feedback-verdict ' + (isCorrect ? 'c' : 'w');
-  fv.textContent = isCorrect ? '✅ CORRECT' : '❌ INCORRECT';
-  fe.innerHTML = `<strong>Correct answer:</strong> ${escHtml(q.Correct_Answer)}<br><br>${escHtml(q.Explanation_Short||"")}${q.Explanation_Long&&q.Explanation_Long.trim()&&q.Explanation_Long!==q.Explanation_Short?`<br><span style="font-size:.78rem;color:var(--dim)">${escHtml(q.Explanation_Long)}</span>`:''}`;
-
-  // Show next, hide skip
-  const btnNext = $('btn-next');
-  const btnSkip = $('btn-skip');
-  if(btnNext) btnNext.style.display = '';
-  if(btnSkip) btnSkip.style.display = 'none';
-
-  $('q-score-live').textContent = `${score} pts`;
+  document.querySelectorAll('.option-btn').forEach(b => b.disabled = true);
+  const expBox = document.getElementById('explanation-box');
+  if (expBox) {
+    expBox.innerHTML = `<div class="explanation"><strong>${isCorrect ? '✓ Correct!' : '✗ Incorrect.'}</strong> ${escapeHTML(explanation)} The correct answer is: <strong>${escapeHTML(correct)}</strong></div>`;
+  }
+  const nextBtn = document.getElementById('next-btn');
+  if (nextBtn) { nextBtn.style.display = 'block'; nextBtn.style.gridColumn = 'span 2'; }
 }
 
-/* ── Skip ── */
-function skipQuestion(){
-  if(answered) return;
-  skipped++;
-  streak = 0;
-  answered = true;
-  showToast("SKIPPED");
-
-  // Reveal correct
-  document.querySelectorAll('.swipe-card').forEach(c => {
-    if(c.dataset.correct === '1') {
-      c.classList.add('reveal-correct');
-      c.querySelector('.swipe-answer').innerHTML += '<div class="swipe-check">✅</div>';
-    } else {
-      c.classList.add('reveal-wrong');
-    }
-  });
-
-  const q = QUESTIONS[qIdx];
-  const fp = $('feedback-panel');
-  const fv = $('feedback-verdict');
-  const fe = $('feedback-explanation');
-  fp.classList.add('visible');
-  fv.className = 'feedback-verdict w';
-  fv.textContent = '⏭ SKIPPED';
-  fe.innerHTML = `<strong>Correct answer:</strong> ${escHtml(q?.Correct_Answer||"")}`;
-
-  const btnNext = $('btn-next');
-  const btnSkip = $('btn-skip');
-  if(btnNext) btnNext.style.display = '';
-  if(btnSkip) btnSkip.style.display = 'none';
+function nextQuestion() {
+  currentQ++; renderQuestion();
 }
 
-/* ── Next ── */
-function nextQuestion(){
-  qIdx++;
-  if(qIdx >= QUESTIONS.length){ endQuiz(); return; }
+function renderResults() {
+  const pct = Math.round((score / questions.length) * 100);
+  let msg = "", grade = "";
+  if (pct >= 90) { msg = "Outstanding! You've deeply internalized the research nodes."; grade = "A+"; }
+  else if (pct >= 75) { msg = "Strong result. You have solid command of the material."; grade = "A"; }
+  else if (pct >= 60) { msg = "Good base. Review the nodes you missed and retry."; grade = "B"; }
+  else if (pct >= 40) { msg = "Keep building. Return to decide.engine and deepen your research."; grade = "C"; }
+  else { msg = "Early days — great. Research more nodes and try again."; grade = "D"; }
+
+  document.getElementById('quiz-badge').textContent = "COMPLETE";
+  document.getElementById('app').innerHTML = `
+    <h1>Results</h1>
+    <div class="score-card">
+      <div class="score-number">${score}/${questions.length}</div>
+      <div class="score-label">Score — Grade: ${grade}</div>
+      <div class="progress-bar" style="margin:14px 0"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="score-msg">${escapeHTML(msg)}</div>
+    </div>
+    <div class="nav-actions" style="margin-top:20px;">
+      <button class="btn btn-full btn-pro" onclick="restartQuiz()">RETRY QUIZ</button>
+      <button class="btn btn-full btn-india" onclick="window.location='index.html'">← decide.engine</button>
+    </div>
+  `;
+}
+
+function restartQuiz() {
+  currentQ = 0; score = 0; answered = false;
   renderQuestion();
 }
 
-/* ── End Quiz ── */
-function endQuiz(){
-  showScreen('results');
-  const total = QUESTIONS.length;
-  const attempted = correct + wrong;
-  const maxPts = QUESTIONS.reduce((s,q)=>s+pointsFor(q),0);
-  const pct = maxPts > 0 ? Math.round((score/maxPts)*100) : 0;
-  const accuracy = attempted > 0 ? Math.round((correct/attempted)*100) : 0;
-  const rank = getRank(pct);
-
-  $('res-score').textContent = score.toLocaleString('en-IN');
-  $('progress-fill').style.width = '100%';
-
-  $('res-grid').innerHTML = `
-    <div class="r-stat"><div class="r-num green">${correct}</div><div class="r-lbl">Correct</div></div>
-    <div class="r-stat"><div class="r-num red">${wrong}</div><div class="r-lbl">Wrong</div></div>
-    <div class="r-stat"><div class="r-num blue">${accuracy}%</div><div class="r-lbl">Accuracy</div></div>
-    <div class="r-stat"><div class="r-num" style="color:var(--saffron)">${maxStreak}</div><div class="r-lbl">Max Streak</div></div>
-  `;
-
-  $('res-rank').innerHTML = `
-    <div class="rank-label">${rank.label}</div>
-    <div class="rank-sub">${rank.sub} · ${pct}% score</div>
-  `;
-
-  $('res-actions').innerHTML = `
-    <button class="btn btn-india" onclick="startQuiz()">↩ RETRY QUIZ</button>
-    <button class="btn btn-go" onclick="shareResult(${score}, ${pct}, '${rank.label.replace(/'/g,"\\'")}')">SHARE RESULT</button>
-    <button class="btn btn-full" onclick="window.location.href='index.html'">← BACK TO DECIDE.ENGINE</button>
-  `;
+// Boot
+const loaded = loadQuestions();
+if (!loaded || !loaded.length) { renderEmpty(); }
+else {
+  questions = shuffle(loaded);
+  renderQuestion();
 }
-
-/* ── Share Result ── */
-function shareResult(pts, pct, rankLabel){
-  const text = `🇮🇳 decide.engine Alchemist Quiz\n${rankLabel}\nScore: ${pts} pts (${pct}%)\nCorrect: ${correct} | Streak: ${maxStreak}\nviadecide.com`;
-  if(navigator.share){
-    navigator.share({ title:"decide.engine Quiz Result", text, url:"https://viadecide.com" }).catch(()=>{});
-  } else if(navigator.clipboard?.writeText){
-    navigator.clipboard.writeText(text).then(()=>showToast("RESULT COPIED"));
-  } else {
-    window.prompt("Copy your result:", text);
-  }
-}
-
-/* ── Keyboard navigation ── */
-document.addEventListener('keydown', e => {
-  if($('quiz').classList.contains('hidden')) return;
-  if(e.key === 'ArrowRight' || e.key === 'Enter'){
-    if(answered) nextQuestion();
-  }
-  if(e.key === 's' || e.key === 'S'){
-    if(!answered) skipQuestion();
-  }
-});
-
-/* ── Swipe gesture ── */
-let swipeStartY = null;
-document.addEventListener('touchstart', e => { swipeStartY = e.touches[0].clientY; }, {passive:true});
-document.addEventListener('touchend', e => {
-  if(swipeStartY === null) return;
-  const dy = e.changedTouches[0].clientY - swipeStartY;
-  swipeStartY = null;
-  if($('quiz').classList.contains('hidden')) return;
-  // Swipe up = next (if answered)
-  if(Math.abs(dy) > 60 && dy < 0 && answered) nextQuestion();
-}, {passive:true});
-
-/* ── Boot ── */
-renderSplash();
 </script>
 </body>
 </html>
