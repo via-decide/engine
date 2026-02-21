@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decision Brief | ViaDecide</title>
+<meta name="theme-color" content="#0a0a0a">
+
+<style>
+:root{
+--bg:#0a0a0a;
+--card:#111;
+--accent:#ff671f;
+--accent2:#ff8a3d;
+--text:#f2f2f2;
+--muted:#8a8a8a;
+--line:rgba(255,255,255,.08);
+--shadow:0 18px 60px rgba(0,0,0,.55);
+}
+
+*{box-sizing:border-box;}
+
+body{
+margin:0;
+background:
+radial-gradient(900px 600px at 20% 0%, rgba(255,103,31,.10), transparent 55%),
+var(--bg);
+color:var(--text);
+font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+
+.wrap{
+max-width:760px;
+margin:64px auto;
+padding:22px 18px;
+}
+
+h1{
+margin:0;
+font-size:30px;
+letter-spacing:-.02em;
+}
+
+.sub{
+margin:8px 0 22px;
+color:var(--muted);
+font-size:14px;
+line-height:1.5;
+}
+
+.card{
+background:linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+border:1px solid var(--line);
+border-radius:18px;
+box-shadow:var(--shadow);
+padding:22px;
+}
+
+form{
+display:flex;
+flex-direction:column;
+gap:14px;
+}
+
+label{
+display:flex;
+flex-direction:column;
+gap:6px;
+font-size:12px;
+color:rgba(255,255,255,.75);
+font-weight:700;
+}
+
+input, select, textarea{
+width:100%;
+padding:14px;
+border-radius:12px;
+border:1px solid rgba(255,255,255,.10);
+background:rgba(0,0,0,.35);
+color:var(--text);
+font-size:14px;
+outline:none;
+}
+
+textarea{
+min-height:110px;
+resize:vertical;
+}
+
+button{
+margin-top:10px;
+padding:16px;
+border-radius:14px;
+border:none;
+font-weight:900;
+cursor:pointer;
+background:linear-gradient(135deg,var(--accent),var(--accent2));
+color:#0a0a0a;
+}
+
+.note{
+margin-top:14px;
+font-size:12px;
+color:var(--muted);
+text-align:center;
+line-height:1.5;
+}
+
+@media (max-width:520px){
+.wrap{margin:44px auto;}
+h1{font-size:26px;}
+}
+</style>
+</head>
+
+<body>
+<div class="wrap">
+
+<h1>Decision Brief</h1>
+<p class="sub">Serious operators only. This filters alignment before engagement.</p>
+
+<div class="card">
+
+<form action="https://formsubmit.co/dharam@viadecide.com" method="POST">
+<input type="hidden" name="_captcha" value="false">
+<input type="hidden" name="_subject" value="New Decision Brief Submission">
+<input type="hidden" name="_next" value="https://viadecide.com/brief-submitted">
+
+<label>
+Full Name
+<input type="text" name="Full Name" required>
+</label>
+
+<label>
+Email
+<input type="email" name="Email" required>
+</label>
+
+<label>
+Core Decision Tension (one sentence)
+<textarea name="Decision Tension" required></textarea>
+</label>
+
+<label>
+Current Stage
+<select name="Stage" required>
+<option>Pre-revenue</option>
+<option>Early traction</option>
+<option>Scaling</option>
+<option>Restructuring</option>
+<option>Capital allocation</option>
+</select>
+</label>
+
+<label>
+Capital Constraint
+<select name="Capital Constraint" required>
+<option>High urgency (runway &lt; 90 days)</option>
+<option>Moderate (3–6 months runway)</option>
+<option>Low urgency (stable)</option>
+</select>
+</label>
+
+<label>
+Time Horizon to Validate
+<select name="Time Horizon" required>
+<option>30 days</option>
+<option>60 days</option>
+<option>90 days</option>
+<option>6+ months</option>
+</select>
+</label>
+
+<label>
+Consequence of Inaction
+<textarea name="Consequence" required></textarea>
+</label>
+
+<label>
+Budget Range (INR)
+<select name="Budget">
+<option>Exploring</option>
+<option>25k–50k</option>
+<option>50k–1L</option>
+<option>1L+</option>
+</select>
+</label>
+
+<button type="submit">Submit Decision Brief</button>
+
+<div class="note">
+If aligned, you’ll receive next steps within 48 hours.
+</div>
+
+</form>
+
+</div>
+</div>
+</body>
+</html>
