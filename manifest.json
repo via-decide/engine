@@ -1,17 +1,91 @@
 {
-  "name": "decide.engine | India AI",
+  "name": "viadecide.com — India's Decision Engine",
   "short_name": "decide.engine",
-  "description": "India's decision research engine — aligned with IndiaAI Mission. Policy-grade intelligence for every citizen.",
-  "start_url": "/index.html",
+  "description": "India's decision research engine — policy-grade intelligence for every citizen. Aligned with the IndiaAI Mission.",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#060c16",
-  "theme_color": "#FF9933",
-  "orientation": "portrait",
-  "icons": [
-    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
-    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" }
-  ],
-  "categories": ["productivity", "education"],
+  "orientation": "portrait-primary",
+  "background_color": "#04080f",
+  "theme_color": "#04080f",
   "lang": "en-IN",
-  "scope": "/"
+  "dir": "ltr",
+  "categories": ["education", "productivity", "utilities"],
+  "icons": [
+    {
+      "src": "icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-144.png",
+      "sizes": "144x144",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-152.png",
+      "sizes": "152x152",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshots/screen1.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "label": "decide.engine Home — India's Decision Research Engine"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Start Research",
+      "short_name": "Research",
+      "description": "Open the decision research tool",
+      "url": "/?shortcut=research",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "IndiaAI Policy Brief",
+      "short_name": "Policy Brief",
+      "description": "View IndiaAI alignment brief",
+      "url": "/?shortcut=policy",
+      "icons": [{ "src": "icons/icon-96.png", "sizes": "96x96" }]
+    }
+  ],
+  "related_applications": [],
+  "prefer_related_applications": false,
+  "scope": "/",
+  "id": "com.viadecide.app"
 }
