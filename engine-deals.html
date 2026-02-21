@@ -2,14 +2,31 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>| decide.engine |</title>
+
+  <!-- IMPORTANT:
+       If the browser is *downloading* this URL, that behavior is controlled by SERVER HEADERS
+       (Content-Type / Content-Disposition). Client-side code cannot prevent a download *before*
+       the HTML is rendered.
+       This file includes best-effort canonical routing for /engine-deals -> /engine-deals/ and
+       sets a <base> for folder hosting, but you must ensure the server serves this file as:
+         Content-Type: text/html
+         (and NOT Content-Disposition: attachment)
+  -->
+
+  <!-- If hosting under https://viadecide.com/engine-deals/ as a folder, keep this base. -->
+  <base href="/engine-deals/" />
 
   <link rel="manifest" href="manifest.json" />
   <meta name="theme-color" content="#0a0a0a" />
   <meta name="background-color" content="#0a0a0a" />
 
+  <!-- jsPDF is unused in this build; keeping it can be fine, but removing reduces risk of any
+       accidental "download PDF" behavior if later wired. Uncomment if needed.
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  -->
 
   <style>
     :root {
@@ -175,20 +192,24 @@
        KUTCH AUTOMATION | UNIVERSAL OS v67.3 (AFFILIATE EDITION)
        ========================================= */
 
-    // ✅ ROUTE FIX: if the site is hosted as a folder (e.g. /engine-deals/),
-    // some servers / static hosts treat the no-trailing-slash path as a file
-    // which can be served as a download. Force the canonical trailing-slash route.
-    (function enforceTrailingSlashRoute() {
+    // ✅ CANONICAL ROUTE FIX
+    (function enforceCanonicalEngineDeals() {
       try {
-        const p = window.location.pathname || '';
-        // Match exact "/engine-deals" at end (case-insensitive)
-        if (/\/engine-deals$/i.test(p)) {
-          window.location.replace(p + '/');
+        const path = window.location.pathname || "";
+        const lower = path.toLowerCase();
+
+        if (lower.endsWith("/engine-deals")) {
+          const qs = window.location.search || "";
+          const hash = window.location.hash || "";
+          window.location.replace(path + "/" + qs + hash);
           return;
         }
-        // Optional: if someone hits "/engine-deals/index" normalize
-        if (/\/engine-deals\/index$/i.test(p)) {
-          window.location.replace(p.replace(/\/index$/i, '/'));
+
+        if (lower.endsWith("/engine-deals/index") || lower.endsWith("/engine-deals/index.html")) {
+          const fixed = path.replace(/\/index(\.html)?$/i, "/");
+          const qs = window.location.search || "";
+          const hash = window.location.hash || "";
+          window.location.replace(fixed + qs + hash);
           return;
         }
       } catch (e) {}
@@ -229,8 +250,8 @@
       "Shure Aonic 215": { attr: { anc: 8.0, sound: 10.0, mic: 7.0, latency: 7.0, battery: 7.0 }, tags: ["audiophile", "eq_master"], price: 18999, video: null }
     };
 
-    // Deal breakers: add missing mapping for fast charge to avoid undefined bans
     const DEAL_BREAKERS = { "Fast Charging": "slow_charge", "Lightweight": "heavy", "Clean UI": "bloatware" };
+
     const ECOM_DEEP_LINKS = {
       amazon: {
         app: q => `intent://www.amazon.in/s?k=${q}&tag=${AMZN_TAG}#Intent;scheme=https;package=in.amazon.mShop.android.shopping;end`,
@@ -238,7 +259,6 @@
       }
     };
 
-    // ✅ MODULE REGISTRY (RESEARCH REMOVED)
     const MODULES = {
       smartphones: {
         label: "SMARTPHONES",
@@ -554,20 +574,15 @@
         const dy = e.changedTouches[0].clientY - touchStartY;
         document.getElementById('depth-fill').style.height = '0%';
 
-        // Swipe up => forward
         if (dy < -80) {
           const activeSub = view.querySelector('.sub-slide.opt-active') || view.querySelector('.sub-slide.static');
           if (!activeSub) return;
           const val = activeSub.dataset.val;
           if (val) ENGINE_STATE.items_detected[val] = { qty: 1 };
           goToSlide(currentIdx + 1);
-        }
-        // Swipe down => back
-        else if (dy > 80) {
+        } else if (dy > 80) {
           goToSlide(currentIdx - 1);
-        }
-        // Side swipe => next option
-        else if (Math.abs(dx) > 60) {
+        } else if (Math.abs(dx) > 60) {
           const slides = Array.from(view.querySelectorAll('.sub-slide'));
           if (slides.length <= 1) return;
           const currIdx = slides.findIndex(s => s.classList.contains('opt-active'));
@@ -587,7 +602,6 @@
       if (slideElements[currentIdx].querySelector('#final-list')) updateFinal();
     }
 
-    // === Minimal stubs for missing functions referenced by UI ===
     function showToast(msg) {
       const t = document.getElementById('toast');
       t.textContent = msg;
@@ -599,7 +613,6 @@
       const winner = calculateVerdict();
       const q = encodeURIComponent(winner.name);
       if (type === 'amazon') {
-        // Prefer app deep link on mobile, fallback web
         const link = ECOM_DEEP_LINKS.amazon.app(q);
         window.location.href = link;
         setTimeout(() => window.open(ECOM_DEEP_LINKS.amazon.web(q), '_blank'), 400);
@@ -622,8 +635,7 @@
       } catch (e) {}
     }
 
-    // Voice placeholders (keep your existing voice wiring if you have it elsewhere)
-    function initVoice() { /* keep empty or plug your voice engine */ }
+    function initVoice() {}
     function toggleListenMode() { showToast("VOICE: N/A"); }
 
     boot();
