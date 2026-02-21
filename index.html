@@ -106,8 +106,9 @@
     /* ═══════════════════════════════ APP LAYOUT */
     #app {
       display: flex;
-      min-height: 100vh;
-      padding-top: 3px; /* tricolor */
+      height: 100vh;       /* full viewport — no overflow on app itself */
+      padding-top: 3px;    /* tricolor bar */
+      overflow: hidden;
     }
 
     /* ═══════════════════════════════ DESKTOP SIDEBAR */
@@ -747,37 +748,78 @@
    Fixes: white screen, responsive layout, routing, PWA
 ═══════════════════════════════════════════════════════════ */
 
-// ── PWA Service Worker
+// ── PWA Service Worker registration
 if ("serviceWorker" in navigator) {
   window.addEventListener("load", () => {
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
+    navigator.serviceWorker.register("/sw.js")
+      .then(reg => {
+        // When a new SW is found, activate it immediately
+        reg.addEventListener("updatefound", () => {
+          const nw = reg.installing;
+          if (!nw) return;
+          nw.addEventListener("statechange", () => {
+            if (nw.state === "installed" && navigator.serviceWorker.controller) {
+              nw.postMessage("SKIP_WAITING");
+            }
+          });
+        });
+        console.log("[PWA] SW registered:", reg.scope);
+      })
+      .catch(err => console.warn("[PWA] SW registration failed:", err));
   });
 }
 
-// ── PWA Install
+// ── PWA Install button
+// beforeinstallprompt fires when browser decides the app is installable.
+// Must: have a manifest, have a SW with a fetch handler, be on HTTPS.
 let deferredInstallPrompt = null;
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
+
+function _setInstallBtn(visible) {
+  // Safe even if DOM not ready yet
+  const apply = () => {
+    const btn = document.getElementById("install-btn");
+    if (btn) btn.style.display = visible ? "block" : "none";
+  };
+  document.readyState === "loading"
+    ? document.addEventListener("DOMContentLoaded", apply, { once: true })
+    : apply();
+}
+
+// Browser fires this when PWA install criteria are met
+window.addEventListener("beforeinstallprompt", e => {
+  e.preventDefault();               // suppress mini-infobar
   deferredInstallPrompt = e;
-  const btn = document.getElementById("install-btn");
-  if (btn) btn.style.display = "block";
+  _setInstallBtn(true);             // show the Install button
 });
+
+// Fired after successful install
 window.addEventListener("appinstalled", () => {
   deferredInstallPrompt = null;
-  const btn = document.getElementById("install-btn");
-  if (btn) btn.style.display = "none";
-  showToast("APP INSTALLED");
+  _setInstallBtn(false);
+  showToast("APP INSTALLED ✓");
 });
+
+// Called when user clicks the Install button in the sidebar
 async function triggerAppInstall() {
-  if (!deferredInstallPrompt) { showToast("INSTALL NOT AVAILABLE"); return; }
-  deferredInstallPrompt.prompt();
+  if (!deferredInstallPrompt) {
+    showToast("Use Chrome/Edge on Android or desktop to install");
+    return;
+  }
   try {
+    await deferredInstallPrompt.prompt();
     const { outcome } = await deferredInstallPrompt.userChoice;
-    showToast(outcome === "accepted" ? "INSTALLING..." : "CANCELLED");
-  } catch(e) { showToast("INSTALL FAILED"); }
+    showToast(outcome === "accepted" ? "INSTALLING…" : "INSTALL CANCELLED");
+  } catch (err) {
+    console.error("[PWA] install error:", err);
+    showToast("INSTALL FAILED");
+  }
   deferredInstallPrompt = null;
-  const btn = document.getElementById("install-btn");
-  if (btn) btn.style.display = "none";
+  _setInstallBtn(false);
+}
+
+// Already running as installed PWA? Hide install button
+if (window.matchMedia("(display-mode: standalone)").matches || navigator.standalone) {
+  _setInstallBtn(false);
 }
 
 // ── Utilities
@@ -1416,7 +1458,7 @@ function renderFounder() {
       <button class="btn btn-muted btn-full" onclick="navigateTo('home')">← HOME</button>
     </div>
   `, "Founder Letter", "INDIA AI", "india");
-  history.pushState({route:"founder"},"","#founder");
+  // hash is pushed by navigateTo — no duplicate push needed
 }
 
 // ─── Policy Brief
@@ -1460,7 +1502,7 @@ function renderPolicy() {
       <button class="btn btn-muted btn-full" onclick="navigateTo('home')">HOME</button>
     </div>
   `, "IndiaAI Policy", "POLICY", "");
-  history.pushState({route:"policy"},"","#policy");
+  // hash is pushed by navigateTo
 }
 
 // ─── Quiz
@@ -1588,10 +1630,17 @@ function resolveHash(hash) {
 }
 
 function navigateTo(routeKey) {
-  const fn=ROUTE_MAP[routeKey];
+  const fn = ROUTE_MAP[routeKey];
   closeSidebar();
-  if(fn){ fn(); if(routeKey!=="founder"&&routeKey!=="policy") history.pushState({route:routeKey},"","#"+routeKey); }
-  else renderHome();
+  if (fn) {
+    fn();
+    // Always sync URL so shortcuts, back-button, and sharing work
+    const current = (location.hash || "").replace(/^#/, "");
+    if (current !== routeKey) history.pushState({ route: routeKey }, "", "#" + routeKey);
+  } else {
+    renderHome();
+    history.pushState({ route: "home" }, "", "#home");
+  }
 }
 
 window.addEventListener("popstate",()=>{
@@ -1628,21 +1677,27 @@ async function handleNodeHash(hash) {
 // BOOT
 // ════════════════════════════════════════════════════════════
 function boot() {
-  // Hide loading screen after short delay
-  setTimeout(()=>{
-    const ls=document.getElementById("loading-screen");
-    if(ls){ls.classList.add("fade-out");setTimeout(()=>ls.classList.add("hidden"),600);}
-  },1200);
+  // Hide loading screen
+  setTimeout(() => {
+    const ls = document.getElementById("loading-screen");
+    if (ls) { ls.classList.add("fade-out"); setTimeout(() => ls.classList.add("hidden"), 600); }
+  }, 1200);
 
-  // Route
-  const hash=(location.hash||"").trim();
-  const key=resolveHash(hash);
-  try{
-    if(key==="__project__"){handleProjectHash(hash);return;}
-    if(key==="__node__"){handleNodeHash(hash);return;}
-    if(key&&ROUTE_MAP[key]){ROUTE_MAP[key]();return;}
+  // Hash routing — hash is always client-side, SW never sees it.
+  // Manifest shortcuts use format: /?source=shortcut#research
+  // So we read location.hash directly — query params are irrelevant.
+  const hash = (location.hash || "").trim();
+  const key  = resolveHash(hash);
+
+  try {
+    if (key === "__project__") { handleProjectHash(hash); return; }
+    if (key === "__node__")    { handleNodeHash(hash);    return; }
+    if (key && ROUTE_MAP[key]) { ROUTE_MAP[key]();        return; }
     renderHome();
-  }catch(e){console.error(e);renderHome();}
+  } catch(e) {
+    console.error("[boot] error:", e);
+    renderHome();
+  }
 }
 
 // Keyboard shortcuts
