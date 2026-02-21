@@ -231,7 +231,6 @@
 
     // Deal breakers: add missing mapping for fast charge to avoid undefined bans
     const DEAL_BREAKERS = { "Fast Charging": "slow_charge", "Lightweight": "heavy", "Clean UI": "bloatware" };
-
     const ECOM_DEEP_LINKS = {
       amazon: {
         app: q => `intent://www.amazon.in/s?k=${q}&tag=${AMZN_TAG}#Intent;scheme=https;package=in.amazon.mShop.android.shopping;end`,
