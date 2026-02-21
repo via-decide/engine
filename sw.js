@@ -1,18 +1,16 @@
-/* sw.js — decide.engine PWA service worker */
+/* sw.js — decide.engine PWA service worker (root-hosted) */
 
 const VERSION = "v1.0.0";
 const CACHE_NAME = `decide-engine-${VERSION}`;
 
-// App shell: cache only the essentials you control.
-// (Don't cache CDN libs aggressively; use runtime caching below.)
+// Cache only what you control
 const APP_SHELL = [
-  "/",            // serve index.html from navigation handler
+  "/",
   "/index.html",
   "/manifest.json",
-  "/alchemist.html" // if you have it; remove if not present
+  "/alchemist.html" // remove if you don't have this file
 ];
 
-// Install: pre-cache shell
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL))
@@ -20,7 +18,6 @@ self.addEventListener("install", (event) => {
   self.skipWaiting();
 });
 
-// Activate: cleanup old caches
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
@@ -39,6 +36,7 @@ self.addEventListener("activate", (event) => {
 async function cacheFirst(request) {
   const cached = await caches.match(request);
   if (cached) return cached;
+
   const res = await fetch(request);
   const cache = await caches.open(CACHE_NAME);
   cache.put(request, res.clone());
@@ -58,45 +56,38 @@ async function networkFirst(request) {
   }
 }
 
-// Fetch strategy:
-// - Navigations: serve cached index.html (app shell) first, fallback to network.
-// - Static assets (same-origin): cache-first.
-// - CDN/assets cross-origin: stale-while-revalidate-ish (cache-first, update in bg).
-// - Wiki API calls: network-first (to stay fresh), fallback to cache.
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   const url = new URL(req.url);
 
-  // Only handle GET
   if (req.method !== "GET") return;
 
-  // 1) SPA navigation -> index.html
+  // SPA navigation => serve cached index.html (offline capable)
   if (req.mode === "navigate") {
     event.respondWith(
       (async () => {
-        // Try cache first (fast offline), then network
         const cached = await caches.match("/index.html");
         if (cached) return cached;
 
-        // If not cached, go network and cache it
         const res = await fetch(req);
         const cache = await caches.open(CACHE_NAME);
         cache.put("/index.html", res.clone());
         return res;
       })().catch(async () => {
-        // Offline fallback
         const cached = await caches.match("/index.html");
-        if (cached) return cached;
-        return new Response("Offline", {
-          status: 200,
-          headers: { "Content-Type": "text/plain" }
-        });
+        return (
+          cached ||
+          new Response("Offline", {
+            status: 200,
+            headers: { "Content-Type": "text/plain" }
+          })
+        );
       })
     );
     return;
   }
 
-  // 2) Same-origin assets (CSS/JS/images/icons/html/json)
+  // Same-origin assets => cache-first
   if (url.origin === self.location.origin) {
     const isAsset =
       req.destination === "script" ||
@@ -111,13 +102,11 @@ self.addEventListener("fetch", (event) => {
       return;
     }
 
-    // Default same-origin GET
     event.respondWith(networkFirst(req).catch(() => caches.match(req)));
     return;
   }
 
-  // 3) MediaWiki APIs (wikipedia/wikivoyage/wikibooks/wikinews) -> network-first
-  // Keeps research fresh; caches as fallback.
+  // MediaWiki APIs => network-first (fresh research), fallback to cache
   const isMediaWiki =
     url.hostname.endsWith("wikipedia.org") ||
     url.hostname.endsWith("wikivoyage.org") ||
@@ -129,11 +118,12 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // 4) Other cross-origin (CDN scripts/fonts) -> cache-first + update
+  // Other cross-origin (CDNs/fonts) => cache-first + update
   event.respondWith(
     (async () => {
       const cached = await caches.match(req);
-      const fetchPromise = fetch(req)
+
+      const fetched = fetch(req)
         .then(async (res) => {
           const cache = await caches.open(CACHE_NAME);
           cache.put(req, res.clone());
@@ -141,7 +131,7 @@ self.addEventListener("fetch", (event) => {
         })
         .catch(() => null);
 
-      return cached || (await fetchPromise) || new Response("", { status: 504 });
+      return cached || (await fetched) || new Response("", { status: 504 });
     })()
   );
 });
