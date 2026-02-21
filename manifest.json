@@ -1,46 +1,14 @@
 {
-  "name": "viadecide.com — India's Decision Engine",
-  "short_name": "decide.engine",
-  "description": "Policy-grade decision intelligence for 1.4 billion Indians. Aligned with the IndiaAI Mission.",
-  "start_url": "/",
+  "name": "ViaDecide | India's Decision Engine",
+  "short_name": "ViaDecide",
+  "description": "India's decision research engine — built for the IndiaAI mission.",
+  "start_url": "/#home",
   "scope": "/",
   "display": "standalone",
-  "orientation": "any",
   "background_color": "#04080f",
   "theme_color": "#04080f",
-  "lang": "en-IN",
-  "categories": ["education", "productivity", "utilities"],
+  "orientation": "portrait",
   "icons": [
-    {
-      "src": "/icons/icon-72.png",
-      "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-96.png",
-      "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-128.png",
-      "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-144.png",
-      "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-152.png",
-      "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "any"
-    },
     {
       "src": "/icons/icon-192.png",
       "sizes": "192x192",
@@ -48,57 +16,10 @@
       "purpose": "any maskable"
     },
     {
-      "src": "/icons/icon-384.png",
-      "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
       "src": "/icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ],
-  "screenshots": [
-    {
-      "src": "/icons/screenshot-wide.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "decide.engine — Desktop View"
-    },
-    {
-      "src": "/icons/screenshot-narrow.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "decide.engine — Mobile View"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Research",
-      "short_name": "Search",
-      "description": "Start a new research journey",
-      "url": "/#research",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "Founder Letter",
-      "short_name": "Founder",
-      "description": "Read the founder's letter",
-      "url": "/#founder",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
-    },
-    {
-      "name": "IndiaAI Policy",
-      "short_name": "Policy",
-      "description": "IndiaAI Mission alignment",
-      "url": "/#policy",
-      "icons": [{ "src": "/icons/icon-96.png", "sizes": "96x96" }]
-    }
-  ],
-  "related_applications": [],
-  "prefer_related_applications": false
+  ]
 }
