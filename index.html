@@ -826,6 +826,26 @@ function createBurst(canvasId){
   animate();
 }
 
+
+  function tokenize(text){
+      return normalizeText(text)
+        .toLowerCase()
+        .replace(/[^a-z0-9\s]/g," ")
+        .split(/\s+/)
+        .filter(w=>w.length>=4);
+
+    const result = await fetch(
+    'https://api.vercel.com/v6/deployments',
+    {
+        method: 'GET',
+        headers: {
+            Authorization: `Bearer ${process.env.curl"https://api.vercel.com/v6/deployments" -H "Authorization: Bearer TOKEN"}`,
+        }
+    }
+);
+  }
+
+  
 function animateCounter(el,target,suffix='',duration=1200){
   const start=performance.now();
   function update(now){
