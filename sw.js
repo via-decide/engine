@@ -1,4 +1,4 @@
-const CACHE_NAME = 'viadecide-engine-cache-v1';
+const CACHE_NAME = 'viadecide-engine-cache-v2';
 
 // Add the core URLs you want to pre-cache on install.
 // Added the sub-pages referenced in your index.html so they work offline.
