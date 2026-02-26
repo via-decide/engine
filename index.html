@@ -1,2100 +1,854 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-<title>Decide — India's Smart Marketplace</title>
-<meta name="description" content="India's first commission-free marketplace. Compare products by YOUR priorities. Starting in Gujarat." />
-<meta name="theme-color" content="#ff671f" />
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VIA Decide — Engine</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-<style>
-/* ══════════════════════════════════════════════════════════
-   SHARED DESIGN TOKENS
-══════════════════════════════════════════════════════════ */
-:root {
-  --brand-orange: #FF671F;
-  --orange-light: #FF8A4C;
-  --orange-dim: rgba(255,103,31,0.12);
-  --orange-border: rgba(255,103,31,0.3);
+    :root {
+      --bg: #0d0d0f;
+      --surface: #14141a;
+      --surface2: #1c1c24;
+      --border: #252530;
+      --border2: #1e1e28;
+      --orange: #ff6b2b;
+      --orange-dim: rgba(255,107,43,0.15);
+      --text: #e8e8f0;
+      --muted: #5a5a70;
+      --muted2: #8080a0;
+      --sidebar-w: 220px;
+      --right-w: 180px;
+      --header-h: 52px;
+      --font-d: 'Syne', sans-serif;
+      --font-m: 'DM Mono', monospace;
+      --ease: 0.18s ease;
+    }
 
-  --navy-950: #070D15;
-  --navy-900: #0D1B2A;
-  --navy-800: #142235;
-  --navy-700: #1C2F46;
-  --navy-600: #243857;
-  --navy-400: #3D5A7A;
-  --navy-200: #7A9BBF;
-  --navy-100: #B8CEDE;
+    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-d); }
+    body { overflow: hidden; }
 
-  --green: #1DB374;
-  --green-dim: rgba(29,179,116,0.12);
-  --green-border: rgba(29,179,116,0.3);
-  --amber: #E8A020;
-  --amber-dim: rgba(232,160,32,0.12);
-  --amber-border: rgba(232,160,32,0.3);
-  --red: #E53E3E;
-  --red-dim: rgba(229,62,62,0.12);
-  --red-border: rgba(229,62,62,0.3);
-  --blue: #4299E1;
-  --blue-dim: rgba(66,153,225,0.12);
-  --blue-border: rgba(66,153,225,0.3);
+    ::-webkit-scrollbar { width: 3px; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
-  --text-primary: #EEF4FB;
-  --text-secondary: #9BB5CE;
-  --text-muted: #5C7A96;
-  --text-dim: #3D5A7A;
+    /* ════ HEADER ════ */
+    #header {
+      position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; padding: 0 0.85rem; gap: 0.6rem; z-index: 200;
+    }
+    .h-logo { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text); text-decoration: none; white-space: nowrap; flex-shrink: 0; }
+    .h-logo span { color: var(--orange); }
+    .h-mode-wrap { display: flex; gap: 2px; flex-shrink: 0; }
+    .mode-tab { font-family: var(--font-m); font-size: 0.65rem; letter-spacing: 0.08em; padding: 0.28rem 0.65rem; border: 1px solid var(--border); background: transparent; color: var(--muted2); cursor: pointer; transition: var(--ease); border-radius: 2px; }
+    .mode-tab.active { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+    .mode-tab:hover:not(.active) { background: var(--surface2); color: var(--text); }
+    .h-spacer { flex: 1; min-width: 0; }
+    .h-search { display: flex; align-items: center; gap: 0.4rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 2px; padding: 0.28rem 0.6rem; }
+    .h-search input { background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-m); font-size: 0.75rem; width: 130px; }
+    .h-search input::placeholder { color: var(--muted); }
+    .btn-yt { display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid var(--border); background: transparent; color: var(--muted2); font-family: var(--font-m); font-size: 0.65rem; letter-spacing: 0.06em; padding: 0.3rem 0.75rem; cursor: pointer; text-decoration: none; border-radius: 2px; white-space: nowrap; transition: var(--ease); flex-shrink: 0; }
+    .btn-yt:hover { border-color: #f00; color: #f55; background: rgba(255,0,0,0.06); }
+    .btn-yt .yi { color: #f55; }
+    .btn-intro { font-family: var(--font-m); font-size: 0.65rem; color: var(--muted2); text-decoration: none; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 2px; transition: var(--ease); flex-shrink: 0; }
+    .btn-intro:hover { color: var(--text); border-color: var(--muted2); }
+    .btn-ham { display: none; background: transparent; border: 1px solid var(--border); border-radius: 2px; padding: 0.3rem 0.55rem; color: var(--muted2); cursor: pointer; font-size: 1rem; flex-shrink: 0; line-height: 1; }
 
-  --border: rgba(255,255,255,0.07);
-  --border-md: rgba(255,255,255,0.11);
-  --border-strong: rgba(255,255,255,0.18);
+    /* ════ 3-COL SHELL ════ */
+    #shell { display: grid; grid-template-columns: var(--sidebar-w) 1fr var(--right-w); height: 100vh; padding-top: var(--header-h); }
 
-  --surface: #0F1E2D;
-  --surface-raised: #142235;
-  --surface-card: #172840;
-  --surface-input: #0A1520;
+    /* ── LEFT SIDEBAR ── */
+    #sidebar-left { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
+    .sb-label { font-family: var(--font-m); font-size: 0.58rem; letter-spacing: 0.18em; color: var(--muted); padding: 0.65rem 0.75rem 0.45rem; border-bottom: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; }
+    .sb-collapse { cursor: pointer; color: var(--orange); font-size: 0.9rem; line-height: 1; }
+    .sb-section { padding: 0.5rem 0.6rem 0.25rem; }
+    .cat-head { display: flex; align-items: center; gap: 0.45rem; padding: 0.38rem 0.45rem; cursor: pointer; border-radius: 3px; transition: var(--ease); user-select: none; }
+    .cat-head:hover { background: var(--surface2); }
+    .cat-icon { font-size: 0.85rem; }
+    .cat-name { font-size: 0.78rem; font-weight: 600; flex: 1; }
+    .cat-arrow { font-size: 0.6rem; color: var(--muted); transition: transform 0.2s; }
+    .cat-arrow.open { transform: rotate(90deg); }
+    .cat-items { overflow: hidden; max-height: 0; transition: max-height 0.22s ease; padding-left: 0.35rem; }
+    .cat-items.open { max-height: 600px; }
+    .prod-item { display: flex; align-items: center; gap: 0.45rem; padding: 0.38rem 0.45rem; border-radius: 3px; cursor: pointer; font-size: 0.77rem; color: var(--muted2); transition: var(--ease); }
+    .prod-item:hover { background: var(--surface2); color: var(--text); }
+    .prod-item.active { background: var(--orange-dim); color: var(--orange); }
+    .prod-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
 
-  --font-ui: "DM Sans", sans-serif;
-  --font-mono: "IBM Plex Mono", monospace;
-  --font-display: "DM Serif Display", serif;
+    /* ── MAIN AREA ── */
+    #main-wrap { display: flex; flex-direction: column; overflow: hidden; }
+    #tab-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.55rem 0.85rem; display: flex; gap: 0.3rem; flex-wrap: wrap; flex-shrink: 0; }
+    .page-tab { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.76rem; padding: 0.32rem 0.78rem; border: 1px solid var(--border); border-radius: 2px; background: transparent; color: var(--muted2); cursor: pointer; transition: var(--ease); white-space: nowrap; }
+    .page-tab:hover { background: var(--surface2); color: var(--text); }
+    .page-tab.active { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
+    .tab-ic { font-size: 0.82rem; }
+    #main-content { flex: 1; overflow-y: auto; padding: 1.4rem 1.2rem; position: relative; }
 
-  --radius-sm: 6px; --radius-md: 12px; --radius-lg: 20px; --radius-xl: 28px;
-  --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
-  --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
-  --shadow-orange: 0 4px 20px rgba(255,103,31,0.25);
-  --transition: .18s ease;
-  --safe-bottom: env(safe-area-inset-bottom, 0px);
-}
+    /* ── RIGHT SIDEBAR ── */
+    #sidebar-right { background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; }
+    .legal-item { display: flex; align-items: center; gap: 0.45rem; padding: 0.65rem 0.7rem; font-size: 0.76rem; color: var(--muted2); cursor: pointer; border-bottom: 1px solid var(--border2); transition: var(--ease); }
+    .legal-item:hover { background: var(--surface2); color: var(--text); }
+    .legal-item.active { background: var(--orange-dim); color: var(--orange); border-left: 2px solid var(--orange); }
+    .li-ic { font-size: 0.82rem; }
 
-*, *::before, *::after { box-sizing: border-box; -webkit-tap-highlight-color: transparent; margin: 0; padding: 0; }
-html { scroll-behavior: smooth; }
-body {
-  min-height: 100vh;
-  background: var(--navy-950);
-  color: var(--text-primary);
-  font-family: var(--font-ui);
-  font-size: 15px;
-  line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-}
-button, input, select, textarea { font: inherit; }
-button { background: none; border: none; color: inherit; cursor: pointer; }
-button:disabled { opacity: .4; cursor: not-allowed; pointer-events: none; }
-a { color: var(--brand-orange); text-decoration: none; }
+    /* ════ MOBILE DRAWER ════ */
+    #drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 300; }
+    #drawer-overlay.open { display: block; }
+    #drawer { position: fixed; top: 0; left: -285px; bottom: 0; width: 285px; background: var(--surface); border-right: 1px solid var(--border); z-index: 400; overflow-y: auto; transition: left 0.25s ease; padding-top: var(--header-h); }
+    #drawer.open { left: 0; }
+    .drawer-label { font-family: var(--font-m); font-size: 0.58rem; letter-spacing: 0.18em; color: var(--muted); padding: 0.6rem 0.75rem 0.4rem; border-bottom: 1px solid var(--border2); margin-bottom: 0.25rem; }
+    .drawer-section { padding: 0.25rem 0.6rem 0.5rem; }
+    .drawer-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.45rem; border-radius: 3px; font-size: 0.82rem; color: var(--muted2); cursor: pointer; transition: var(--ease); }
+    .drawer-item:hover { background: var(--surface2); color: var(--text); }
+    .drawer-item.active { background: var(--orange-dim); color: var(--orange); }
+    .drawer-close { position: absolute; top: calc(var(--header-h) + 0.5rem); right: 0.75rem; background: transparent; border: 1px solid var(--border); border-radius: 2px; color: var(--muted2); cursor: pointer; font-size: 0.9rem; padding: 0.22rem 0.55rem; }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--navy-600); border-radius: 3px; }
+    /* ════ CONTENT STYLES ════ */
+    .loading-box { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 0.85rem; color: var(--muted2); }
+    .spinner { width: 30px; height: 30px; border: 2px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.7s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-/* ══ ANIMATIONS ══ */
-@keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes fadeInFast { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: .5; } }
-@keyframes spin { to { transform: rotate(360deg); } }
-@keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
+    /* Home */
+    .home-wrap { max-width: 680px; margin: 0 auto; }
+    .home-wrap h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.4rem; }
+    .home-wrap h2 span { color: var(--orange); }
+    .home-sub { font-family: var(--font-m); font-size: 0.72rem; color: var(--muted2); letter-spacing: 0.06em; margin-bottom: 1.75rem; }
+    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px,1fr)); gap: 0.65rem; margin-bottom: 1.75rem; }
+    .card { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.9rem; cursor: pointer; transition: var(--ease); }
+    .card:hover { border-color: var(--orange); background: var(--orange-dim); }
+    .card-ic { font-size: 1.3rem; margin-bottom: 0.45rem; }
+    .card-t { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.2rem; }
+    .card-d { font-size: 0.73rem; color: var(--muted2); line-height: 1.5; }
 
-.page-enter { animation: fadeIn .22s ease; }
+    /* Page content */
+    .pc { max-width: 720px; }
+    .pc h1 { font-size: 1.55rem; font-weight: 800; margin-bottom: 0.35rem; }
+    .pc .meta { font-family: var(--font-m); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 1.75rem; }
+    .pc h2 { font-size: 0.95rem; font-weight: 700; color: var(--muted2); border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; margin: 1.75rem 0 0.65rem; }
+    .pc p { font-size: 0.86rem; line-height: 1.8; color: #a0a0b8; margin-bottom: 0.7rem; }
+    .pc ul { margin: 0.4rem 0 0.7rem 1.35rem; }
+    .pc li { font-size: 0.86rem; line-height: 1.8; color: #a0a0b8; }
+    .pc strong { color: var(--text); }
+    .pc .pill { display: inline-block; font-family: var(--font-m); font-size: 0.65rem; letter-spacing: 0.1em; border: 1px solid var(--border); padding: 0.2rem 0.55rem; border-radius: 2px; color: var(--muted2); margin-bottom: 0.5rem; }
+    .pc .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0 1.5rem; }
+    .pc .stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.7rem 1rem; min-width: 100px; }
+    .pc .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--orange); line-height: 1; margin-bottom: 0.2rem; }
+    .pc .stat-lbl { font-family: var(--font-m); font-size: 0.63rem; color: var(--muted2); letter-spacing: 0.08em; }
+    .pc .cg { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px,1fr)); gap: 0.6rem; margin: 0.75rem 0 1.25rem; }
+    .pc .cc { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.8rem; }
+    .pc .cc-name { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .pc .cr { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted2); padding: 0.2rem 0; border-bottom: 1px solid var(--border2); }
+    .pc .cr:last-child { border-bottom: none; }
+    .pc .cv { color: var(--text); }
+    .pc .tr-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0; border-bottom: 1px solid var(--border2); }
+    .pc .tr-rank { font-family: var(--font-m); font-size: 0.68rem; color: var(--muted); width: 1.5rem; flex-shrink: 0; }
+    .pc .tr-name { font-size: 0.84rem; font-weight: 600; flex: 1; }
+    .pc .tr-tag { font-family: var(--font-m); font-size: 0.65rem; color: var(--orange); border: 1px solid var(--orange-dim); padding: 0.15rem 0.45rem; border-radius: 2px; }
+    .pc .wl-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0; border-bottom: 1px solid var(--border2); }
+    .pc .wl-ic { font-size: 1.1rem; }
+    .pc .wl-info { flex: 1; }
+    .pc .wl-name { font-size: 0.84rem; font-weight: 600; margin-bottom: 0.15rem; }
+    .pc .wl-meta { font-family: var(--font-m); font-size: 0.66rem; color: var(--muted2); }
+    .pc .wl-price { font-size: 0.88rem; font-weight: 700; color: var(--orange); }
 
-/* ══════════════════════════════════════════════════════════
-   TOP MODE SWITCHER BAR
-══════════════════════════════════════════════════════════ */
-#mode-bar {
-  position: sticky; top: 0; z-index: 200;
-  background: rgba(7,13,21,0.95);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--border);
-  display: flex; align-items: center; gap: 0;
-  padding: 0 24px;
-  height: 52px;
-}
-.mode-brand {
-  font-family: var(--font-display);
-  font-size: 20px; color: var(--text-primary);
-  margin-right: 20px; flex-shrink: 0;
-  cursor: pointer;
-}
-.mode-tabs { display: flex; align-items: center; gap: 4px; flex: 1; }
-.mode-tab {
-  display: inline-flex; align-items: center; gap: 7px;
-  padding: 7px 14px;
-  border-radius: var(--radius-sm);
-  font-size: 13px; font-weight: 600;
-  color: var(--text-muted);
-  transition: var(--transition);
-  cursor: pointer; border: none; background: none;
-}
-.mode-tab:hover { color: var(--text-secondary); background: rgba(255,255,255,0.04); }
-.mode-tab.active { color: var(--text-primary); background: var(--surface-raised); border: 1px solid var(--border-md); }
-.mode-tab .tab-dot { width: 7px; height: 7px; border-radius: 50%; }
-.mode-tab.active .tab-dot { animation: pulse 2s infinite; }
-.mode-tab-buyer.active .tab-dot { background: var(--green); }
-.mode-tab-seller.active .tab-dot { background: var(--brand-orange); }
-.mode-tab-pages.active .tab-dot { background: var(--blue); }
+    /* Seller placeholder */
+    .seller-ph { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 0.85rem; color: var(--muted2); text-align: center; }
+    .seller-ph .s-icon { font-size: 2.5rem; opacity: 0.35; }
+    .seller-ph h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); }
+    .seller-ph p { font-size: 0.8rem; max-width: 300px; line-height: 1.6; }
+    .seller-ph .todo { font-family: var(--font-m); font-size: 0.62rem; letter-spacing: 0.1em; border: 1px dashed var(--border); padding: 0.22rem 0.6rem; border-radius: 2px; color: var(--muted); }
 
-.mode-bar-right { display: flex; align-items: center; gap: 8px; margin-left: auto; }
-.ondc-chip {
-  font-size: 10px; font-weight: 700; letter-spacing: .8px;
-  background: var(--blue-dim); border: 1px solid var(--blue-border);
-  color: var(--blue); padding: 3px 8px; border-radius: var(--radius-sm);
-}
-.demo-chip {
-  font-size: 10px; font-weight: 700; letter-spacing: .8px;
-  background: rgba(255,59,59,0.12); border: 1px solid rgba(255,59,59,0.3);
-  color: #ff7070; padding: 3px 8px; border-radius: var(--radius-sm);
-}
-
-/* ══ MAIN WRAPPER ══ */
-#app { min-height: calc(100vh - 52px); }
-
-/* ══ TOAST ══ */
-#toast-wrap {
-  position: fixed; bottom: calc(20px + var(--safe-bottom)); right: 20px;
-  z-index: 9999; display: flex; flex-direction: column; gap: 8px;
-  pointer-events: none;
-}
-.toast-item {
-  background: var(--navy-700); border: 1px solid var(--border-strong);
-  border-radius: var(--radius-md); padding: 10px 16px;
-  font-size: 13px; box-shadow: var(--shadow-md);
-  display: flex; align-items: center; gap: 8px;
-  opacity: 0; transform: translateX(12px);
-  transition: all .2s ease; max-width: 320px;
-}
-.toast-item.show { opacity: 1; transform: translateX(0); }
-.toast-item.t-success { border-color: var(--green-border); }
-.toast-item.t-error { border-color: var(--red-border); }
-.toast-item.t-info { border-color: var(--blue-border); }
-.spinner { width: 16px; height: 16px; border: 2px solid rgba(255,255,255,0.2); border-top-color: #fff; border-radius: 50%; animation: spin .6s linear infinite; display: inline-block; }
-
-/* ══════════════════════════════════════════════════════════
-   BUYER MODE — styles
-══════════════════════════════════════════════════════════ */
-.b-wrap { max-width: 860px; margin: 0 auto; padding: 24px 20px calc(40px + var(--safe-bottom)); }
-.b-card {
-  background: rgba(20,34,52,0.7);
-  border: 1px solid var(--border-md);
-  border-radius: var(--radius-lg);
-  padding: 20px 18px;
-  transition: border-color var(--transition), transform var(--transition);
-}
-.b-card:hover { border-color: var(--border-strong); transform: translateY(-2px); }
-.b-card[data-action] { cursor: pointer; }
-.b-card[aria-disabled="true"] { opacity: .35; cursor: not-allowed; pointer-events: none; }
-
-.b-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-.b-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-.b-card-icon { font-size: 2.2rem; margin-bottom: 10px; }
-.b-card-title { font-size: 15px; font-weight: 700; letter-spacing: .3px; }
-.b-card-sub { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
-.b-tag {
-  display: inline-block; font-size: 10px; font-weight: 700;
-  letter-spacing: .8px; text-transform: uppercase;
-  padding: 3px 9px; border-radius: var(--radius-sm); margin-top: 8px;
-}
-.b-tag-live { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
-.b-tag-soon { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
-.b-tag-new { background: var(--blue-dim); border: 1px solid var(--blue-border); color: var(--blue); }
-.b-tag-demo { background: rgba(255,59,59,0.12); border: 1px solid rgba(255,59,59,0.3); color: #ff7070; }
-
-.b-section-label {
-  font-size: 10px; font-weight: 700; letter-spacing: 1.2px; text-transform: uppercase;
-  color: var(--text-dim); margin-bottom: 12px; margin-top: 24px;
-}
-.b-hero {
-  text-align: center; padding: 40px 0 32px;
-}
-.b-hero-badge {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--orange-dim); border: 1px solid var(--orange-border);
-  color: var(--brand-orange);
-  font-size: 10px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;
-  padding: 5px 12px; border-radius: var(--radius-sm);
-  margin-bottom: 18px;
-}
-.b-hero-title {
-  font-family: var(--font-display);
-  font-size: 38px; line-height: 1.15; letter-spacing: -.5px;
-  margin-bottom: 12px;
-}
-.b-hero-title em { color: var(--brand-orange); font-style: normal; }
-.b-hero-sub { font-size: 14px; color: var(--text-muted); max-width: 480px; margin: 0 auto 24px; line-height: 1.65; }
-
-.b-notice {
-  display: flex; gap: 10px; padding: 12px 14px;
-  border-radius: var(--radius-md); margin-bottom: 16px;
-  font-size: 13px; line-height: 1.5;
-}
-.b-notice.demo { background: rgba(255,179,0,0.07); border: 1px solid rgba(255,179,0,0.3); color: #d4a017; border-left: 3px solid var(--amber); }
-.b-notice.info { background: var(--blue-dim); border: 1px solid var(--blue-border); }
-.b-notice.success { background: var(--green-dim); border: 1px solid var(--green-border); }
-
-.b-btn-primary {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--brand-orange); color: #fff;
-  padding: 13px 24px; border-radius: var(--radius-md);
-  font-size: 14px; font-weight: 700; width: 100%;
-  transition: background var(--transition), transform var(--transition);
-  box-shadow: var(--shadow-orange);
-}
-.b-btn-primary:hover { background: var(--orange-light); transform: translateY(-1px); }
-.b-btn-secondary {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: transparent; border: 1px solid var(--border-strong);
-  color: var(--text-primary); padding: 12px 24px;
-  border-radius: var(--radius-md); font-size: 14px; font-weight: 500; width: 100%;
-  transition: all var(--transition); margin-top: 10px;
-}
-.b-btn-secondary:hover { background: var(--surface-raised); }
-
-.b-filter-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
-.b-filter-btn {
-  background: rgba(20,34,52,0.7); border: 2px solid var(--border-md);
-  padding: 14px; border-radius: var(--radius-md);
-  text-align: center; font-weight: 700; font-size: 13px;
-  cursor: pointer; transition: all var(--transition);
-  text-transform: uppercase; letter-spacing: .5px;
-}
-.b-filter-btn:hover { border-color: var(--border-strong); }
-.b-filter-btn.active { background: var(--brand-orange); color: #000; border-color: var(--brand-orange); }
-
-.b-product-card {
-  background: rgba(20,34,52,0.7); border: 1px solid var(--border-md);
-  border-radius: var(--radius-lg); padding: 18px; margin-bottom: 12px;
-  transition: var(--transition);
-}
-.b-product-card:hover { border-color: var(--border-strong); }
-.b-product-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
-.b-product-name { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-.b-product-seller { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
-.b-badge {
-  background: var(--blue-dim); border: 1px solid var(--blue-border);
-  color: var(--blue); padding: 3px 9px; border-radius: var(--radius-sm); font-size: 11px; font-weight: 700;
-}
-.b-price-main { font-size: 22px; font-weight: 800; color: var(--brand-orange); font-family: var(--font-mono); }
-.b-price-orig { font-size: 13px; color: var(--text-dim); text-decoration: line-through; font-family: var(--font-mono); }
-.b-product-details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 14px 0; padding: 12px; background: rgba(255,255,255,0.03); border-radius: var(--radius-md); }
-.b-detail-label { font-size: 11px; color: var(--text-muted); }
-.b-detail-value { font-weight: 700; font-size: 13px; }
-.b-product-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.b-buy { background: var(--brand-orange); color: #000; border: none; padding: 11px; border-radius: var(--radius-md); font-weight: 800; cursor: pointer; transition: var(--transition); font-size: 13px; }
-.b-buy:hover { background: var(--orange-light); transform: translateY(-1px); }
-.b-add { background: transparent; color: var(--text-primary); border: 1px solid var(--border-md); padding: 11px; border-radius: var(--radius-md); font-weight: 600; cursor: pointer; transition: var(--transition); font-size: 13px; }
-.b-add:hover { background: var(--surface-raised); }
-
-.b-input {
-  width: 100%; padding: 13px 16px; border-radius: var(--radius-md);
-  border: 1px solid var(--border-md); background: var(--surface-input);
-  color: var(--text-primary); outline: none; margin-top: 6px;
-  transition: border-color var(--transition);
-}
-.b-input:focus { border-color: var(--brand-orange); }
-.b-textarea { min-height: 110px; resize: vertical; }
-.b-field-label { font-size: 12px; font-weight: 600; color: var(--text-secondary); letter-spacing: .2px; margin-top: 14px; display: block; }
-
-.b-payment-option {
-  display: flex; align-items: center; gap: 12px;
-  padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-md);
-  margin-bottom: 10px; cursor: pointer; transition: var(--transition);
-}
-.b-payment-option:hover { background: rgba(255,255,255,0.04); }
-.b-payment-option.selected { border-color: var(--brand-orange); background: var(--orange-dim); }
-
-.b-receipt-section {
-  border: 1px dashed rgba(255,103,31,0.3); border-radius: var(--radius-md);
-  padding: 16px; margin-bottom: 12px; background: rgba(255,103,31,0.03);
-}
-.b-receipt-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border); }
-.b-receipt-row:last-child { border-bottom: none; }
-.b-receipt-total { font-size: 16px; font-weight: 800; color: var(--brand-orange); font-family: var(--font-mono); }
-
-.b-tracking-item { position: relative; padding-left: 44px; padding-bottom: 20px; }
-.b-tracking-item:last-child { padding-bottom: 0; }
-.b-tracking-dot {
-  position: absolute; left: 0; width: 28px; height: 28px;
-  background: var(--navy-600); border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; font-size: 13px;
-}
-.b-tracking-item.done .b-tracking-dot { background: var(--green); box-shadow: 0 0 10px var(--green-border); }
-.b-tracking-line { position: absolute; left: 13px; top: 28px; width: 2px; height: calc(100% - 28px); background: var(--border-md); }
-.b-tracking-item.done .b-tracking-line { background: var(--green); }
-.b-tracking-item:last-child .b-tracking-line { display: none; }
-.b-tracking-label { font-weight: 700; font-size: 14px; }
-.b-tracking-time { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
-
-.b-pdf-btn {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: rgba(255,103,31,0.08); border: 1px solid var(--orange-border);
-  color: var(--brand-orange); padding: 13px 24px; border-radius: var(--radius-md);
-  font-weight: 700; font-size: 14px; cursor: pointer; width: 100%;
-  transition: var(--transition); margin-top: 10px;
-}
-.b-pdf-btn:hover { background: rgba(255,103,31,0.15); transform: translateY(-1px); }
-
-.b-mono { font-family: var(--font-mono); font-size: 13px; }
-
-/* ══════════════════════════════════════════════════════════
-   SELLER MODE — styles (scoped to .s- prefix)
-══════════════════════════════════════════════════════════ */
-.s-wrap { max-width: 1000px; margin: 0 auto; padding: 0 24px 60px; }
-.s-page-header { padding: 28px 0 20px; }
-.s-page-title { font-size: 26px; font-weight: 700; letter-spacing: -.4px; margin-bottom: 6px; }
-.s-page-title span { color: var(--brand-orange); }
-.s-page-sub { font-size: 13px; color: var(--text-muted); }
-
-.s-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
-.s-card {
-  background: var(--surface-card); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 22px;
-}
-.s-card-header {
-  display: flex; align-items: center; justify-content: space-between;
-  margin-bottom: 16px; padding-bottom: 14px; border-bottom: 1px solid var(--border);
-}
-.s-card-title { font-size: 16px; font-weight: 600; letter-spacing: -.2px; }
-.s-card-sub { font-size: 12px; color: var(--text-muted); margin-top: 3px; }
-
-.s-stat-card {
-  background: var(--surface-card); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 18px 20px;
-}
-.s-stat-label { font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; }
-.s-stat-value { font-size: 26px; font-weight: 700; letter-spacing: -.5px; font-family: var(--font-mono); }
-.s-stat-note { font-size: 11px; color: var(--text-muted); margin-top: 6px; }
-
-.s-field-label { display: block; font-size: 12px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; letter-spacing: .2px; }
-.s-field-label .req { color: var(--brand-orange); margin-left: 2px; }
-.s-input {
-  width: 100%; background: var(--surface-input); border: 1px solid var(--border-md);
-  border-radius: var(--radius-md); color: var(--text-primary); padding: 12px 14px;
-  font-size: 14px; transition: border-color var(--transition), box-shadow var(--transition); outline: none;
-}
-.s-input:focus { border-color: var(--brand-orange); box-shadow: 0 0 0 3px var(--orange-dim); }
-.s-input.is-error { border-color: var(--red); }
-.s-input.is-valid { border-color: var(--green); }
-.s-input-mono { font-family: var(--font-mono); letter-spacing: .5px; }
-.s-field { margin-bottom: 16px; }
-.s-field-error { font-size: 11px; color: var(--red); margin-top: 6px; display: none; }
-.s-field-error.show { display: block; }
-.s-field-ok { font-size: 11px; color: var(--green); margin-top: 6px; display: none; }
-.s-field-ok.show { display: block; }
-.s-field-help { font-size: 11px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
-
-.s-btn-primary {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: var(--brand-orange); color: #fff; padding: 13px 24px;
-  border-radius: var(--radius-md); font-size: 14px; font-weight: 700; width: 100%;
-  transition: all var(--transition); box-shadow: var(--shadow-orange); margin-bottom: 10px;
-}
-.s-btn-primary:hover { background: var(--orange-light); transform: translateY(-1px); }
-.s-btn-secondary {
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  background: transparent; border: 1px solid var(--border-strong); color: var(--text-primary);
-  padding: 12px 24px; border-radius: var(--radius-md); font-size: 14px; font-weight: 500; width: 100%;
-  transition: all var(--transition); margin-bottom: 10px;
-}
-.s-btn-secondary:hover { background: var(--surface-raised); }
-.s-btn-ghost {
-  display: inline-flex; align-items: center; gap: 6px;
-  color: var(--text-secondary); padding: 6px 10px; border-radius: var(--radius-sm);
-  font-size: 12px; font-weight: 600; transition: all var(--transition);
-}
-.s-btn-ghost:hover { color: var(--text-primary); background: var(--surface-raised); }
-
-.s-chip {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 9px; border-radius: var(--radius-sm);
-  font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase;
-}
-.s-chip-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
-.s-chip.green { background: var(--green-dim); border: 1px solid var(--green-border); color: var(--green); }
-.s-chip.green .s-chip-dot { background: var(--green); }
-.s-chip.amber { background: var(--amber-dim); border: 1px solid var(--amber-border); color: var(--amber); }
-.s-chip.amber .s-chip-dot { background: var(--amber); }
-.s-chip.red { background: var(--red-dim); border: 1px solid var(--red-border); color: var(--red); }
-.s-chip.red .s-chip-dot { background: var(--red); }
-.s-chip.blue { background: var(--blue-dim); border: 1px solid var(--blue-border); color: var(--blue); }
-.s-chip.blue .s-chip-dot { background: var(--blue); }
-.s-chip.muted { background: rgba(255,255,255,0.05); border: 1px solid var(--border-md); color: var(--text-muted); }
-.s-chip.muted .s-chip-dot { background: var(--text-dim); }
-
-.s-notice {
-  display: flex; gap: 10px; padding: 12px 14px; border-radius: var(--radius-md);
-  margin-bottom: 16px; font-size: 13px; line-height: 1.5;
-}
-.s-notice.info { background: var(--blue-dim); border: 1px solid var(--blue-border); }
-.s-notice.warning { background: var(--amber-dim); border: 1px solid var(--amber-border); }
-.s-notice.success { background: var(--green-dim); border: 1px solid var(--green-border); }
-.s-notice.error { background: var(--red-dim); border: 1px solid var(--red-border); }
-
-.s-table-wrap { overflow-x: auto; border-radius: var(--radius-md); }
-.s-table { width: 100%; border-collapse: collapse; font-size: 12px; min-width: 600px; }
-.s-table th { background: var(--surface-raised); color: var(--text-muted); font-size: 10px; font-weight: 700; letter-spacing: .8px; text-transform: uppercase; padding: 9px 14px; text-align: left; border-bottom: 1px solid var(--border-md); }
-.s-table td { padding: 12px 14px; border-bottom: 1px solid var(--border); vertical-align: middle; }
-.s-table tr:last-child td { border-bottom: none; }
-.s-table tr:hover td { background: rgba(255,255,255,0.02); }
-.s-mono { font-family: var(--font-mono); font-size: 11px; }
-.s-muted { color: var(--text-muted); }
-
-.s-check-row {
-  display: flex; align-items: center; padding: 12px 14px;
-  border-bottom: 1px solid var(--border); gap: 14px; transition: background var(--transition);
-}
-.s-check-row:last-child { border-bottom: none; }
-.s-check-row:hover { background: rgba(255,255,255,0.02); }
-.s-check-icon {
-  width: 34px; height: 34px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center; font-size: 15px; flex-shrink: 0;
-}
-
-.s-timeline { padding: 14px 0; }
-.s-timeline-step { display: flex; gap: 14px; position: relative; padding-bottom: 18px; }
-.s-timeline-step:last-child { padding-bottom: 0; }
-.s-timeline-left { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; width: 30px; }
-.s-timeline-node {
-  width: 30px; height: 30px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 13px; flex-shrink: 0;
-  border: 2px solid var(--border-md); background: var(--surface-card);
-  transition: all .3s ease;
-}
-.s-timeline-node.done { background: var(--green-dim); border-color: var(--green); color: var(--green); }
-.s-timeline-node.active { background: var(--orange-dim); border-color: var(--brand-orange); color: var(--brand-orange); box-shadow: 0 0 0 4px var(--orange-dim); animation: pulse 2s infinite; }
-.s-timeline-node.error { background: var(--red-dim); border-color: var(--red); color: var(--red); }
-.s-timeline-node.pending { color: var(--text-dim); }
-.s-timeline-connector { width: 2px; flex: 1; margin-top: 4px; min-height: 16px; background: var(--border-md); transition: background .3s ease; }
-.s-timeline-connector.done { background: var(--green); }
-.s-timeline-content { flex: 1; padding-top: 5px; padding-bottom: 6px; }
-.s-timeline-label { font-weight: 600; font-size: 13px; }
-.s-timeline-label.done { color: var(--green); }
-.s-timeline-label.active { color: var(--brand-orange); }
-.s-timeline-label.error { color: var(--red); }
-.s-timeline-label.pending { color: var(--text-muted); }
-.s-timeline-meta { font-size: 11px; color: var(--text-muted); margin-top: 3px; font-family: var(--font-mono); }
-.s-timeline-note { font-size: 11px; color: var(--text-secondary); margin-top: 8px; background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 8px 12px; }
-
-.s-enc-badge {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 3px 8px; border-radius: var(--radius-sm);
-  background: rgba(29,179,116,0.08); border: 1px solid rgba(29,179,116,0.2); margin-top: 6px;
-}
-.s-enc-badge span { font-size: 10px; font-weight: 700; color: var(--green); letter-spacing: .3px; }
-
-/* Seller Login */
-.s-login-wrap {
-  min-height: calc(100vh - 52px);
-  display: flex; align-items: center; justify-content: center;
-  padding: 40px 20px;
-}
-.s-login-box { width: 100%; max-width: 420px; }
-.s-login-title { font-size: 28px; font-weight: 700; letter-spacing: -.5px; margin-bottom: 6px; }
-.s-login-sub { font-size: 13px; color: var(--text-muted); margin-bottom: 28px; }
-
-/* ══════════════════════════════════════════════════════════
-   PAGES MODE — repo explorer
-══════════════════════════════════════════════════════════ */
-.p-wrap { max-width: 960px; margin: 0 auto; padding: 24px 20px; }
-.p-hero { text-align: center; padding: 28px 0 24px; }
-.p-hero-title { font-family: var(--font-display); font-size: 32px; margin-bottom: 8px; letter-spacing: -.3px; }
-.p-hero-sub { font-size: 13px; color: var(--text-muted); max-width: 400px; margin: 0 auto; }
-
-.p-repo-bar {
-  display: flex; align-items: center; gap: 8px; margin-bottom: 24px;
-  background: var(--surface-raised); border: 1px solid var(--border-md);
-  border-radius: var(--radius-md); padding: 10px 14px;
-}
-.p-repo-icon { font-size: 16px; flex-shrink: 0; }
-.p-repo-url { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.p-repo-status { font-size: 11px; font-weight: 700; }
-
-.p-page-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; margin-bottom: 24px; }
-.p-page-card {
-  background: var(--surface-card); border: 1px solid var(--border);
-  border-radius: var(--radius-lg); padding: 18px;
-  cursor: pointer; transition: all var(--transition);
-}
-.p-page-card:hover { border-color: var(--brand-orange); transform: translateY(-2px); background: var(--surface-raised); }
-.p-page-card.active { border-color: var(--brand-orange); background: var(--orange-dim); }
-.p-page-name { font-weight: 700; font-size: 14px; margin-bottom: 5px; display: flex; align-items: center; gap: 8px; }
-.p-page-size { font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); }
-.p-page-type { font-size: 10px; font-weight: 700; letter-spacing: .6px; text-transform: uppercase; }
-.p-page-desc { font-size: 12px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; }
-.p-page-tag { display: inline-block; font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; padding: 2px 7px; border-radius: 4px; margin-top: 8px; background: var(--orange-dim); border: 1px solid var(--orange-border); color: var(--brand-orange); }
-
-.p-preview-pane {
-  background: var(--surface-card); border: 1px solid var(--border-md);
-  border-radius: var(--radius-lg); overflow: hidden; margin-bottom: 16px;
-}
-.p-preview-header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 12px 16px; border-bottom: 1px solid var(--border);
-  background: var(--surface-raised);
-}
-.p-preview-filename { font-family: var(--font-mono); font-size: 12px; color: var(--text-secondary); }
-.p-preview-actions { display: flex; gap: 8px; }
-.p-preview-btn {
-  font-size: 11px; font-weight: 700; padding: 5px 12px;
-  border-radius: var(--radius-sm); border: 1px solid var(--border-md);
-  color: var(--text-secondary); transition: var(--transition);
-}
-.p-preview-btn:hover { background: var(--surface-card); color: var(--text-primary); }
-.p-preview-btn.primary { background: var(--brand-orange); color: #fff; border-color: var(--brand-orange); }
-.p-preview-iframe {
-  width: 100%; border: none;
-  min-height: 600px; background: var(--navy-900);
-}
-.p-loading {
-  display: flex; align-items: center; justify-content: center;
-  padding: 60px; flex-direction: column; gap: 14px; color: var(--text-muted);
-  font-size: 13px;
-}
-.p-empty { text-align: center; padding: 60px 20px; color: var(--text-muted); font-size: 13px; }
-
-.p-refresh-btn {
-  display: inline-flex; align-items: center; gap: 8px;
-  background: var(--surface-raised); border: 1px solid var(--border-md);
-  color: var(--text-secondary); padding: 9px 16px; border-radius: var(--radius-md);
-  font-size: 13px; font-weight: 600; transition: var(--transition);
-}
-.p-refresh-btn:hover { border-color: var(--border-strong); color: var(--text-primary); }
-
-/* Modal */
-.modal-overlay {
-  position: fixed; inset: 0; z-index: 1000;
-  background: rgba(0,0,0,0.75); backdrop-filter: blur(4px);
-  display: flex; align-items: center; justify-content: center; padding: 20px;
-  animation: fadeInFast .18s ease;
-}
-.modal-box {
-  background: var(--navy-800); border: 1px solid var(--border-md);
-  border-radius: var(--radius-xl); padding: 28px;
-  max-width: 500px; width: 100%; max-height: 85vh; overflow-y: auto;
-  box-shadow: var(--shadow-lg); animation: slideUp .2s ease;
-}
-.modal-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 20px; }
-.modal-title { font-size: 20px; font-weight: 700; }
-.modal-close {
-  width: 28px; height: 28px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  background: var(--surface-raised); border: 1px solid var(--border-md);
-  color: var(--text-muted); font-size: 14px; flex-shrink: 0;
-  transition: var(--transition);
-}
-.modal-close:hover { background: var(--surface-card); color: var(--text-primary); }
-
-/* Footer */
-.site-footer {
-  background: var(--navy-900); border-top: 1px solid var(--border);
-  padding: 28px 0; margin-top: 40px;
-}
-.footer-inner { max-width: 960px; margin: 0 auto; padding: 0 24px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.footer-copy { font-size: 11px; color: var(--text-dim); }
-.footer-ondc { display: flex; align-items: center; gap: 8px; font-size: 11px; color: var(--text-dim); }
-.footer-links { display: flex; gap: 16px; }
-.footer-links a { font-size: 12px; color: var(--text-muted); transition: color var(--transition); }
-.footer-links a:hover { color: var(--text-primary); }
-
-@media (max-width: 700px) {
-  .b-grid-2, .b-grid-3, .s-grid-2 { grid-template-columns: 1fr; }
-  .b-filter-grid { grid-template-columns: 1fr 1fr; }
-  .b-product-details, .b-product-actions { grid-template-columns: 1fr; }
-  .p-page-grid { grid-template-columns: 1fr; }
-  .mode-brand { font-size: 17px; }
-  #mode-bar { padding: 0 14px; }
-  .mode-tab span:not(.tab-dot) { display: none; }
-  .mode-tab { padding: 7px 10px; }
-}
-</style>
+    /* ════ RESPONSIVE ════ */
+    @media (max-width: 900px) {
+      #shell { grid-template-columns: var(--sidebar-w) 1fr; }
+      #sidebar-right { display: none; }
+    }
+    @media (max-width: 640px) {
+      :root { --header-h: 48px; }
+      #shell { grid-template-columns: 1fr; }
+      #sidebar-left { display: none; }
+      .h-search { display: none; }
+      .btn-intro { display: none; }
+      .btn-ham { display: block; }
+      #tab-nav { overflow-x: auto; flex-wrap: nowrap; padding: 0.45rem 0.6rem; }
+      #tab-nav::-webkit-scrollbar { height: 2px; }
+      #main-content { padding: 1rem 0.85rem; }
+      .h-logo { font-size: 0.92rem; }
+    }
+  </style>
 </head>
 <body>
 
-<!-- MODE BAR -->
-<nav id="mode-bar">
-  <div class="mode-brand" onclick="setMode('buyer')">Decide</div>
-  <div class="mode-tabs">
-    <button class="mode-tab mode-tab-buyer active" id="tab-buyer" onclick="setMode('buyer')">
-      <span class="tab-dot"></span>
-      <span>Marketplace</span>
-    </button>
-    <button class="mode-tab mode-tab-seller" id="tab-seller" onclick="setMode('seller')">
-      <span class="tab-dot"></span>
-      <span>Seller Portal</span>
-    </button>
-    <button class="mode-tab mode-tab-pages" id="tab-pages" onclick="setMode('pages')">
-      <span class="tab-dot"></span>
-      <span>Repo Pages</span>
-    </button>
-  </div>
-  <div class="mode-bar-right">
-    <span class="ondc-chip">ONDC</span>
-    <span class="demo-chip">DEMO</span>
-  </div>
-</nav>
+<!-- ═══════════════════════════════════════════════════════════════
+     ALL SUBPAGE TEMPLATES
+     Every page is embedded here — zero external file fetches needed.
+     Works on file://, localhost, and any static host.
+═══════════════════════════════════════════════════════════════ -->
 
-<div id="app"></div>
-<div id="toast-wrap" aria-live="polite"></div>
+<template id="tpl-overview">
+<div class="pc">
+  <span class="pill">PRODUCTS · OVERVIEW</span>
+  <h1>Product Overview</h1>
+  <p class="meta">BUYER MODE · 4 CATEGORIES · 16 PRODUCTS TRACKED</p>
+  <p>Your central hub for product intelligence. Track the tech landscape across phones, laptops, earbuds, and monitors — structured, unbiased, noise-free.</p>
+  <div class="stat-row">
+    <div class="stat"><div class="stat-val">4</div><div class="stat-lbl">CATEGORIES</div></div>
+    <div class="stat"><div class="stat-val">16</div><div class="stat-lbl">PRODUCTS</div></div>
+    <div class="stat"><div class="stat-val">3</div><div class="stat-lbl">TRENDING ↑</div></div>
+    <div class="stat"><div class="stat-val">5</div><div class="stat-lbl">WATCHLISTED</div></div>
+  </div>
+  <h2>Categories at a Glance</h2>
+  <div class="cg">
+    <div class="cc"><div class="cc-name">📱 Phones</div><div class="cr"><span>Models tracked</span><span class="cv">4</span></div><div class="cr"><span>Top pick</span><span class="cv">Pixel 9 Pro</span></div><div class="cr"><span>Price range</span><span class="cv">$799–$1,299</span></div></div>
+    <div class="cc"><div class="cc-name">💻 Laptops</div><div class="cr"><span>Models tracked</span><span class="cv">4</span></div><div class="cr"><span>Top pick</span><span class="cv">MacBook Pro M4</span></div><div class="cr"><span>Price range</span><span class="cv">$999–$2,499</span></div></div>
+    <div class="cc"><div class="cc-name">🎧 Earbuds</div><div class="cr"><span>Models tracked</span><span class="cv">4</span></div><div class="cr"><span>Top pick</span><span class="cv">Sony WF-1000XM6</span></div><div class="cr"><span>Price range</span><span class="cv">$199–$349</span></div></div>
+    <div class="cc"><div class="cc-name">🖥️ Monitors</div><div class="cr"><span>Models tracked</span><span class="cv">3</span></div><div class="cr"><span>Top pick</span><span class="cv">LG OLED 27 4K</span></div><div class="cr"><span>Price range</span><span class="cv">$449–$1,299</span></div></div>
+  </div>
+  <h2>How to Use This App</h2>
+  <p>Browse products in the <strong>left panel</strong> (or the ☰ menu on mobile). Use <strong>Compare</strong> to view specs side-by-side. <strong>Trending</strong> shows momentum rankings. Add items to your <strong>Watchlist</strong> to track them. Legal documents are in the right panel or menu.</p>
+  <p>All product data lives in the <code style="font-family:var(--font-m);font-size:0.8rem;color:var(--orange)">PRODUCTS</code> array at the top of <code style="font-family:var(--font-m);font-size:0.8rem;color:var(--orange)">index.html</code> — edit it to add categories and items without touching any other code.</p>
+</div>
+</template>
 
-<!-- Modals -->
-<div id="modal-support" class="modal-overlay hidden" style="display:none">
-  <div class="modal-box">
-    <div class="modal-header">
-      <div class="modal-title">Contact Support</div>
-      <button class="modal-close" onclick="hideModal('modal-support')">✕</button>
-    </div>
-    <div style="background:var(--surface-raised);border:1px solid var(--border-md);border-radius:var(--radius-md);padding:16px;margin-bottom:12px">
-      <div style="font-weight:700;font-size:14px;margin-bottom:6px">📧 Email Support</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">UTR disputes, settlements, invoices</div>
-      <a href="mailto:support@decideindia.com" style="color:var(--brand-orange);font-weight:700;font-size:13px">support@decideindia.com</a>
-    </div>
-    <div style="background:var(--surface-raised);border:1px solid var(--border-md);border-radius:var(--radius-md);padding:16px;margin-bottom:12px">
-      <div style="font-weight:700;font-size:14px;margin-bottom:6px">💬 WhatsApp</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Mon–Sat, 9AM–7PM IST</div>
-      <a href="https://wa.me/919876543210" target="_blank" style="color:var(--green);font-weight:700;font-size:13px">+91 98765 43210</a>
-    </div>
-    <div style="background:var(--surface-raised);border:1px solid var(--border-md);border-radius:var(--radius-md);padding:16px;margin-bottom:20px">
-      <div style="font-weight:700;font-size:14px;margin-bottom:6px">📞 Helpline</div>
-      <div style="font-size:12px;color:var(--text-muted);margin-bottom:10px">Toll-free, Mon–Fri 10AM–6PM IST</div>
-      <a href="tel:18001234567" style="color:var(--blue);font-weight:700;font-size:13px">1800-123-4567</a>
-    </div>
-    <button class="s-btn-secondary" onclick="hideModal('modal-support')">Close</button>
+<template id="tpl-compare">
+<div class="pc" style="max-width:820px">
+  <span class="pill">PRODUCTS · COMPARE</span>
+  <h1>Compare Products</h1>
+  <p class="meta">SIDE-BY-SIDE SPECS · PLACEHOLDER DATA · REPLACE WITH LIVE SOURCE</p>
+  <p>Compare specifications across top models in each category. Data below is illustrative — wire up your data source to populate this view dynamically.</p>
+  <h2>📱 Flagship Phones</h2>
+  <div class="cg">
+    <div class="cc"><div class="cc-name">iPhone 16 Pro</div><div class="cr"><span>Chip</span><span class="cv">A18 Pro</span></div><div class="cr"><span>RAM</span><span class="cv">8 GB</span></div><div class="cr"><span>Display</span><span class="cv">6.3″ OLED 120Hz</span></div><div class="cr"><span>Battery</span><span class="cv">3,582 mAh</span></div><div class="cr"><span>Price</span><span class="cv">$999</span></div></div>
+    <div class="cc"><div class="cc-name">Pixel 9 Pro</div><div class="cr"><span>Chip</span><span class="cv">Tensor G4</span></div><div class="cr"><span>RAM</span><span class="cv">16 GB</span></div><div class="cr"><span>Display</span><span class="cv">6.3″ LTPO 120Hz</span></div><div class="cr"><span>Battery</span><span class="cv">4,700 mAh</span></div><div class="cr"><span>Price</span><span class="cv">$999</span></div></div>
+    <div class="cc"><div class="cc-name">Galaxy S25 Ultra</div><div class="cr"><span>Chip</span><span class="cv">SD 8 Elite</span></div><div class="cr"><span>RAM</span><span class="cv">12 GB</span></div><div class="cr"><span>Display</span><span class="cv">6.9″ AMOLED 120Hz</span></div><div class="cr"><span>Battery</span><span class="cv">5,000 mAh</span></div><div class="cr"><span>Price</span><span class="cv">$1,299</span></div></div>
+    <div class="cc"><div class="cc-name">OnePlus 13</div><div class="cr"><span>Chip</span><span class="cv">SD 8 Elite</span></div><div class="cr"><span>RAM</span><span class="cv">16 GB</span></div><div class="cr"><span>Display</span><span class="cv">6.82″ AMOLED 120Hz</span></div><div class="cr"><span>Battery</span><span class="cv">6,000 mAh</span></div><div class="cr"><span>Price</span><span class="cv">$899</span></div></div>
+  </div>
+  <h2>💻 Ultrabooks</h2>
+  <div class="cg">
+    <div class="cc"><div class="cc-name">MacBook Pro M4</div><div class="cr"><span>Chip</span><span class="cv">Apple M4 Pro</span></div><div class="cr"><span>RAM</span><span class="cv">24 GB</span></div><div class="cr"><span>Storage</span><span class="cv">512 GB SSD</span></div><div class="cr"><span>Display</span><span class="cv">14.2″ Liquid Retina</span></div><div class="cr"><span>Price</span><span class="cv">$1,999</span></div></div>
+    <div class="cc"><div class="cc-name">ThinkPad X1 Carbon</div><div class="cr"><span>Chip</span><span class="cv">Core Ultra 7</span></div><div class="cr"><span>RAM</span><span class="cv">32 GB</span></div><div class="cr"><span>Storage</span><span class="cv">1 TB SSD</span></div><div class="cr"><span>Display</span><span class="cv">14″ IPS 2.8K</span></div><div class="cr"><span>Price</span><span class="cv">$1,649</span></div></div>
+    <div class="cc"><div class="cc-name">Dell XPS 15</div><div class="cr"><span>Chip</span><span class="cv">Core Ultra 9</span></div><div class="cr"><span>RAM</span><span class="cv">32 GB</span></div><div class="cr"><span>Storage</span><span class="cv">1 TB SSD</span></div><div class="cr"><span>Display</span><span class="cv">15.6″ OLED 3.5K</span></div><div class="cr"><span>Price</span><span class="cv">$1,799</span></div></div>
+    <div class="cc"><div class="cc-name">LG Gram 16</div><div class="cr"><span>Chip</span><span class="cv">Core Ultra 7</span></div><div class="cr"><span>RAM</span><span class="cv">16 GB</span></div><div class="cr"><span>Storage</span><span class="cv">512 GB SSD</span></div><div class="cr"><span>Display</span><span class="cv">16″ IPS WQXGA</span></div><div class="cr"><span>Price</span><span class="cv">$1,299</span></div></div>
+  </div>
+  <h2>🎧 ANC Earbuds</h2>
+  <div class="cg">
+    <div class="cc"><div class="cc-name">AirPods Pro 2</div><div class="cr"><span>ANC</span><span class="cv">Yes (H2)</span></div><div class="cr"><span>Battery</span><span class="cv">6h + 24h case</span></div><div class="cr"><span>Codec</span><span class="cv">AAC</span></div><div class="cr"><span>Price</span><span class="cv">$249</span></div></div>
+    <div class="cc"><div class="cc-name">Sony WF-1000XM6</div><div class="cr"><span>ANC</span><span class="cv">Yes (QN3)</span></div><div class="cr"><span>Battery</span><span class="cv">8h + 24h case</span></div><div class="cr"><span>Codec</span><span class="cv">LDAC / AAC</span></div><div class="cr"><span>Price</span><span class="cv">$279</span></div></div>
+    <div class="cc"><div class="cc-name">Bose QC Ultra</div><div class="cr"><span>ANC</span><span class="cv">Yes (CustomTune)</span></div><div class="cr"><span>Battery</span><span class="cv">6h + 24h case</span></div><div class="cr"><span>Codec</span><span class="cv">aptX Adaptive</span></div><div class="cr"><span>Price</span><span class="cv">$299</span></div></div>
+    <div class="cc"><div class="cc-name">Galaxy Buds3 Pro</div><div class="cr"><span>ANC</span><span class="cv">Yes (Blade design)</span></div><div class="cr"><span>Battery</span><span class="cv">6h + 18h case</span></div><div class="cr"><span>Codec</span><span class="cv">SSC HiFi</span></div><div class="cr"><span>Price</span><span class="cv">$249</span></div></div>
   </div>
 </div>
+</template>
 
-<div id="modal-admin" class="modal-overlay" style="display:none">
-  <div class="modal-box" style="max-width:420px">
-    <div class="modal-header">
-      <div>
-        <div class="modal-title" style="font-size:17px">Admin Review Panel</div>
-        <div style="font-size:11px;color:var(--text-muted);margin-top:3px">Simulates backend admin action</div>
-      </div>
-      <button class="modal-close" onclick="hideModal('modal-admin')">✕</button>
-    </div>
-    <div class="s-notice info"><span>ℹ️</span><span>In production, this is only accessible to admin users. Here it simulates server-side verification.</span></div>
-    <div class="s-field">
-      <label class="s-field-label">Rejection Reason (required if rejecting)</label>
-      <textarea id="admin-reason" class="s-input b-textarea" placeholder="e.g. UTR not found in payment gateway records..."></textarea>
-    </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-      <button class="s-btn-primary" style="background:var(--green);box-shadow:none" onclick="adminVerify(true)">✓ Verify UTR</button>
-      <button style="display:flex;align-items:center;justify-content:center;background:var(--red-dim);border:1px solid var(--red-border);color:var(--red);padding:12px;border-radius:var(--radius-md);font-weight:600;cursor:pointer;font-size:14px" onclick="adminVerify(false)">✕ Reject</button>
-    </div>
+<template id="tpl-trending">
+<div class="pc">
+  <span class="pill">PRODUCTS · TRENDING</span>
+  <h1>Trending Now</h1>
+  <p class="meta">RANKED BY SEARCH MOMENTUM · PLACEHOLDER DATA · WEEK OF 2025-01</p>
+  <p>Products generating the most research activity this week. Signals derived from search volume, review velocity, and price movement.</p>
+  <h2>🔥 Top 10 This Week</h2>
+  <div class="tr-item"><span class="tr-rank">01</span><div style="flex:1"><div class="tr-name">Sony WF-1000XM6</div><div style="font-size:.74rem;color:var(--muted2)">Earbuds · ANC · $279</div></div><span class="tr-tag">↑ NEW</span></div>
+  <div class="tr-item"><span class="tr-rank">02</span><div style="flex:1"><div class="tr-name">MacBook Pro M4</div><div style="font-size:.74rem;color:var(--muted2)">Laptop · Apple Silicon · $1,999</div></div><span class="tr-tag">↑ +3</span></div>
+  <div class="tr-item"><span class="tr-rank">03</span><div style="flex:1"><div class="tr-name">Galaxy S25 Ultra</div><div style="font-size:.74rem;color:var(--muted2)">Phone · Android · $1,299</div></div><span class="tr-tag">→ STABLE</span></div>
+  <div class="tr-item"><span class="tr-rank">04</span><div style="flex:1"><div class="tr-name">LG OLED 27 4K</div><div style="font-size:.74rem;color:var(--muted2)">Monitor · OLED · $799</div></div><span class="tr-tag">↑ +1</span></div>
+  <div class="tr-item"><span class="tr-rank">05</span><div style="flex:1"><div class="tr-name">Pixel 9 Pro</div><div style="font-size:.74rem;color:var(--muted2)">Phone · Android · $999</div></div><span class="tr-tag">↓ -2</span></div>
+  <div class="tr-item"><span class="tr-rank">06</span><div style="flex:1"><div class="tr-name">OnePlus 13</div><div style="font-size:.74rem;color:var(--muted2)">Phone · Android · $899</div></div><span class="tr-tag">↑ +4</span></div>
+  <div class="tr-item"><span class="tr-rank">07</span><div style="flex:1"><div class="tr-name">Dell UltraSharp 27</div><div style="font-size:.74rem;color:var(--muted2)">Monitor · IPS · $549</div></div><span class="tr-tag">→ STABLE</span></div>
+  <div class="tr-item"><span class="tr-rank">08</span><div style="flex:1"><div class="tr-name">AirPods Pro 2</div><div style="font-size:.74rem;color:var(--muted2)">Earbuds · ANC · $249</div></div><span class="tr-tag">↓ -1</span></div>
+  <div class="tr-item"><span class="tr-rank">09</span><div style="flex:1"><div class="tr-name">ThinkPad X1 Carbon</div><div style="font-size:.74rem;color:var(--muted2)">Laptop · Business · $1,649</div></div><span class="tr-tag">↑ +2</span></div>
+  <div class="tr-item"><span class="tr-rank">10</span><div style="flex:1"><div class="tr-name">iPhone 16 Pro</div><div style="font-size:.74rem;color:var(--muted2)">Phone · iOS · $999</div></div><span class="tr-tag">↓ -3</span></div>
+</div>
+</template>
+
+<template id="tpl-watchlist">
+<div class="pc">
+  <span class="pill">PRODUCTS · WATCHLIST</span>
+  <h1>Your Watchlist</h1>
+  <p class="meta">5 ITEMS · DEMO DATA · CONNECT BACKEND FOR LIVE ALERTS</p>
+  <p>Products you're tracking. Price drops and stock changes will alert you here once connected to a live data source.</p>
+  <h2>Tracked Items</h2>
+  <div class="wl-item"><span class="wl-ic">📱</span><div class="wl-info"><div class="wl-name">Pixel 9 Pro</div><div class="wl-meta">Added 3 days ago · In Stock</div></div><span class="wl-price">$999</span></div>
+  <div class="wl-item"><span class="wl-ic">💻</span><div class="wl-info"><div class="wl-name">MacBook Pro M4</div><div class="wl-meta">Added 1 week ago · In Stock</div></div><span class="wl-price">$1,999</span></div>
+  <div class="wl-item"><span class="wl-ic">🎧</span><div class="wl-info"><div class="wl-name">Sony WF-1000XM6</div><div class="wl-meta">Added today · Limited Stock</div></div><span class="wl-price" style="color:#f0c040">$279</span></div>
+  <div class="wl-item"><span class="wl-ic">🖥️</span><div class="wl-info"><div class="wl-name">LG OLED 27 4K</div><div class="wl-meta">Added 2 weeks ago · In Stock</div></div><span class="wl-price">$799</span></div>
+  <div class="wl-item"><span class="wl-ic">📱</span><div class="wl-info"><div class="wl-name">Galaxy S25 Ultra</div><div class="wl-meta">Added 5 days ago · In Stock</div></div><span class="wl-price">$1,299</span></div>
+  <p style="margin-top:1.5rem;font-family:var(--font-m);font-size:0.68rem;color:var(--muted)">
+    TODO: Connect to a backend API for real-time price tracking and stock alerts.
+  </p>
+</div>
+</template>
+
+<template id="tpl-terms">
+<div class="pc">
+  <span class="pill">LEGAL · TERMS OF SERVICE</span>
+  <h1>Terms of Service</h1>
+  <p class="meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+  <p>By accessing or using VIA Decide ("the Service"), you agree to be bound by these Terms of Service. Please read them carefully before using the platform.</p>
+  <h2>1. Acceptance of Terms</h2>
+  <p>Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users, and others who access or use the Service.</p>
+  <h2>2. Use of the Service</h2>
+  <p>You agree to use the Service only for lawful purposes and in a way that does not infringe the rights of others or restrict anyone else's use and enjoyment of the Service.</p>
+  <ul>
+    <li>Do not attempt to gain unauthorized access to any part of the Service.</li>
+    <li>Do not transmit any unsolicited commercial communications.</li>
+    <li>Do not use automated tools to scrape or harvest data.</li>
+  </ul>
+  <h2>3. Intellectual Property</h2>
+  <p>The Service and its original content, features, and functionality are and will remain the exclusive property of VIA Decide and its licensors. The Service is protected by copyright, trademark, and other applicable laws.</p>
+  <h2>4. Limitation of Liability</h2>
+  <p>In no event shall VIA Decide, its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages arising out of your use of the Service.</p>
+  <h2>5. Changes to Terms</h2>
+  <p>We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide reasonable notice prior to any new terms taking effect.</p>
+  <h2>6. Contact</h2>
+  <p>If you have any questions about these Terms, please contact us through the support portal.</p>
+</div>
+</template>
+
+<template id="tpl-privacy">
+<div class="pc">
+  <span class="pill">LEGAL · PRIVACY POLICY</span>
+  <h1>Privacy Policy</h1>
+  <p class="meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+  <p>VIA Decide is committed to protecting your personal information and your right to privacy.</p>
+  <h2>1. Information We Collect</h2>
+  <ul>
+    <li><strong>Account data:</strong> name, email address, password hash.</li>
+    <li><strong>Usage data:</strong> pages visited, features used, session duration.</li>
+    <li><strong>Device data:</strong> browser type, operating system, IP address.</li>
+  </ul>
+  <h2>2. How We Use Your Information</h2>
+  <p>We use collected information to provide, operate, and maintain the Service; improve and personalize your experience; and communicate with you about updates.</p>
+  <h2>3. Data Retention</h2>
+  <p>We retain personal data only as long as necessary to fulfill the purposes outlined in this Policy, unless a longer retention period is required or permitted by law.</p>
+  <h2>4. Your Rights</h2>
+  <p>Depending on your location, you may have rights to access, correct, delete, or port your personal data. Contact us to exercise any of these rights.</p>
+  <h2>5. Cookies</h2>
+  <p>We use cookies and similar tracking technologies to track activity on the Service. You can configure your browser to refuse all cookies.</p>
+  <h2>6. Contact</h2>
+  <p>Privacy questions? Contact our privacy team through the support portal.</p>
+</div>
+</template>
+
+<template id="tpl-conditions">
+<div class="pc">
+  <span class="pill">LEGAL · CONDITIONS OF USE</span>
+  <h1>Conditions of Use</h1>
+  <p class="meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+  <p>These Conditions of Use govern your access to and use of the VIA Decide platform. Continued use constitutes acceptance.</p>
+  <h2>1. Eligibility</h2>
+  <p>You must be at least 18 years of age to use this Service.</p>
+  <h2>2. Account Responsibilities</h2>
+  <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account. Notify us immediately of any unauthorized use.</p>
+  <h2>3. Prohibited Conduct</h2>
+  <ul>
+    <li>Submitting false, misleading, or fraudulent product information.</li>
+    <li>Attempting to manipulate product rankings or ratings.</li>
+    <li>Using the Service to harass, threaten, or intimidate other users.</li>
+    <li>Reverse engineering, decompiling, or disassembling the Service.</li>
+  </ul>
+  <h2>4. Termination</h2>
+  <p>We may suspend or terminate your access at our sole discretion, without notice, for conduct that violates these Conditions or is harmful to others.</p>
+  <h2>5. Governing Law</h2>
+  <p>These Conditions shall be governed by and construed in accordance with applicable law, without regard to its conflict of law provisions.</p>
+</div>
+</template>
+
+<template id="tpl-rules">
+<div class="pc">
+  <span class="pill">LEGAL · COMMUNITY RULES</span>
+  <h1>Community Rules</h1>
+  <p class="meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+  <p>These rules ensure VIA Decide remains a high-signal, zero-noise environment for product intelligence.</p>
+  <h2>Rule 1 · Be Accurate</h2>
+  <p>Only submit product information you can verify. Speculation must be clearly labeled. Fabricated specs result in immediate removal and possible account suspension.</p>
+  <h2>Rule 2 · No Affiliate Bias</h2>
+  <p>Do not promote products for personal financial gain. Undisclosed affiliate relationships or paid promotion are strictly prohibited.</p>
+  <h2>Rule 3 · Respect Other Users</h2>
+  <p>Critique products, not people. Personal attacks, harassment, or discrimination will not be tolerated and will result in account termination.</p>
+  <h2>Rule 4 · No Spam</h2>
+  <p>Do not duplicate submissions or post irrelevant content. Low-effort posts will be removed without notice.</p>
+  <h2>Rule 5 · Protect Privacy</h2>
+  <p>Do not share personal information about other users without explicit consent.</p>
+  <h2>Enforcement</h2>
+  <p>Violations are handled by the moderation team. Appeals may be submitted through the support portal within 14 days of a moderation action.</p>
+</div>
+</template>
+
+<!-- ═══════════════════════════════════════════════════════
+     MOBILE DRAWER
+═══════════════════════════════════════════════════════ -->
+<div id="drawer-overlay" onclick="closeDrawer()"></div>
+<div id="drawer">
+  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+  <div id="drawer-inner"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     HEADER
+═══════════════════════════════════════════════════════ -->
+<header id="header">
+  <a class="h-logo" href="intro.html">VIA<span>.</span>DECIDE</a>
+  <div class="h-mode-wrap" id="modeTabs"></div>
+  <div class="h-spacer"></div>
+  <div class="h-search">
+    <span style="color:var(--muted);font-size:0.85rem">⌕</span>
+    <input type="text" id="searchInput" placeholder="Search products…" autocomplete="off" />
   </div>
+  <a class="btn-yt" id="ytBtn" href="#" target="_blank" rel="noopener">
+    <span class="yi">▶</span><span>Watch Demo</span>
+  </a>
+  <a class="btn-intro" href="intro.html">← Home</a>
+  <button class="btn-ham" id="hamBtn" onclick="openDrawer()" aria-label="Open menu">☰</button>
+</header>
+
+<!-- ═══════════════════════════════════════════════════════
+     SHELL
+═══════════════════════════════════════════════════════ -->
+<div id="shell">
+  <aside id="sidebar-left"></aside>
+  <div id="main-wrap">
+    <nav id="tab-nav"></nav>
+    <main id="main-content"></main>
+  </div>
+  <aside id="sidebar-right"></aside>
 </div>
 
 <script>
-/* ══════════════════════════════════════════════════════════
-   SHARED UTILITIES
-══════════════════════════════════════════════════════════ */
-const $ = id => document.getElementById(id);
-const esc = s => String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
-const money = n => "₹" + Number(n||0).toLocaleString("en-IN", {minimumFractionDigits:2, maximumFractionDigits:2});
-const moneyRaw = n => "₹" + Number(n||0).toLocaleString("en-IN");
-const fmtDate = iso => { try { return new Date(iso).toLocaleString("en-IN",{dateStyle:"medium",timeStyle:"short"}); } catch(e) { return iso||"—"; } };
-const fmtDateOnly = iso => { try { return new Date(iso).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"}); } catch(e) { return iso||"—"; } };
-function hidden(el) { el.style.display = "none"; }
-function show(el) { el.style.display = ""; }
+'use strict';
 
-let toastN = 0;
-function toast(msg, type="info") {
-  const wrap = $("toast-wrap");
-  const id = "t" + (++toastN);
-  const colors = {success:"var(--green)",error:"var(--red)",info:"var(--blue)"};
-  const icons = {success:"✓",error:"✕",info:"ℹ"};
-  const el = document.createElement("div");
-  el.id = id; el.className = "toast-item t-" + type;
-  el.innerHTML = `<span style="color:${colors[type]||colors.info};font-weight:700">${icons[type]||icons.info}</span> ${esc(msg)}`;
-  wrap.appendChild(el);
-  requestAnimationFrame(() => requestAnimationFrame(() => el.classList.add("show")));
-  setTimeout(() => { el.classList.remove("show"); setTimeout(() => el.remove(), 220); }, 3200);
-}
+/* ─────────────────────────────────────
+   CONSTANTS
+───────────────────────────────────── */
+const YOUTUBE_CHANNEL_URL = "https://youtube.com/@yourchannel"; // TODO: update URL
 
-function showModal(id) { $(id).style.display = "flex"; document.body.style.overflow = "hidden"; }
-function hideModal(id) { $(id).style.display = "none"; document.body.style.overflow = ""; }
-document.addEventListener("click", e => {
-  if (e.target.classList.contains("modal-overlay")) {
-    e.target.style.display = "none"; document.body.style.overflow = "";
-  }
-});
-
-/* ══════════════════════════════════════════════════════════
-   MODE STATE
-══════════════════════════════════════════════════════════ */
+/* ─────────────────────────────────────
+   MODE SYSTEM
+   Add { id:"seller", label:"Seller Portal" } to enable seller tab.
+   Then call renderSellerShell() from switchMode().
+───────────────────────────────────── */
 let MODE = "buyer";
-function setMode(m) {
-  MODE = m;
-  ["buyer","seller","pages"].forEach(t => {
-    $("tab-" + t).classList.toggle("active", t === m);
-  });
-  if (m === "buyer") renderBuyerHome();
-  else if (m === "seller") {
-    if (!SELLER_STATE.currentSeller) renderSellerLogin();
-    else renderSellerDashboard();
-  }
-  else if (m === "pages") renderPagesExplorer();
-}
-
-/* ══════════════════════════════════════════════════════════
-   ████████████████  BUYER MODE  ████████████████
-══════════════════════════════════════════════════════════ */
-
-const SUPABASE_URL = "https://zdarsygrpqbbcafrqcjt.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpkYXJzeWdycHFiYmNhZnJxY2p0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA5ODczMTUsImV4cCI6MjA4NjU2MzMxNX0.ut97BRi9_UFkeZuG_6Ue4mXdAAmtH6MFFdi2vUgHiW4";
-
-async function apiPost(fn, payload) {
-  const url = SUPABASE_URL + "/functions/v1/" + encodeURIComponent(fn);
-  const res = await fetch(url, { method:"POST", headers:{"Content-Type":"application/json","apikey":SUPABASE_ANON_KEY,"Authorization":"Bearer "+SUPABASE_ANON_KEY}, body:JSON.stringify(payload||{}) });
-  const text = await res.text();
-  try { return text ? JSON.parse(text) : null; } catch(e) { return {raw:text}; }
-}
-
-const BUYER_STATE = {
-  domain: null, filters: [], cart: [], orders: [],
-  selectedRestaurantId: null, liveInterval: null,
-  results: [], payMethod: null, lastEcomCat: null,
-  deviceId: localStorage.getItem("decide_device_id") || (() => { const id = "d-"+Math.random().toString(36).slice(2); localStorage.setItem("decide_device_id",id); return id; })()
-};
-
-const ECOM_DATA = [
-  {cat:"smartphones",name:"iPhone 15 Pro",price:134900,cam:9,gam:9,bat:7,seller:"Apple Store",rating:4.8,stock:50,delivery:"2 days",warranty:"1 year",city:"Gandhidham"},
-  {cat:"smartphones",name:"Samsung S24 Ultra",price:129999,cam:10,gam:9,bat:8,seller:"Samsung",rating:4.9,stock:40,delivery:"3 days",warranty:"1 year",city:"Gandhidham"},
-  {cat:"smartphones",name:"OnePlus 12",price:63999,cam:8,gam:9,bat:9,seller:"OnePlus",rating:4.7,stock:110,delivery:"1 day",warranty:"1 year",city:"Gandhidham"},
-  {cat:"earbuds",name:"AirPods Pro 2",price:24499,snd:9,anc:10,mic:9,seller:"Apple Store",rating:4.8,stock:150,delivery:"1 day",warranty:"1 year",city:"Gandhidham"},
-  {cat:"earbuds",name:"Sony WF-1000XM5",price:23990,snd:10,anc:10,mic:8,seller:"Sony",rating:4.8,stock:90,delivery:"1 day",warranty:"1 year",city:"Gandhidham"},
-  {cat:"laptops",name:"MacBook Air M3",price:113900,perf:9,port:7,scr:9,seller:"Apple Store",rating:4.8,stock:55,delivery:"2 days",warranty:"1 year",city:"Gandhidham"},
-  {cat:"laptops",name:"Dell XPS 13",price:139990,perf:8,port:6,scr:9,seller:"Dell",rating:4.7,stock:40,delivery:"4 days",warranty:"1 year",city:"Gandhidham"}
+const MODES = [
+  { id: "buyer", label: "Buyer Mode" },
+  // TODO: { id: "seller", label: "Seller Portal" },
 ];
 
-const FOOD_DATA = [{
-  id:"rajkot-thali-001", name:"Unlimited Gujarati Thali", brand:"Family Restaurant",
-  city:"Rajkot", priceHint:150, upiId:"6351537770@yapl",
-  hours:"11AM–3:30PM, 7PM–10:30PM",
-  menu:[
-    {id:"thali-150",name:"Unlimited Gujarati Thali",price:150,veg:true,desc:"Traditional unlimited thali"},
-    {id:"pavbhaji-120",name:"Pav Bhaji",price:120,veg:true,desc:"Butter pav bhaji"},
-    {id:"chaas-25",name:"Chaas",price:25,veg:true,desc:"Fresh buttermilk"}
-  ]
-}];
+/* ─────────────────────────────────────
+   PAGES REGISTRY
+   name    → matches tpl-{name} template id
+   file    → used as fallback href / fetch target
+   section → "products" | "legal"
+   icon    → display symbol
+───────────────────────────────────── */
+const PAGES = [
+  { name: "overview",   label: "Overview",       file: "overview.html",   section: "products", icon: "◈" },
+  { name: "compare",    label: "Compare",         file: "compare.html",    section: "products", icon: "⇄" },
+  { name: "trending",   label: "Trending",        file: "trending.html",   section: "products", icon: "↑" },
+  { name: "watchlist",  label: "Watchlist",       file: "watchlist.html",  section: "products", icon: "☆" },
+  { name: "terms",      label: "Terms",           file: "terms.html",      section: "legal",    icon: "§" },
+  { name: "privacy",    label: "Privacy Policy",  file: "privacy.html",    section: "legal",    icon: "⬡" },
+  { name: "conditions", label: "Conditions",      file: "conditions.html", section: "legal",    icon: "⊞" },
+  { name: "rules",      label: "Rules",           file: "rules.html",      section: "legal",    icon: "▤" },
+  // TODO: Seller pages:
+  // { name: "dashboard", label: "Dashboard", file: "seller/dashboard.html", section: "seller", icon: "⊡" },
+];
 
-function loadOrders() { try { const x = JSON.parse(localStorage.getItem("order_history")||"[]"); BUYER_STATE.orders = Array.isArray(x) ? x : []; } catch(e) { BUYER_STATE.orders = []; } }
-function saveOrders() { try { localStorage.setItem("order_history", JSON.stringify(BUYER_STATE.orders)); } catch(e) {} }
-function loadUtrIdx() { try { const x = JSON.parse(localStorage.getItem("utr_index")||"{}"); return x && typeof x === "object" ? x : {}; } catch(e) { return {}; } }
-function saveUtrIdx(idx) { try { localStorage.setItem("utr_index", JSON.stringify(idx||{})); } catch(e) {} }
-function stopInterval() { if (BUYER_STATE.liveInterval) { clearInterval(BUYER_STATE.liveInterval); BUYER_STATE.liveInterval = null; } }
+/* ─────────────────────────────────────
+   PRODUCTS DATA  ← edit freely
+───────────────────────────────────── */
+const PRODUCTS = [
+  {
+    id: "phones", label: "Phones", icon: "📱",
+    items: [
+      { id: "iphone-16",  label: "iPhone 16 Pro" },
+      { id: "pixel-9",    label: "Pixel 9 Pro" },
+      { id: "s25-ultra",  label: "Galaxy S25 Ultra" },
+      { id: "oneplus-13", label: "OnePlus 13" },
+    ],
+  },
+  {
+    id: "laptops", label: "Laptops", icon: "💻",
+    items: [
+      { id: "mbp-m4",      label: "MacBook Pro M4" },
+      { id: "thinkpad-x1", label: "ThinkPad X1 Carbon" },
+      { id: "dell-xps15",  label: "Dell XPS 15" },
+      { id: "lg-gram",     label: "LG Gram 16" },
+    ],
+  },
+  {
+    id: "earbuds", label: "Earbuds", icon: "🎧",
+    items: [
+      { id: "airpods-pro", label: "AirPods Pro 2" },
+      { id: "buds3-pro",   label: "Galaxy Buds3 Pro" },
+      { id: "bose-qc",     label: "Bose QC Ultra" },
+      { id: "wf1000xm6",   label: "Sony WF-1000XM6" },
+    ],
+  },
+  {
+    id: "monitors", label: "Monitors", icon: "🖥️",
+    items: [
+      { id: "lg-ultrafine", label: "LG UltraFine 5K" },
+      { id: "dell-u2723d",  label: "Dell UltraSharp 27" },
+      { id: "lg-oled",      label: "LG OLED 27 4K" },
+    ],
+  },
+];
 
-function renderBuyerHome() {
-  stopInterval();
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div class="b-hero">
-      <div class="b-hero-badge"><span style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;display:inline-block"></span>ONDC Verified Network</div>
-      <h1 class="b-hero-title">Your orders.<br>Your <em>settlements</em>.<br>Your <em>market</em>.</h1>
-      <p class="b-hero-sub">India's first commission-free marketplace. Compare products by YOUR priorities. Starting in Gujarat — Gandhidham & Rajkot.</p>
-      <div style="display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap">
-        <span class="b-tag b-tag-live">Zero Commission</span>
-        <span class="b-tag b-tag-new">ONDC Compliant</span>
-        <span class="b-tag b-tag-demo">🧪 Demo Build</span>
-      </div>
-    </div>
+/* ─────────────────────────────────────
+   STATE
+───────────────────────────────────── */
+let activePageName  = null;
+let activeProductId = null;
+let isLoading       = false;
 
-    <div class="b-notice demo">
-      <span>⚠️</span>
-      <span><strong>Demo build</strong> — Payments, UTR submissions, and seller confirmations are simulated for UX testing. No real money moves.</span>
-    </div>
-
-    <div class="b-section-label">Shopping Categories</div>
-    <div class="b-grid-2">
-      <div class="b-card" data-action="ecom">
-        <div class="b-card-icon">🛍️</div>
-        <div class="b-card-title">E-Commerce</div>
-        <div class="b-card-sub">Phones, laptops, audio — Gandhidham</div>
-        <span class="b-tag b-tag-live">Live</span>
-      </div>
-      <div class="b-card" data-action="food">
-        <div class="b-card-icon">🍽️</div>
-        <div class="b-card-title">Food Ordering</div>
-        <div class="b-card-sub">UPI → UTR flow — Rajkot</div>
-        <span class="b-tag b-tag-live">Live</span> <span class="b-tag b-tag-demo">UPI 🧪</span>
-      </div>
-      <div class="b-card" aria-disabled="true">
-        <div class="b-card-icon">👕</div>
-        <div class="b-card-title">Fashion</div>
-        <div class="b-card-sub">Coming soon</div>
-        <span class="b-tag b-tag-soon">Soon</span>
-      </div>
-      <div class="b-card" aria-disabled="true">
-        <div class="b-card-icon">🛒</div>
-        <div class="b-card-title">Groceries</div>
-        <div class="b-card-sub">Coming soon</div>
-        <span class="b-tag b-tag-soon">Soon</span>
-      </div>
-    </div>
-
-    <div class="b-section-label">My Account</div>
-    <div class="b-grid-2">
-      <div class="b-card" data-action="orders">
-        <div class="b-card-icon">📦</div>
-        <div class="b-card-title">My Orders</div>
-        <div class="b-card-sub">Track & manage orders</div>
-        <span class="b-tag b-tag-new">Track</span>
-      </div>
-      <div class="b-card" data-action="cart-page" style="${BUYER_STATE.cart.length ? '' : 'opacity:.5'}">
-        <div class="b-card-icon">🛒</div>
-        <div class="b-card-title">Cart</div>
-        <div class="b-card-sub">${BUYER_STATE.cart.length} items</div>
-        <span class="b-tag" style="background:var(--border);color:var(--text-muted)">${BUYER_STATE.cart.length > 0 ? BUYER_STATE.cart.length + " Items" : "Empty"}</span>
-      </div>
-    </div>
-
-    <div class="b-section-label">Join / Sell</div>
-    <div class="b-grid-2">
-      <div class="b-card" onclick="setMode('seller')">
-        <div class="b-card-icon">🏪</div>
-        <div class="b-card-title">Seller Portal</div>
-        <div class="b-card-sub">Manage orders, UTR, settlements</div>
-        <span class="b-tag b-tag-new">Open →</span>
-      </div>
-      <div class="b-card" data-action="waitlist">
-        <div class="b-card-icon">📧</div>
-        <div class="b-card-title">Join Waitlist</div>
-        <div class="b-card-sub">Get early access</div>
-        <span class="b-tag b-tag-live">Open</span>
-      </div>
-    </div>
-
-    <div class="b-section-label">Gujarat Coverage</div>
-    <div class="b-grid-3">
-      <div class="b-card" data-action="food">
-        <div class="b-card-icon">🏙️</div>
-        <div class="b-card-title">Rajkot</div>
-        <span class="b-tag b-tag-live">Food Live</span>
-      </div>
-      <div class="b-card" data-action="ecom">
-        <div class="b-card-icon">🏙️</div>
-        <div class="b-card-title">Gandhidham</div>
-        <span class="b-tag b-tag-live">E-Com Live</span>
-      </div>
-      <div class="b-card" aria-disabled="true">
-        <div class="b-card-icon">🏙️</div>
-        <div class="b-card-title">Ahmedabad</div>
-        <span class="b-tag b-tag-soon">Soon</span>
-      </div>
-    </div>
-  </div>`;
-  attachBuyerEvents();
+/* ─────────────────────────────────────
+   ROUTING
+───────────────────────────────────── */
+function registerRoutes() {
+  window.addEventListener('hashchange', handleRoute);
+  handleRoute();
 }
 
-function attachBuyerEvents() {
-  $("app").querySelectorAll("[data-action]").forEach(el => {
-    el.addEventListener("click", () => {
-      const a = el.dataset.action;
-      if (el.getAttribute("aria-disabled") === "true") return;
-      if (a === "ecom") renderEcomMenu();
-      else if (a === "food") renderFoodList();
-      else if (a === "orders") { loadOrders(); renderOrders(); }
-      else if (a === "cart-page") renderCart();
-      else if (a === "waitlist") renderWaitlist();
+function handleRoute() {
+  const hash = window.location.hash;
+  if (hash.startsWith('#page=')) {
+    const key  = hash.slice(6);
+    const page = PAGES.find(p => p.file === key || p.name === key);
+    if (page) { loadPage(page.name, false); return; }
+  }
+  renderHomePage();
+}
+
+/* ─────────────────────────────────────
+   SHELL
+───────────────────────────────────── */
+function renderShell() {
+  document.getElementById('ytBtn').href = YOUTUBE_CHANNEL_URL;
+  renderModeTabs();
+  renderSidebar();
+  renderSubpageNav();
+  renderRightSidebar();
+  renderDrawer();
+}
+
+/* ─────────────────────────────────────
+   MODE TABS
+───────────────────────────────────── */
+function renderModeTabs() {
+  document.getElementById('modeTabs').innerHTML = MODES.map(m =>
+    `<button class="mode-tab ${m.id === MODE ? 'active' : ''}" onclick="switchMode('${m.id}')">${escH(m.label)}</button>`
+  ).join('');
+}
+
+function switchMode(mode) {
+  MODE = mode;
+  renderModeTabs();
+  if (mode === 'buyer') renderHomePage();
+  else renderSellerPlaceholder();
+}
+
+/* ─────────────────────────────────────
+   LEFT SIDEBAR
+───────────────────────────────────── */
+function renderSidebar() {
+  const open = getOpenCats();
+  document.getElementById('sidebar-left').innerHTML = `
+    <div class="sb-label">MY PRODUCTS <span class="sb-collapse" onclick="collapseAll()" title="Collapse">−</span></div>
+    <div class="sb-section">${PRODUCTS.map(c => renderCat(c, open)).join('')}</div>
+  `;
+}
+
+function renderCat(cat, open) {
+  const isOpen = open.includes(cat.id);
+  return `
+    <div>
+      <div class="cat-head" onclick="toggleCat('${cat.id}')">
+        <span class="cat-icon">${cat.icon}</span>
+        <span class="cat-name">${escH(cat.label)}</span>
+        <span class="cat-arrow ${isOpen ? 'open' : ''}">▶</span>
+      </div>
+      <div class="cat-items ${isOpen ? 'open' : ''}">
+        ${cat.items.map(item => `
+          <div class="prod-item ${item.id === activeProductId ? 'active' : ''}"
+               onclick="selectProduct('${cat.id}','${item.id}','${escH(item.label)}')">
+            <span class="prod-dot"></span>${escH(item.label)}
+          </div>`).join('')}
+      </div>
+    </div>`;
+}
+
+function getOpenCats() {
+  try { return JSON.parse(sessionStorage.getItem('openCats') || '["phones"]'); }
+  catch(e) { return ["phones"]; }
+}
+function toggleCat(id) {
+  let o = getOpenCats();
+  o = o.includes(id) ? o.filter(x => x !== id) : [...o, id];
+  sessionStorage.setItem('openCats', JSON.stringify(o));
+  renderSidebar();
+}
+function collapseAll() { sessionStorage.setItem('openCats', '[]'); renderSidebar(); }
+
+function selectProduct(catId, itemId, label) {
+  activeProductId = itemId;
+  activePageName  = null;
+  setActive(null);
+  closeDrawer();
+  document.getElementById('main-content').innerHTML = `
+    <div class="pc">
+      <span class="pill">${escH(catId.toUpperCase())} · PRODUCT</span>
+      <h1>${escH(label)}</h1>
+      <p class="meta">SELECT A VIEW TAB ABOVE TO SEE STRUCTURED DATA</p>
+      <p>Product detail panel for <strong>${escH(label)}</strong>. Use the tabs above — <strong>Compare</strong>, <strong>Trending</strong>, etc. — to explore structured data, or click another product in the panel.</p>
+      <p style="font-family:var(--font-m);font-size:0.68rem;color:var(--muted);margin-top:1.5rem">
+        TODO: Connect product ID <code style="color:var(--orange)">${escH(itemId)}</code> to a live data source.
+      </p>
+    </div>`;
+}
+
+/* ─────────────────────────────────────
+   SUBPAGE NAV TABS
+───────────────────────────────────── */
+function renderSubpageNav() {
+  document.getElementById('tab-nav').innerHTML = PAGES
+    .filter(p => p.section === 'products')
+    .map(p => `<button class="page-tab ${activePageName === p.name ? 'active' : ''}" onclick="loadPage('${p.name}')"><span class="tab-ic">${p.icon}</span>${escH(p.label)}</button>`)
+    .join('');
+}
+
+/* ─────────────────────────────────────
+   RIGHT SIDEBAR
+───────────────────────────────────── */
+function renderRightSidebar() {
+  document.getElementById('sidebar-right').innerHTML =
+    `<div class="sb-label" style="padding:.65rem .7rem;border-bottom:1px solid var(--border2)">LEGAL</div>` +
+    PAGES.filter(p => p.section === 'legal').map(p =>
+      `<div class="legal-item ${activePageName === p.name ? 'active' : ''}" onclick="loadPage('${p.name}')">
+         <span class="li-ic">${p.icon}</span>${escH(p.label)}
+       </div>`
+    ).join('');
+}
+
+/* ─────────────────────────────────────
+   MOBILE DRAWER
+───────────────────────────────────── */
+function renderDrawer() {
+  let html = '';
+
+  html += `<div class="drawer-label">VIEWS</div><div class="drawer-section">`;
+  PAGES.filter(p => p.section === 'products').forEach(p => {
+    html += `<div class="drawer-item ${activePageName === p.name ? 'active' : ''}" onclick="loadPage('${p.name}');closeDrawer()">${p.icon} ${escH(p.label)}</div>`;
+  });
+  html += '</div>';
+
+  html += `<div class="drawer-label">LEGAL</div><div class="drawer-section">`;
+  PAGES.filter(p => p.section === 'legal').forEach(p => {
+    html += `<div class="drawer-item ${activePageName === p.name ? 'active' : ''}" onclick="loadPage('${p.name}');closeDrawer()">${p.icon} ${escH(p.label)}</div>`;
+  });
+  html += '</div>';
+
+  html += `<div class="drawer-label">MY PRODUCTS</div><div class="drawer-section">`;
+  PRODUCTS.forEach(cat => {
+    cat.items.forEach(item => {
+      html += `<div class="drawer-item ${item.id === activeProductId ? 'active' : ''}" onclick="selectProduct('${cat.id}','${item.id}','${escH(item.label)}')">${cat.icon} ${escH(item.label)}</div>`;
     });
   });
-}
+  html += '</div>';
 
-/* ── Ecommerce ── */
-function renderEcomMenu() {
-  stopInterval();
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderBuyerHome()">← Back</button>
-      <h2 style="font-size:20px;font-weight:700">E-Commerce</h2>
-    </div>
-    <div class="b-notice demo"><span>🛒</span><span>Products, prices &amp; discounts are demo data. Rankings change based on your filter priorities.</span></div>
-    <div class="b-grid-3">
-      ${["smartphones","earbuds","laptops"].map(c => `
-      <div class="b-card" onclick="renderFilters('${c}')">
-        <div class="b-card-icon">${{smartphones:"📱",earbuds:"🎧",laptops:"💻"}[c]}</div>
-        <div class="b-card-title">${c.charAt(0).toUpperCase()+c.slice(1)}</div>
-        <span class="b-tag b-tag-live">Available</span>
-      </div>`).join("")}
-    </div>
+  html += `<div class="drawer-label">NAVIGATE</div><div class="drawer-section">
+    <div class="drawer-item" onclick="window.location.href='intro.html'">← Back to Intro</div>
+    <div class="drawer-item" onclick="renderHomePage();closeDrawer()">⌂ Home</div>
   </div>`;
+
+  document.getElementById('drawer-inner').innerHTML = html;
 }
 
-function renderFilters(cat) {
-  stopInterval(); BUYER_STATE.domain = cat; BUYER_STATE.lastEcomCat = cat; BUYER_STATE.filters = [];
-  const filterMap = {smartphones:["cam","gam","bat"],earbuds:["snd","anc","mic"],laptops:["perf","port","scr"]};
-  const labels = {cam:"Camera",gam:"Gaming",bat:"Battery",snd:"Sound",anc:"Noise Cancel",mic:"Microphone",perf:"Performance",port:"Portability",scr:"Screen"};
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderEcomMenu()">← Back</button>
-      <h2 style="font-size:20px;font-weight:700">${cat.charAt(0).toUpperCase()+cat.slice(1)}</h2>
-    </div>
-    <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px">Pick your priorities (tap to activate) — results rank accordingly</p>
-    <div class="b-filter-grid">
-      ${(filterMap[cat]||[]).map(f => `<div class="b-filter-btn" id="fb-${f}" onclick="toggleFilter('${f}',this)">${labels[f]}</div>`).join("")}
-    </div>
-    <button class="b-btn-primary" onclick="doSearch()">Find Best Deals</button>
-    <button class="b-btn-secondary" onclick="renderEcomMenu()">← Back</button>
-  </div>`;
-}
+function openDrawer()  { renderDrawer(); document.getElementById('drawer').classList.add('open'); document.getElementById('drawer-overlay').classList.add('open'); }
+function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('drawer-overlay').classList.remove('open'); }
 
-function toggleFilter(key, el) {
-  const i = BUYER_STATE.filters.indexOf(key);
-  if (i >= 0) { BUYER_STATE.filters.splice(i,1); el.classList.remove("active"); }
-  else { BUYER_STATE.filters.push(key); el.classList.add("active"); }
-}
+/* ─────────────────────────────────────
+   LOAD PAGE
+   Strategy: template-first (zero network dependency).
+   1. Check for embedded <template id="tpl-{name}">
+   2. Found → render instantly (works offline + file://)
+   3. Not found → try fetch() for server environments
+   4. Fetch fails → friendly error, no infinite loop
+───────────────────────────────────── */
+function loadPage(pageName, pushHistory = true) {
+  if (isLoading) return;
+  const page = PAGES.find(p => p.name === pageName);
+  if (!page) { showError('Unknown page', pageName, null); return; }
+  if (pageName === activePageName) return; // already showing this page
 
-function doSearch() {
-  const cat = BUYER_STATE.domain;
-  const items = ECOM_DATA.filter(p => p.cat === cat);
-  const scored = items.map(p => {
-    let score = 0;
-    BUYER_STATE.filters.forEach(f => { if (p[f]) score += p[f]; });
-    return {...p, score};
-  }).sort((a,b) => b.score - a.score || a.price - b.price);
-  BUYER_STATE.results = scored;
-  renderMarketplace();
-}
+  isLoading = true;
+  activePageName  = pageName;
+  activeProductId = null;
 
-function renderMarketplace() {
-  stopInterval();
-  const results = BUYER_STATE.results;
-  if (!results.length) { toast("No results found","error"); return; }
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between">
-      <div style="display:flex;align-items:center;gap:8px">
-        <button class="s-btn-ghost" onclick="renderFilters('${BUYER_STATE.lastEcomCat}')">← Refine</button>
-        <span style="font-size:16px;font-weight:700">Best Deals</span>
-      </div>
-      <span style="font-size:12px;color:var(--text-muted)">${results.length} results</span>
-    </div>
-    <div class="b-notice demo"><span>🛒</span><span>Discounts are randomly generated. Not real prices.</span></div>
-    ${results.map((p,i) => {
-      const disc = Math.floor(Math.random()*20)+5;
-      const orig = Math.floor(p.price/(1-disc/100));
-      return `<div class="b-product-card">
-        <div class="b-product-row">
-          <div>
-            <div class="b-product-name">${esc(p.name)}</div>
-            <div class="b-product-seller">
-              <span class="b-badge">${esc(p.seller)}</span>
-              <span style="color:var(--amber);font-size:12px">⭐ ${p.rating}</span>
-              <span class="b-badge">${esc(p.city)}</span>
-            </div>
-          </div>
-          <div style="text-align:right">
-            <div class="b-price-main">${moneyRaw(p.price)}</div>
-            <div class="b-price-orig">${moneyRaw(orig)}</div>
-            <div style="font-size:11px;font-weight:700;color:var(--green);margin-top:3px">${disc}% OFF</div>
-          </div>
-        </div>
-        <div class="b-product-details">
-          <div><div class="b-detail-label">Stock</div><div class="b-detail-value" style="color:${p.stock>50?'var(--green)':'var(--amber)'}">${p.stock} units</div></div>
-          <div><div class="b-detail-label">Delivery</div><div class="b-detail-value">${esc(p.delivery)}</div></div>
-          <div><div class="b-detail-label">Warranty</div><div class="b-detail-value">${esc(p.warranty)}</div></div>
-          <div><div class="b-detail-label">GST</div><div class="b-detail-value" style="color:var(--green)">Included ✓</div></div>
-        </div>
-        <div class="b-product-actions">
-          <button class="b-buy" onclick="buyNow(${i})">Buy Now</button>
-          <button class="b-add" onclick="addToCart(${i})">+ Cart</button>
-        </div>
-      </div>`;
-    }).join("")}
-    <button class="b-btn-secondary" onclick="renderBuyerHome()">← Home</button>
-  </div>`;
-}
+  if (pushHistory) history.replaceState(null, '', `#page=${page.file}`);
 
-function addToCart(i) { const p = BUYER_STATE.results[i]; if (!p) return; BUYER_STATE.cart.push({type:"ecommerce",name:p.name,seller:p.seller,price:p.price,qty:1}); toast("Added: "+p.name,"success"); }
-function buyNow(i) { const p = BUYER_STATE.results[i]; if (!p) return; BUYER_STATE.cart = [{type:"ecommerce",name:p.name,seller:p.seller,price:p.price,qty:1}]; renderPayment(); }
+  setActive(pageName);
+  closeDrawer();
 
-/* ── Food ── */
-function renderFoodList() {
-  stopInterval();
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderBuyerHome()">← Back</button>
-      <h2 style="font-size:20px;font-weight:700">Food — Rajkot</h2>
-    </div>
-    <div class="b-notice demo"><span>💳</span><span>UPI demo — No real payment is processed. UTR submission tests validation & duplicate-detection only.</span></div>
-    ${FOOD_DATA.map(r => `
-    <div class="b-product-card" onclick="renderRestaurant('${r.id}')" style="cursor:pointer">
-      <div class="b-product-row">
-        <div>
-          <div class="b-product-name">${esc(r.name)}</div>
-          <div class="b-product-seller"><span class="b-badge">${esc(r.city)}</span><span style="color:var(--amber);font-size:12px">⭐ 4.8</span></div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:6px">${esc(r.brand)} · From ${moneyRaw(r.priceHint)}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${esc(r.hours)}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="b-price-main">${moneyRaw(r.priceHint)}</div>
-          <span class="b-tag b-tag-live" style="margin-top:8px">Order →</span>
-        </div>
-      </div>
-    </div>`).join("")}
-    <button class="b-btn-secondary" onclick="renderBuyerHome()">← Home</button>
-  </div>`;
-}
-
-function renderRestaurant(rid) {
-  stopInterval();
-  const r = FOOD_DATA.find(x => x.id === rid);
-  if (!r) { toast("Not found","error"); return; }
-  BUYER_STATE.selectedRestaurantId = r.id;
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderFoodList()">← Back</button>
-      <h2 style="font-size:20px;font-weight:700">${esc(r.name)}</h2>
-    </div>
-    <div class="b-notice demo"><span>💳</span><span>UPI ID is demo-only. No real transaction occurs.</span></div>
-    <div style="background:var(--surface-raised);border:1px solid var(--border-md);border-radius:var(--radius-md);padding:14px;margin-bottom:16px">
-      <div class="b-detail-label">UPI ID (demo)</div>
-      <div style="font-family:var(--font-mono);font-size:13px;margin-top:6px;color:var(--brand-orange)">${esc(r.upiId)}</div>
-    </div>
-    ${r.menu.map(item => `
-    <div class="b-product-card">
-      <div class="b-product-row">
-        <div>
-          <div class="b-product-name">${esc(item.name)}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${esc(item.desc||"")} · ${item.veg?"🟢 Veg":"🔴 Non-veg"}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="b-price-main">${moneyRaw(item.price)}</div>
-          <button class="b-add" style="margin-top:8px" onclick="addFoodItem('${item.id}')">+ Add</button>
-        </div>
-      </div>
-    </div>`).join("")}
-    <button class="b-btn-primary" onclick="renderCart()">Go to Cart →</button>
-    <button class="b-btn-secondary" onclick="renderFoodList()">← Back</button>
-  </div>`;
-}
-
-function addFoodItem(itemId) {
-  const r = FOOD_DATA.find(x => x.id === BUYER_STATE.selectedRestaurantId);
-  if (!r) return;
-  const item = r.menu.find(x => x.id === itemId);
-  if (!item) return;
-  BUYER_STATE.cart.push({type:"food",restaurantId:r.id,seller:r.name,name:item.name,price:item.price,qty:1,upiId:r.upiId});
-  toast("Added: "+item.name,"success");
-}
-
-/* ── Cart ── */
-function renderCart() {
-  stopInterval();
-  if (!BUYER_STATE.cart.length) { toast("Cart is empty","info"); renderBuyerHome(); return; }
-  const sub = BUYER_STATE.cart.reduce((s,p) => s+p.price*p.qty, 0);
-  const isFood = BUYER_STATE.cart[0]?.type === "food";
-  const gst = Math.floor(sub*(isFood?0.05:0.18));
-  const total = sub + gst;
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderBuyerHome()">← Home</button>
-      <h2 style="font-size:20px;font-weight:700">Cart (${BUYER_STATE.cart.length})</h2>
-    </div>
-    ${BUYER_STATE.cart.map((it,i) => `
-    <div class="b-product-card">
-      <div class="b-product-row">
-        <div>
-          <div class="b-product-name">${esc(it.name)}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${esc(it.seller)}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="b-price-main">${moneyRaw(it.price)}</div>
-          <button onclick="removeFromCart(${i})" style="color:var(--red);font-size:12px;font-weight:700;margin-top:8px">Remove</button>
-        </div>
-      </div>
-    </div>`).join("")}
-    <div class="b-receipt-section">
-      <div class="b-receipt-row"><span style="color:var(--text-muted)">Subtotal</span><span class="b-mono">${moneyRaw(sub)}</span></div>
-      <div class="b-receipt-row"><span style="color:var(--text-muted)">Tax (${isFood?"5":"18"}% GST)</span><span class="b-mono">${moneyRaw(gst)}</span></div>
-      <div class="b-receipt-row"><span class="b-receipt-total">Total</span><span class="b-receipt-total">${moneyRaw(total)}</span></div>
-    </div>
-    <button class="b-btn-primary" onclick="renderPayment()">Proceed to Pay</button>
-    <button class="b-btn-secondary" onclick="renderBuyerHome()">← Home</button>
-  </div>`;
-}
-
-function removeFromCart(i) { BUYER_STATE.cart.splice(i,1); if (!BUYER_STATE.cart.length) { toast("Cart empty"); renderBuyerHome(); return; } renderCart(); }
-
-/* ── Payment ── */
-function renderPayment() {
-  stopInterval();
-  if (!BUYER_STATE.cart.length) { renderBuyerHome(); return; }
-  BUYER_STATE.payMethod = null;
-  const sub = BUYER_STATE.cart.reduce((s,p) => s+p.price*p.qty, 0);
-  const isFood = BUYER_STATE.cart[0]?.type === "food";
-  const gst = Math.floor(sub*(isFood?0.05:0.18));
-  const total = sub + gst;
-
-  if (isFood) {
-    const upiId = BUYER_STATE.cart[0]?.upiId || "6351537770@yapl";
-    $("app").innerHTML = `
-    <div class="b-wrap page-enter">
-      <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-        <button class="s-btn-ghost" onclick="renderCart()">← Cart</button>
-        <h2 style="font-size:20px;font-weight:700">Pay via UPI</h2>
-      </div>
-      <div class="b-notice demo"><span>💳</span><span>Demo UPI — No real money moves.</span></div>
-      <div style="text-align:center;padding:24px;background:var(--surface-card);border:1px solid var(--border-md);border-radius:var(--radius-lg);margin-bottom:16px">
-        <div style="font-size:3rem;margin-bottom:12px">📲</div>
-        <div style="font-size:28px;font-weight:800;color:var(--brand-orange);font-family:var(--font-mono)">${moneyRaw(total)}</div>
-        <div style="font-size:12px;color:var(--text-muted);margin:12px 0 6px">UPI ID</div>
-        <div style="font-family:var(--font-mono);font-weight:700;color:var(--text-primary)">${esc(upiId)}</div>
-        <button class="b-btn-secondary" style="max-width:220px;margin:14px auto 0" onclick="copyUpiId('${esc(upiId)}')">📋 Copy UPI ID</button>
-      </div>
-      <button class="b-btn-primary" style="background:var(--green);box-shadow:none" onclick="showUTRSubmit()">I Have Paid → Submit UTR</button>
-      <button class="b-btn-secondary" onclick="renderCart()">← Back</button>
-    </div>`;
+  // ── 1. Try embedded template (always works, zero network) ──
+  const tpl = document.getElementById(`tpl-${pageName}`);
+  if (tpl) {
+    isLoading = false;
+    const clone = document.importNode(tpl.content, true);
+    const wrap  = document.createElement('div');
+    wrap.appendChild(clone);
+    injectContent(wrap.innerHTML);
     return;
   }
 
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderCart()">← Cart</button>
-      <h2 style="font-size:20px;font-weight:700">Payment — ${moneyRaw(total)}</h2>
-    </div>
-    <div class="b-notice demo"><span>💳</span><span>All checkout flows are simulated.</span></div>
-    <div style="margin-bottom:16px">
-      <div style="font-weight:700;margin-bottom:10px;font-size:14px">Choose Payment Method</div>
-      <div class="b-payment-option" id="pm-upi" onclick="selectPM('upi')"><div style="font-size:2rem">📱</div><div><div style="font-weight:700">UPI</div><div style="font-size:12px;color:var(--text-muted)">GPay / PhonePe / Paytm</div></div></div>
-      <div class="b-payment-option" id="pm-cod" onclick="selectPM('cod')"><div style="font-size:2rem">💵</div><div><div style="font-weight:700">Cash on Delivery</div><div style="font-size:12px;color:var(--text-muted)">Demo mode</div></div></div>
-    </div>
-    <button class="b-btn-primary" onclick="placeOrder()">Place Order</button>
-    <button class="b-btn-secondary" onclick="renderCart()">← Back</button>
-  </div>`;
+  // ── 2. No template: try fetch (for server environments) ──
+  showLoading();
+  const ctrl  = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 5000);
+  fetch(page.file, { signal: ctrl.signal })
+    .finally(() => clearTimeout(timer))
+    .then(res => { if (!res.ok) throw new Error(`HTTP ${res.status}`); return res.text(); })
+    .then(text => { isLoading = false; injectContent(extractBody(text)); })
+    .catch(err => { isLoading = false; showError(page.label, page.file, err); });
 }
 
-function selectPM(m) {
-  BUYER_STATE.payMethod = m;
-  document.querySelectorAll(".b-payment-option").forEach(el => el.classList.remove("selected"));
-  $("pm-"+m)?.classList.add("selected");
-  toast("Payment: "+m.toUpperCase(),"info");
+function extractBody(html) {
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return (doc.querySelector('main') || doc.querySelector('.pc') || doc.querySelector('body') || { innerHTML: html }).innerHTML;
 }
 
-function copyUpiId(id) { try { navigator.clipboard.writeText(id); toast("UPI ID copied!","success"); } catch(e) { toast("Copy: "+id); } }
-
-function showUTRSubmit() {
-  const sub = BUYER_STATE.cart.reduce((s,p) => s+p.price*p.qty, 0);
-  const gst = Math.floor(sub*0.05); const total = sub+gst;
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderPayment()">← Back</button>
-      <h2 style="font-size:20px;font-weight:700">Submit UTR</h2>
-    </div>
-    <div class="b-notice demo"><span>🔢</span><span>Enter any 12-digit number as UTR. Checks format & prevents duplicate reuse via localStorage.</span></div>
-    <div style="background:var(--surface-card);border:1px solid var(--border-md);border-radius:var(--radius-md);padding:16px;margin-bottom:16px">
-      <div style="font-size:13px;font-weight:600;margin-bottom:10px">Amount: <span style="color:var(--brand-orange);font-family:var(--font-mono)">${moneyRaw(total)}</span></div>
-      <label class="b-field-label">12-digit UTR Number</label>
-      <input id="utr-num" inputmode="numeric" class="b-input b-mono" placeholder="e.g. 123456789012" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'').slice(0,12)"/>
-      <div style="font-size:11px;color:var(--text-muted);margin-top:6px">Digits only. No spaces.</div>
-      <div id="utr-err" style="font-size:11px;color:var(--red);margin-top:6px;display:none"></div>
-    </div>
-    <button class="b-btn-primary" onclick="confirmUTR()">Submit UTR</button>
-    <button class="b-btn-secondary" onclick="renderPayment()">← Back</button>
-  </div>`;
+function injectContent(html) {
+  const el = document.getElementById('main-content');
+  el.innerHTML = html;
+  el.scrollTop = 0;
 }
 
-function confirmUTR() {
-  const el = $("utr-num"); const errEl = $("utr-err");
-  const utr = (el?.value||"").trim();
-  if (!/^\d{12}$/.test(utr)) { errEl.textContent="UTR must be exactly 12 digits"; errEl.style.display="block"; return; }
-  const idx = loadUtrIdx();
-  if (idx[utr]) { errEl.textContent="Duplicate UTR — already used in a previous order"; errEl.style.display="block"; return; }
-  errEl.style.display = "none";
-
-  const sub = BUYER_STATE.cart.reduce((s,p) => s+p.price*p.qty, 0);
-  const gst = Math.floor(sub*0.05); const total = sub+gst;
-  const id = "DEC-"+Math.random().toString(36).slice(2,4).toUpperCase()+String(Math.floor(Math.random()*10000)).padStart(4,"0");
-  const now = new Date().toISOString();
-
-  const order = {
-    id, items: BUYER_STATE.cart.slice(), subtotal:sub, tax:gst, total, payment:"upi", utr,
-    status:"utr_submitted", timestamp:now, restaurantId:BUYER_STATE.cart[0]?.restaurantId||null,
-    updates:[{status:"placed",time:now,label:"Order Placed",completed:true},{status:"utr_submitted",time:now,label:"UTR Submitted – Awaiting Confirmation",completed:true}]
-  };
-  idx[utr] = {orderId:id,ts:now}; saveUtrIdx(idx);
-  loadOrders(); BUYER_STATE.orders.push(order); saveOrders();
-  BUYER_STATE.cart = [];
-  toast("UTR submitted. Awaiting seller confirmation.","success");
-  renderLiveTracking(id);
+/* ─────────────────────────────────────
+   ACTIVE STATE
+───────────────────────────────────── */
+function setActive(pageName) {
+  activePageName = pageName;
+  renderSubpageNav();
+  renderRightSidebar();
+  renderSidebar();
 }
 
-function placeOrder() {
-  if (!BUYER_STATE.payMethod) { toast("Select payment method","error"); return; }
-  const sub = BUYER_STATE.cart.reduce((s,p) => s+p.price*p.qty, 0);
-  const gst = Math.floor(sub*0.18); const total = sub+gst;
-  const id = "ORD-"+Math.random().toString(36).slice(2,10).toUpperCase();
-  const now = new Date().toISOString();
-  const order = { id, items:BUYER_STATE.cart.slice(), subtotal:sub, tax:gst, total, payment:BUYER_STATE.payMethod, status:"confirmed", timestamp:now, updates:[{status:"placed",time:now,label:"Order Placed",completed:true},{status:"confirmed",time:now,label:"Payment Confirmed",completed:true}] };
-  loadOrders(); BUYER_STATE.orders.push(order); saveOrders();
-  BUYER_STATE.cart = []; BUYER_STATE.payMethod = null;
-  toast("Order placed!","success"); loadOrders(); renderOrders();
+/* ─────────────────────────────────────
+   UI STATES
+───────────────────────────────────── */
+function showLoading() {
+  document.getElementById('main-content').innerHTML =
+    `<div class="loading-box"><div class="spinner"></div><span style="font-family:var(--font-m);font-size:.72rem;letter-spacing:.1em;color:var(--muted)">LOADING…</span></div>`;
 }
 
-/* ── Orders ── */
-function renderOrders() {
-  stopInterval(); loadOrders();
-  if (!BUYER_STATE.orders.length) { $("app").innerHTML = `<div class="b-wrap page-enter"><div style="text-align:center;padding:60px 20px"><div style="font-size:3rem;margin-bottom:14px">📦</div><div style="font-size:18px;font-weight:700;color:var(--text-secondary)">No orders yet</div><div style="font-size:13px;color:var(--text-muted);margin-top:8px">Your orders will appear here</div></div><button class="b-btn-secondary" onclick="renderBuyerHome()">← Home</button></div>`; return; }
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderBuyerHome()">← Home</button>
-      <h2 style="font-size:20px;font-weight:700">My Orders</h2>
-    </div>
-    ${BUYER_STATE.orders.slice().reverse().map(o => `
-    <div class="b-product-card" onclick="renderLiveTracking('${o.id}')" style="cursor:pointer;margin-bottom:12px">
-      <div class="b-product-row">
-        <div>
-          <div class="b-product-name" style="font-size:13px;font-family:var(--font-mono)">${esc(o.id)}</div>
-          <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${fmtDate(o.timestamp)}</div>
-        </div>
-        <div style="text-align:right">
-          <div class="b-price-main" style="font-size:18px">${moneyRaw(o.total)}</div>
-          <div style="font-size:11px;font-weight:700;margin-top:4px;color:${o.status==='delivered'?'var(--green)':o.status==='confirmed'?'var(--brand-orange)':'var(--amber)'}">${o.status.toUpperCase()}</div>
-        </div>
+function showError(label, file, err) {
+  document.getElementById('main-content').innerHTML = `
+    <div style="max-width:460px;margin:2rem auto;display:flex;flex-direction:column;gap:.85rem">
+      <span style="font-family:var(--font-m);font-size:.65rem;color:#f55;border:1px solid rgba(255,85,85,.3);padding:.22rem .6rem;border-radius:2px;width:fit-content">ERROR · LOAD FAILED</span>
+      <h2 style="font-size:1.3rem;font-weight:800">${escH(label)}</h2>
+      <p style="font-size:.84rem;color:var(--muted2);line-height:1.6">The page could not be loaded.</p>
+      ${err ? `<code style="font-family:var(--font-m);font-size:.72rem;color:var(--muted)">${escH(String(err))}</code>` : ''}
+      <a href="${escH(file)}" target="_blank" rel="noopener"
+         style="display:inline-flex;align-items:center;gap:.4rem;font-family:var(--font-m);font-size:.73rem;color:var(--orange);border:1px solid var(--orange-dim);padding:.42rem .9rem;border-radius:2px;text-decoration:none;width:fit-content">
+        Open Raw File ↗
+      </a>
+    </div>`;
+}
+
+function renderHomePage() {
+  activePageName  = null;
+  activeProductId = null;
+  history.replaceState(null, '', window.location.pathname);
+  setActive(null);
+
+  const productPages = PAGES.filter(p => p.section === 'products');
+  const legalPages   = PAGES.filter(p => p.section === 'legal');
+
+  document.getElementById('main-content').innerHTML = `
+    <div class="home-wrap">
+      <h2>Welcome to <span>VIA Decide</span></h2>
+      <p class="home-sub">// SELECT A VIEW OR BROWSE PRODUCTS IN THE PANEL · TAP ☰ ON MOBILE</p>
+      <div class="card-grid">
+        ${productPages.map(p => `
+          <div class="card" onclick="loadPage('${p.name}')">
+            <div class="card-ic">${p.icon}</div>
+            <div class="card-t">${escH(p.label)}</div>
+            <div class="card-d">Open the ${escH(p.label.toLowerCase())} view</div>
+          </div>`).join('')}
       </div>
-    </div>`).join("")}
-    <button class="b-btn-secondary" onclick="renderBuyerHome()">← Home</button>
-  </div>`;
-}
-
-/* ── Live Tracking ── */
-function renderLiveTracking(orderId) {
-  stopInterval(); loadOrders();
-  const order = BUYER_STATE.orders.find(o => o.id === orderId);
-  if (!order) { toast("Order not found","error"); return; }
-  const steps = [{status:"placed",label:"Order Placed",icon:"✓"},{status:"utr_submitted",label:"UTR Submitted",icon:"✓"},{status:"confirmed",label:"Payment Confirmed",icon:"✓"},{status:"preparing",label:"Preparing",icon:"⏳"},{status:"ready",label:"Ready",icon:"📦"},{status:"delivered",label:"Delivered",icon:"🎉"}];
-  const getUpdate = st => (order.updates||[]).find(u => u.status === st);
-
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderOrders()">← Orders</button>
-      <h2 style="font-size:20px;font-weight:700">Live Tracking</h2>
-    </div>
-    <div style="background:var(--orange-dim);border:1px solid var(--orange-border);border-radius:var(--radius-lg);padding:16px;margin-bottom:16px;text-align:center">
-      <div style="font-size:2rem;margin-bottom:8px">📦</div>
-      <div style="font-weight:700;color:var(--brand-orange)">${order.status.replace(/_/g," ").toUpperCase()}</div>
-      <div style="font-size:11px;font-family:var(--font-mono);color:var(--text-muted);margin-top:6px">${esc(orderId)}</div>
-    </div>
-    <div class="b-product-card" style="margin-bottom:16px">
-      ${steps.map(s => { const u = getUpdate(s.status); return `<div class="b-tracking-item ${u?'done':''}">${!["delivered"].includes(s.status)?'<div class="b-tracking-line"></div>':''}<div class="b-tracking-dot">${u?'✓':s.icon}</div><div style="margin-left:44px"><div class="b-tracking-label">${esc(s.label)}</div>${u?`<div class="b-tracking-time">${fmtDate(u.time)}</div>`:'<div class="b-tracking-time" style="color:var(--text-dim)">Pending</div>'}</div></div>`; }).join("")}
-    </div>
-    <div class="b-receipt-section" style="margin-bottom:16px">
-      <div class="b-receipt-row"><span style="color:var(--text-muted)">Payment</span><span style="color:var(--green);font-weight:700">${String(order.payment||"UPI").toUpperCase()}</span></div>
-      ${order.utr?`<div class="b-receipt-row"><span style="color:var(--text-muted)">UTR</span><span class="b-mono">${esc(order.utr)}</span></div>`:''}
-      <div class="b-receipt-row"><span style="color:var(--text-muted)">Total</span><span class="b-receipt-total">${moneyRaw(order.total)}</span></div>
-    </div>
-    <button class="b-pdf-btn" onclick="downloadBuyerReceipt('${orderId}')">📄 Download Receipt PDF</button>
-    ${order.status==="utr_submitted"?`<button class="b-btn-primary" style="background:var(--green);box-shadow:none;margin-top:10px" onclick="simulateConfirm('${orderId}')">🟢 Simulate Seller Confirm</button>`:''}
-    <button class="b-btn-secondary" onclick="renderOrders()">← Orders</button>
-    <div class="b-notice info" style="margin-top:16px"><span>⏱️</span><span>Auto-refreshes every 10s (polls localStorage)</span></div>
-  </div>`;
-
-  BUYER_STATE.liveInterval = setInterval(() => {
-    loadOrders();
-    const updated = BUYER_STATE.orders.find(o => o.id === orderId);
-    if (updated && JSON.stringify(updated.updates||[]) !== JSON.stringify(order.updates||[])) {
-      renderLiveTracking(orderId);
-    }
-  }, 10000);
-}
-
-function simulateConfirm(orderId) {
-  loadOrders();
-  const order = BUYER_STATE.orders.find(o => o.id === orderId);
-  if (!order) return;
-  const now = new Date().toISOString();
-  order.status = "confirmed";
-  order.updates = order.updates||[];
-  order.updates.push({status:"confirmed",time:now,label:"Payment Confirmed ✓",completed:true});
-  order.updates.push({status:"preparing",time:now,label:"Restaurant Preparing",completed:true});
-  saveOrders(); toast("Seller confirmed (simulated)","success"); renderLiveTracking(orderId);
-}
-
-/* ── Waitlist ── */
-function renderWaitlist() {
-  $("app").innerHTML = `
-  <div class="b-wrap page-enter">
-    <div style="margin-bottom:20px;display:flex;align-items:center;gap:8px">
-      <button class="s-btn-ghost" onclick="renderBuyerHome()">← Home</button>
-      <h2 style="font-size:20px;font-weight:700">Join Waitlist</h2>
-    </div>
-    <div class="b-notice demo"><span>☁️</span><span>Calls Supabase Edge Function if available, otherwise saves locally.</span></div>
-    <label class="b-field-label">Email</label><input id="wl-email" type="email" class="b-input" placeholder="you@example.com"/>
-    <label class="b-field-label">City (optional)</label><input id="wl-city" class="b-input" placeholder="e.g. Rajkot"/>
-    <label class="b-field-label">I am (optional)</label><input id="wl-interest" class="b-input" placeholder="buyer / seller / developer"/>
-    <div style="height:16px"></div>
-    <button class="b-btn-primary" onclick="submitWaitlist()">Get Early Access</button>
-    <button class="b-btn-secondary" onclick="renderBuyerHome()">← Cancel</button>
-  </div>`;
-}
-
-async function submitWaitlist() {
-  const email = ($("wl-email")?.value||"").trim();
-  const city = ($("wl-city")?.value||"").trim();
-  const interest = ($("wl-interest")?.value||"").trim();
-  if (!email || email.indexOf("@") < 1) { toast("Enter valid email","error"); return; }
-  try {
-    await apiPost("waitlist",{email,city:city||null,interest:interest||null,source:"index",device_id:BUYER_STATE.deviceId});
-    toast("Added to waitlist!","success");
-  } catch(e) {
-    try { const a = JSON.parse(localStorage.getItem("waitlist_local")||"[]"); a.push({email,city,interest,ts:new Date().toISOString()}); localStorage.setItem("waitlist_local",JSON.stringify(a)); } catch(ex){}
-    toast("Saved locally (demo)","info");
-  }
-  setTimeout(() => renderBuyerHome(), 1200);
-}
-
-/* ── PDF Receipt ── */
-function downloadBuyerReceipt(orderId) {
-  loadOrders();
-  const order = BUYER_STATE.orders.find(o => o.id === orderId);
-  if (!order) { toast("Order not found","error"); return; }
-  const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
-  if (!jsPDF) { toast("PDF loading, try again","error"); return; }
-  const doc = new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
-  const W = doc.internal.pageSize.getWidth(); const M = 18;
-  doc.setFillColor(8,15,25); doc.rect(0,0,W,297,"F");
-  doc.setFillColor(255,103,31); doc.rect(0,0,W,40,"F");
-  doc.setFontSize(22);doc.setFont("helvetica","bold");doc.setTextColor(0,0,0);doc.text("DECIDE",M,16);
-  doc.setFontSize(9);doc.setFont("helvetica","normal");doc.text("India's Smart Marketplace",M,23);
-  doc.setFontSize(14);doc.setFont("helvetica","bold");doc.text("ORDER RECEIPT",W-M,16,{align:"right"});
-  doc.setFontSize(8);doc.setFont("helvetica","normal");doc.text("Demo Build",W-M,23,{align:"right"});
-  let y=54;
-  doc.setFillColor(30,30,30);doc.setDrawColor(50,50,50);doc.roundedRect(M,y,W-M*2,16,3,3,"FD");
-  doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(255,179,0);
-  doc.text("⚠ DEMO RECEIPT: No real payment was processed.",M+5,y+7);
-  doc.setFont("helvetica","normal");doc.setTextColor(180,130,30);doc.text("UTR submitted is for testing only.",M+5,y+13);
-  y+=24;
-  const fields=[["ORDER ID",order.id],["DATE",fmtDate(order.timestamp)],["PAYMENT",order.payment?.toUpperCase()],order.utr?["UTR",order.utr]:null,["STATUS",order.status?.toUpperCase()]].filter(Boolean);
-  fields.forEach(([k,v])=>{doc.setFontSize(8);doc.setFont("helvetica","bold");doc.setTextColor(100,110,130);doc.text(k,M,y);doc.setFont("helvetica","normal");doc.setTextColor(200,215,230);doc.text(String(v||""),M+50,y);y+=8;});
-  y+=8;
-  doc.setFontSize(9);doc.setFont("helvetica","bold");doc.setTextColor(150,165,185);doc.text("ITEMS",M,y);y+=8;
-  (order.items||[]).forEach(it=>{doc.setFont("helvetica","normal");doc.setTextColor(220,230,240);doc.setFontSize(8.5);doc.text(String(it.name||"").substring(0,30),M,y);doc.text(moneyRaw(it.price),W-M,y,{align:"right"});y+=8;});
-  y+=4;doc.setDrawColor(60,60,60);doc.line(M,y,W-M,y);y+=8;
-  [["Subtotal",moneyRaw(order.subtotal)],["Tax",moneyRaw(order.tax)],["TOTAL",moneyRaw(order.total)]].forEach(([l,v],i)=>{doc.setFont("helvetica",i===2?"bold":"normal");doc.setFontSize(i===2?11:8.5);doc.setTextColor(i===2?40:160,i===2?220:170,i===2?130:190);doc.text(l,W*0.5,y);doc.text(v,W-M,y,{align:"right"});y+=i===2?0:8;});
-  doc.setFillColor(0,230,118);doc.rect(0,282,W,3,"F");
-  doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(80,90,110);doc.text("DECIDE INDIA • decideindia.com • ⚠ DEMO ONLY",W/2,290,{align:"center"});
-  doc.save("Decide-Receipt-"+order.id+".pdf");
-  toast("Receipt downloaded","success");
-}
-
-/* ══════════════════════════════════════════════════════════
-   ████████████████  SELLER MODE  ████████████████
-══════════════════════════════════════════════════════════ */
-
-const SELLER_DB = {
-  sellers: {
-    "SELL-001": {
-      id:"SELL-001",name:"Rajkot Thali House",email:"owner@rajkotthali.com",
-      gstin:"24AABCT1234M1Z5",pan:"AABCT1234M",phone:"+91 98765 43210",
-      business_type:"Food & Beverage",city:"Rajkot, Gujarat",bank_last4:"4821",
-      onboarding:{kyc:"verified",gst:"verified",bank:"verified",catalog:"in_progress",ondc:"submitted"}
-    }
-  },
-  orders: {
-    "ORD-20240101-0047":{id:"ORD-20240101-0047",seller_id:"SELL-001",buyer_name:"Priya Shah",amount:850,items:["Unlimited Gujarati Thali x2","Chaas x2"],created_at:"2024-01-28T11:30:00Z"},
-    "ORD-20240101-0052":{id:"ORD-20240101-0052",seller_id:"SELL-001",buyer_name:"Arjun Mehta",amount:1200,items:["Thali x4","Pav Bhaji x2"],created_at:"2024-01-29T13:15:00Z"},
-    "ORD-20240101-0061":{id:"ORD-20240101-0061",seller_id:"SELL-001",buyer_name:"Nisha Patel",amount:450,items:["Pav Bhaji x3","Chaas x3"],created_at:"2024-01-30T18:45:00Z"}
-  },
-  utr_submissions:{}, utr_index:{}, utr_audit:[],
-  settlements:[
-    {id:"SET-001",order_id:"ORD-20231215-0031",gross_amount:1500,platform_fee:75,tax_on_fee:13.5,net_amount:1411.5,status:"paid",payment_method:"NEFT",settlement_utr:"509821341209",settlement_date:"2023-12-17T14:22:00Z",invoice_available:true,invoice_number:"DEC/2023-24/001"},
-    {id:"SET-002",order_id:"ORD-20231220-0038",gross_amount:980,platform_fee:49,tax_on_fee:8.82,net_amount:922.18,status:"paid",payment_method:"IMPS",settlement_utr:"509821399001",settlement_date:"2023-12-22T10:05:00Z",invoice_available:true,invoice_number:"DEC/2023-24/002"},
-    {id:"SET-003",order_id:"ORD-20240105-0041",gross_amount:2200,platform_fee:110,tax_on_fee:19.8,net_amount:2070.2,status:"processing",payment_method:"NEFT",settlement_utr:null,settlement_date:null,invoice_available:false,invoice_number:null}
-  ]
-};
-
-const SELLER_STATE = { currentSeller:null, activeOrderId:null, activeSubId:null };
-
-const SELLER_API = {
-  validateUTR(utr, orderId) {
-    const t = String(utr||"").trim();
-    if (!/^\d{12}$/.test(t)) return {valid:false,format_error:"UTR must be exactly 12 digits (numbers only)"};
-    const existId = SELLER_DB.utr_index[t];
-    if (existId) {
-      const ex = SELLER_DB.utr_submissions[existId];
-      if (ex && ex.order_id === orderId && ex.seller_id === SELLER_STATE.currentSeller) return {valid:true,duplicate:true,scope:"same_order"};
-      return {valid:true,duplicate:true,scope:"different_order"};
-    }
-    return {valid:true,duplicate:false};
-  },
-  submitUTR(orderId, utr, amount) {
-    const v = this.validateUTR(utr, orderId);
-    if (!v.valid) return {error:"INVALID",message:v.format_error};
-    if (v.duplicate) {
-      if (v.scope === "same_order") return {error:"ALREADY_SUBMITTED",sub_id:SELLER_DB.utr_index[utr]};
-      return {error:"DUPLICATE_UTR"};
-    }
-    const order = SELLER_DB.orders[orderId];
-    if (!order || order.seller_id !== SELLER_STATE.currentSeller) return {error:"ORDER_NOT_FOUND"};
-    const subId = "UTR-"+Date.now().toString(36).toUpperCase()+"-"+Math.random().toString(36).slice(2,5).toUpperCase();
-    const audId = "AUD-"+Date.now().toString(36).toUpperCase();
-    const now = new Date().toISOString();
-    const sub = {id:subId,utr_number:utr,order_id:orderId,seller_id:SELLER_STATE.currentSeller,amount_declared:amount,status:"submitted",submitted_at:now,verified_at:null,rejection_reason:null,audit_log_id:audId,created_at:now,updated_at:now};
-    SELLER_DB.utr_submissions[subId] = sub;
-    SELLER_DB.utr_index[utr] = subId;
-    SELLER_DB.utr_audit.push({id:audId,utr_submission_id:subId,from_status:null,to_status:"submitted",actor_id:SELLER_STATE.currentSeller,actor_type:"seller",note:"Initial UTR submission",created_at:now});
-    setTimeout(() => {
-      const s = SELLER_DB.utr_submissions[subId];
-      if (s && s.status === "submitted") {
-        const n2 = new Date().toISOString();
-        s.status = "under_review"; s.updated_at = n2;
-        SELLER_DB.utr_audit.push({id:"AUD-"+Date.now().toString(36).toUpperCase(),utr_submission_id:subId,from_status:"submitted",to_status:"under_review",actor_id:"SYSTEM",actor_type:"system",note:"Forwarded for bank reconciliation check",created_at:n2});
-        if (SELLER_STATE.activeSubId === subId && MODE === "seller") renderUTRStatus(subId);
-      }
-    }, 2000);
-    return {sub_id:subId,status:"submitted",audit_id:audId};
-  },
-  getTimeline(subId) {
-    const sub = SELLER_DB.utr_submissions[subId]; if (!sub) return null;
-    const events = SELLER_DB.utr_audit.filter(e => e.utr_submission_id === subId);
-    return {sub_id:subId,status:sub.status,utr_masked:sub.utr_number.slice(0,-4).replace(/\d/g,"•")+sub.utr_number.slice(-4),amount:sub.amount_declared,order_id:sub.order_id,rejection_reason:sub.rejection_reason,audit_id:sub.audit_log_id,events};
-  },
-  adminResolve(subId, approved, reason) {
-    const sub = SELLER_DB.utr_submissions[subId]; if (!sub) return false;
-    const now = new Date().toISOString();
-    const ns = approved ? "verified" : "rejected";
-    SELLER_DB.utr_audit.push({id:"AUD-"+Date.now().toString(36).toUpperCase(),utr_submission_id:subId,from_status:sub.status,to_status:ns,actor_id:"ADMIN-001",actor_type:"admin",note:approved?"UTR matched in payment gateway":(reason||"Could not verify UTR"),created_at:now});
-    sub.status=ns; sub.verified_at=now; sub.verified_by="ADMIN-001";
-    if (!approved) { sub.rejection_reason=reason||"Unable to verify UTR against bank records."; delete SELLER_DB.utr_index[sub.utr_number]; }
-    sub.updated_at=now; return true;
-  }
-};
-
-function chipHTML(status) {
-  const m = {not_started:["muted","Not Started"],pending:["amber","Pending"],submitted:["amber","Submitted"],under_review:["amber","Under Review"],in_progress:["amber","In Progress"],processing:["amber","Processing"],verified:["green","Verified"],active:["green","Active"],paid:["green","Paid"],rejected:["red","Rejected"],live:["green","Live"]};
-  const [cls,label] = m[status]||["muted",status];
-  return `<span class="s-chip ${cls}"><span class="s-chip-dot"></span>${label}</span>`;
-}
-function encBadge() { return `<div class="s-enc-badge"><span>🔒</span><span>Encrypted &amp; Secure</span></div>`; }
-
-function renderSellerLogin() {
-  $("app").innerHTML = `
-  <div class="s-login-wrap page-enter">
-    <div class="s-login-box">
-      <div style="display:inline-flex;align-items:center;gap:8px;background:var(--orange-dim);border:1px solid var(--orange-border);color:var(--brand-orange);font-size:10px;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 11px;border-radius:var(--radius-sm);margin-bottom:18px">
-        <span class="ondc-chip" style="font-size:9px">ONDC</span> Seller Portal
-      </div>
-      <div class="s-login-title">Seller Sign In</div>
-      <div class="s-login-sub">Enter your registered seller credentials to access your portal.</div>
-      <div class="s-field">
-        <label class="s-field-label">Email Address <span class="req">*</span></label>
-        <input id="sl-email" type="email" class="s-input" placeholder="you@business.com" value="owner@rajkotthali.com"/>
-        ${encBadge()}
-      </div>
-      <div class="s-field">
-        <label class="s-field-label">Password <span class="req">*</span></label>
-        <input id="sl-password" type="password" class="s-input" placeholder="••••••••••" value="password123"/>
-        ${encBadge()}
-      </div>
-      <button class="s-btn-primary" onclick="handleSellerLogin()">Sign In to Seller Portal</button>
-      <div style="text-align:center;font-size:12px;color:var(--text-dim);margin-top:12px">
-        Use <strong style="color:var(--text-secondary)">owner@rajkotthali.com</strong> / any password to demo
-      </div>
-      <div style="text-align:center;margin-top:12px">
-        <span style="font-size:12px;color:var(--text-muted)">Not a seller? </span>
-        <button class="s-btn-ghost" onclick="setMode('buyer')" style="color:var(--brand-orange)">Browse Marketplace →</button>
-      </div>
-    </div>
-  </div>`;
-}
-
-function handleSellerLogin() {
-  const email = ($("sl-email")?.value||"").trim();
-  if (!email || email.indexOf("@") < 1) { toast("Enter valid email","error"); return; }
-  const btn = document.querySelector(".s-btn-primary");
-  if (btn) { btn.disabled=true; btn.innerHTML=`<span class="spinner"></span> Signing in…`; }
-  setTimeout(() => { SELLER_STATE.currentSeller = "SELL-001"; renderSellerDashboard(); toast("Welcome back, Rajkot Thali House","success"); }, 900);
-}
-
-function renderSellerDashboard() {
-  const seller = SELLER_DB.sellers[SELLER_STATE.currentSeller];
-  const paidSets = SELLER_DB.settlements.filter(s => s.status==="paid");
-  const totalPaid = paidSets.reduce((s,x) => s+x.net_amount, 0);
-  const pendSets = SELLER_DB.settlements.filter(s => s.status==="processing");
-  const pendAmt = pendSets.reduce((s,x) => s+x.gross_amount, 0);
-  const ob = seller.onboarding;
-  const ordersNeedUTR = Object.values(SELLER_DB.orders).filter(o => !Object.values(SELLER_DB.utr_submissions).find(u => u.order_id===o.id && u.status!=="rejected"));
-  const recentSubs = Object.values(SELLER_DB.utr_submissions).slice(-3).reverse();
-
-  const obSteps = [
-    {key:"kyc",label:"KYC Verification",icon:"👤",desc:"PAN & Aadhaar"},
-    {key:"gst",label:"GST Registration",icon:"📋",desc:"GSTIN via GST portal"},
-    {key:"bank",label:"Bank Account",icon:"🏦",desc:"Settlement account linked"},
-    {key:"catalog",label:"Product Catalog",icon:"🛍️",desc:"Active ONDC listings"},
-    {key:"ondc",label:"ONDC Integration",icon:"🇮🇳",desc:"Network participant approval"}
-  ];
-
-  $("app").innerHTML = `
-  <div class="s-wrap page-enter">
-    <div class="s-page-header">
-      <div style="display:flex;align-items:center;justify-content:space-between">
-        <div>
-          <div class="s-page-title">Good day, <span>${esc(seller.name)}</span></div>
-          <div class="s-page-sub">Seller ID: <span style="font-family:var(--font-mono);color:var(--text-secondary)">${seller.id}</span> · ${esc(seller.city)} · ${esc(seller.business_type)}</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="s-btn-ghost" onclick="showModal('modal-support')">Support</button>
-          <button class="s-btn-ghost" onclick="sellerLogout()" style="color:var(--text-dim)">Sign out</button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stats -->
-    <div class="s-grid-2" style="grid-template-columns:1fr 1fr 1fr 1fr;margin-bottom:16px">
-      <div class="s-stat-card"><div class="s-stat-label">Total Settled (Net)</div><div class="s-stat-value" style="color:var(--green)">${money(totalPaid)}</div><div class="s-stat-note">${paidSets.length} settlements</div></div>
-      <div class="s-stat-card"><div class="s-stat-label">Pending Settlement</div><div class="s-stat-value" style="color:var(--amber)">${money(pendAmt)}</div><div class="s-stat-note">${pendSets.length} processing</div></div>
-      <div class="s-stat-card"><div class="s-stat-label">Orders Awaiting UTR</div><div class="s-stat-value" style="color:${ordersNeedUTR.length>0?'var(--brand-orange)':'var(--green)'}">${ordersNeedUTR.length}</div><div class="s-stat-note">${ordersNeedUTR.length>0?"Action required":"All submitted"}</div></div>
-      <div class="s-stat-card"><div class="s-stat-label">ONDC Status</div><div style="margin-top:8px">${chipHTML(ob.ondc)}</div><div class="s-stat-note">Review in progress</div></div>
-    </div>
-
-    <!-- Onboarding -->
-    <div class="s-card" style="margin-bottom:16px">
-      <div class="s-card-header">
-        <div><div class="s-card-title">Onboarding Progress</div><div class="s-card-sub">Complete all steps to go live</div></div>
-        <span style="font-size:12px;color:var(--text-muted)">${obSteps.filter(s=>ob[s.key]==="verified"||ob[s.key]==="active").length}/${obSteps.length} done</span>
-      </div>
-      ${obSteps.map(step => {
-        const st = ob[step.key];
-        const bgC = {verified:"var(--green-dim)",active:"var(--green-dim)",in_progress:"var(--amber-dim)",submitted:"var(--amber-dim)"}[st]||"rgba(255,255,255,0.03)";
-        return `<div class="s-check-row">
-          <div class="s-check-icon" style="background:${bgC}">${step.icon}</div>
-          <div style="flex:1"><div style="font-weight:600;font-size:13px">${esc(step.label)}</div><div style="font-size:11px;color:var(--text-muted);margin-top:2px">${esc(step.desc)}</div></div>
-          <div style="display:flex;align-items:center;gap:10px">${chipHTML(st)}</div>
-        </div>`;
-      }).join("")}
-    </div>
-
-    <!-- Orders needing UTR -->
-    <div class="s-card" style="margin-bottom:16px">
-      <div class="s-card-header">
-        <div><div class="s-card-title">Submit UTR for Orders</div><div class="s-card-sub">Orders waiting for UTR submission</div></div>
-      </div>
-      ${ordersNeedUTR.length===0 ? `<div style="text-align:center;padding:32px;color:var(--text-muted)"><div style="font-size:2rem;margin-bottom:10px">✅</div><div style="font-weight:600">All UTRs Submitted</div></div>` : `
-      <div class="s-table-wrap">
-        <table class="s-table">
-          <thead><tr><th>Order ID</th><th>Buyer</th><th>Amount</th><th>Date</th><th>Action</th></tr></thead>
-          <tbody>
-            ${ordersNeedUTR.map(o => `<tr>
-              <td class="s-mono">${esc(o.id)}</td>
-              <td>${esc(o.buyer_name)}</td>
-              <td class="s-mono">${money(o.amount)}</td>
-              <td class="s-muted">${fmtDateOnly(o.created_at)}</td>
-              <td><button class="s-btn-ghost" style="color:var(--brand-orange);font-weight:700" onclick="renderUTRSubmit('${esc(o.id)}')">Submit UTR →</button></td>
-            </tr>`).join("")}
-          </tbody>
-        </table>
-      </div>`}
-    </div>
-
-    <!-- Recent Submissions -->
-    <div class="s-card" style="margin-bottom:16px">
-      <div class="s-card-header">
-        <div><div class="s-card-title">Recent UTR Submissions</div><div class="s-card-sub">Track verification status</div></div>
-      </div>
-      ${recentSubs.length===0 ? `<div style="text-align:center;padding:32px;color:var(--text-muted)"><div style="font-size:2rem;margin-bottom:10px">📋</div><div style="font-weight:600">No UTR submissions yet</div></div>` : `
-      <div class="s-table-wrap">
-        <table class="s-table">
-          <thead><tr><th>Submission ID</th><th>Order</th><th>UTR (masked)</th><th>Amount</th><th>Status</th><th></th></tr></thead>
-          <tbody>
-            ${recentSubs.map(sub => { const masked = sub.utr_number.slice(0,-4).replace(/\d/g,"•")+sub.utr_number.slice(-4); return `<tr>
-              <td class="s-mono" style="font-size:10px">${esc(sub.id)}</td>
-              <td class="s-mono" style="font-size:10px">${esc(sub.order_id)}</td>
-              <td class="s-mono">${esc(masked)}</td>
-              <td class="s-mono">${money(sub.amount_declared)}</td>
-              <td>${chipHTML(sub.status)}</td>
-              <td><button class="s-btn-ghost" style="font-size:11px" onclick="renderUTRStatus('${esc(sub.id)}')">View →</button></td>
-            </tr>`; }).join("")}
-          </tbody>
-        </table>
-      </div>`}
-    </div>
-
-    <!-- Settlements -->
-    <div class="s-card" style="margin-bottom:16px">
-      <div class="s-card-header">
-        <div><div class="s-card-title">Settlement History</div><div class="s-card-sub">Download GST invoices</div></div>
-        <button class="s-btn-ghost" style="color:var(--brand-orange)" onclick="exportCSV()">↓ CSV</button>
-      </div>
-      <div class="s-table-wrap">
-        <table class="s-table">
-          <thead><tr><th>Order</th><th>Gross</th><th>Fees</th><th>Net Paid</th><th>Method</th><th>Date</th><th>Status</th><th>Invoice</th></tr></thead>
-          <tbody>
-            ${SELLER_DB.settlements.map(s => `<tr>
-              <td class="s-mono" style="font-size:10px">${esc(s.order_id)}</td>
-              <td class="s-mono">${money(s.gross_amount)}</td>
-              <td class="s-mono s-muted">${money(s.platform_fee+s.tax_on_fee)}</td>
-              <td class="s-mono" style="color:var(--green);font-weight:700">${money(s.net_amount)}</td>
-              <td>${esc(s.payment_method)}</td>
-              <td class="s-muted">${fmtDateOnly(s.settlement_date)}</td>
-              <td>${chipHTML(s.status)}</td>
-              <td>${s.invoice_available?`<button class="s-btn-ghost" style="color:var(--blue);font-size:11px" onclick="downloadInvoicePDF('${s.id}')">↓ PDF</button>`:`<span style="font-size:11px;color:var(--text-dim)">Pending</span>`}</td>
-            </tr>`).join("")}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  </div>`;
-}
-
-function sellerLogout() { SELLER_STATE.currentSeller = null; SELLER_STATE.activeOrderId = null; SELLER_STATE.activeSubId = null; renderSellerLogin(); }
-
-function renderUTRSubmit(orderId) {
-  SELLER_STATE.activeOrderId = orderId;
-  const order = SELLER_DB.orders[orderId];
-  if (!order) { renderSellerDashboard(); return; }
-  $("app").innerHTML = `
-  <div class="s-wrap page-enter">
-    <div class="s-page-header">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <button class="s-btn-ghost" onclick="renderSellerDashboard()">← Dashboard</button>
-        <span style="color:var(--text-dim)">/</span>
-        <span style="font-size:13px;color:var(--text-muted)">Submit UTR</span>
-      </div>
-      <div class="s-page-title">Submit Payment UTR</div>
-      <div class="s-page-sub">Enter the 12-digit UTR from your bank transaction to verify payment.</div>
-    </div>
-
-    <div style="max-width:580px">
-      <!-- Order Summary -->
-      <div class="s-card" style="background:var(--surface-raised);margin-bottom:16px">
-        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Order Details</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div><div class="s-field-label">Order ID</div><div style="font-family:var(--font-mono);font-size:12px;color:var(--text-primary)">${esc(orderId)}</div></div>
-          <div><div class="s-field-label">Buyer</div><div style="font-size:13px">${esc(order.buyer_name)}</div></div>
-          <div><div class="s-field-label">Amount</div><div style="font-size:22px;font-weight:800;color:var(--brand-orange);font-family:var(--font-mono)">${money(order.amount)}</div></div>
-          <div><div class="s-field-label">Items</div><div style="font-size:11px;color:var(--text-secondary)">${order.items.map(esc).join(", ")}</div></div>
-        </div>
-      </div>
-
-      <div class="s-card" style="margin-bottom:16px">
-        <div class="s-notice info" style="margin-bottom:16px"><span>ℹ️</span><span><strong>How to find UTR:</strong> UPI App → Transaction History → Tap payment → Copy 12-digit UTR/Reference number.</span></div>
-
-        <div class="s-field">
-          <label class="s-field-label">UTR Number <span class="req">*</span></label>
-          <input id="s-utr" type="text" inputmode="numeric" class="s-input s-input-mono" placeholder="e.g. 423156789012" maxlength="12" oninput="this.value=this.value.replace(/\D/g,'').slice(0,12);onUTRChange(this)" onblur="onUTRBlur(this)"/>
-          ${encBadge()}
-          <div id="s-utr-err" class="s-field-error"></div>
-          <div id="s-utr-ok" class="s-field-ok"></div>
-          <div class="s-field-help">12 digits only. Copy directly from UPI app.</div>
-        </div>
-
-        <div class="s-field">
-          <label class="s-field-label">Declared Amount <span class="req">*</span></label>
-          <input id="s-amt" type="number" class="s-input s-input-mono" value="${order.amount}" step="0.01" min="1"/>
-          ${encBadge()}
-          <div class="s-field-help">Must match amount paid. ±5% tolerance accepted.</div>
-        </div>
-      </div>
-
-      <button class="s-btn-primary" onclick="handleUTRSubmit()" id="s-submit-btn">Submit UTR for Verification</button>
-      <button class="s-btn-secondary" onclick="renderSellerDashboard()">Cancel</button>
-    </div>
-  </div>`;
-}
-
-let utrTimer = null;
-function onUTRChange(el) {
-  const errEl = $("s-utr-err"); const okEl = $("s-utr-ok");
-  errEl.classList.remove("show"); okEl.classList.remove("show");
-  el.classList.remove("is-error","is-valid");
-  clearTimeout(utrTimer);
-  if (el.value.length === 12) utrTimer = setTimeout(() => onUTRBlur(el), 400);
-}
-function onUTRBlur(el) {
-  const val = el.value.trim();
-  const errEl = $("s-utr-err"); const okEl = $("s-utr-ok");
-  if (!val) return;
-  const r = SELLER_API.validateUTR(val, SELLER_STATE.activeOrderId);
-  if (!r.valid) { errEl.textContent=r.format_error; errEl.classList.add("show"); el.classList.add("is-error"); return; }
-  if (r.duplicate) {
-    errEl.textContent = r.scope==="same_order" ? "Already submitted for this order." : "This UTR is linked to another order.";
-    errEl.classList.add("show"); el.classList.add("is-error"); return;
-  }
-  okEl.textContent = "UTR format valid — proceed to submit."; okEl.classList.add("show"); el.classList.add("is-valid");
-}
-
-function handleUTRSubmit() {
-  const utrEl = $("s-utr"); const amtEl = $("s-amt"); const btn = $("s-submit-btn");
-  const utr = (utrEl?.value||"").trim(); const amt = parseFloat(amtEl?.value||"0");
-  const errEl = $("s-utr-err");
-  if (!/^\d{12}$/.test(utr)) { errEl.textContent="UTR must be exactly 12 digits"; errEl.classList.add("show"); utrEl.classList.add("is-error"); return; }
-  if (!amt || amt <= 0) { toast("Enter valid amount","error"); return; }
-  btn.disabled=true; btn.innerHTML=`<span class="spinner"></span> Submitting…`;
-  setTimeout(() => {
-    const result = SELLER_API.submitUTR(SELLER_STATE.activeOrderId, utr, amt);
-    if (result.error === "DUPLICATE_UTR") { btn.disabled=false; btn.innerHTML="Submit UTR for Verification"; errEl.textContent="This UTR is already linked to another order. Check your bank app for the correct UTR."; errEl.classList.add("show"); utrEl.classList.add("is-error"); return; }
-    if (result.error === "INVALID") { btn.disabled=false; btn.innerHTML="Submit UTR for Verification"; errEl.textContent=result.message; errEl.classList.add("show"); return; }
-    if (result.error) { btn.disabled=false; btn.innerHTML="Submit UTR for Verification"; toast("Error: "+result.error,"error"); return; }
-    SELLER_STATE.activeSubId = result.sub_id;
-    toast("UTR submitted. Verification in progress.","success");
-    renderUTRStatus(result.sub_id);
-  }, 800);
-}
-
-function renderUTRStatus(subId) {
-  SELLER_STATE.activeSubId = subId;
-  const data = SELLER_API.getTimeline(subId);
-  if (!data) { renderSellerDashboard(); return; }
-  const allSteps = [{s:"submitted",l:"Submitted",icon:"→"},{s:"under_review",l:"Under Review",icon:"⏳"},{s:"verified",l:"Verified",icon:"✓"},{s:"rejected",l:"Rejected",icon:"✕"}];
-  const isRej = data.status === "rejected"; const isVer = data.status === "verified";
-  const steps = isRej ? allSteps.filter(x=>x.s!=="verified") : allSteps.filter(x=>x.s!=="rejected");
-  const statusIdx = ["submitted","under_review","verified"].indexOf(data.status);
-  const getNodeState = s => {
-    if (s === data.status && isRej) return "error";
-    if (s === data.status && isVer) return "done";
-    if (s === data.status) return "active";
-    if (["submitted","under_review","verified"].indexOf(s) < statusIdx) return "done";
-    return "pending";
-  };
-  const getEv = s => data.events.find(e => e.to_status === s);
-  const msg = {submitted:{h:"UTR Submitted",b:"Forwarded to verification system.",eta:"2–4 business hours",c:"var(--amber)"},under_review:{h:"Verification In Progress",b:"Matching UTR against bank records. No action needed.",eta:"Typically completes within 2–4 hours",c:"var(--amber)"},verified:{h:"Payment Verified ✓",b:"Confirmed. Settlement queued.",eta:"Transfer within 1–3 business days",c:"var(--green)"},rejected:{h:"Verification Failed",b:"Could not verify UTR. Review reason below and resubmit.",eta:"Resubmit within 48 hours",c:"var(--red)"}}[data.status]||{h:"Processing",b:"",eta:"",c:"var(--amber)"};
-
-  $("app").innerHTML = `
-  <div class="s-wrap page-enter">
-    <div class="s-page-header">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px">
-        <button class="s-btn-ghost" onclick="renderSellerDashboard()">← Dashboard</button>
-        <span style="color:var(--text-dim)">/</span>
-        <span style="font-size:13px;color:var(--text-muted)">UTR Status</span>
-      </div>
-      <div class="s-page-title" style="font-size:22px">${esc(msg.h)}</div>
-      <div class="s-page-sub">${esc(msg.b)}</div>
-    </div>
-    <div style="max-width:580px">
-      <div class="s-notice ${isVer?'success':isRej?'error':'warning'}" style="margin-bottom:16px">
-        <span>${isVer?"✅":isRej?"⛔":"⏱️"}</span>
-        <span><strong style="color:${msg.c}">${esc(msg.h)}</strong><br>${esc(msg.eta)}</span>
-      </div>
-
-      <div class="s-card" style="background:var(--surface-raised);margin-bottom:16px">
-        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:12px">Submission Details</div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
-          <div><div class="s-field-label">Submission ID</div><div style="font-family:var(--font-mono);font-size:10px;color:var(--text-secondary)">${esc(subId)}</div></div>
-          <div><div class="s-field-label">Order ID</div><div style="font-family:var(--font-mono);font-size:11px;color:var(--text-secondary)">${esc(data.order_id)}</div></div>
-          <div><div class="s-field-label">UTR (masked)</div><div style="font-family:var(--font-mono);font-size:14px">${esc(data.utr_masked)}</div></div>
-          <div><div class="s-field-label">Amount</div><div style="font-size:20px;font-weight:700;font-family:var(--font-mono)">${money(data.amount)}</div></div>
-          <div style="grid-column:1/-1"><div class="s-field-label">Status</div>${chipHTML(data.status)}</div>
-        </div>
-        <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border);font-size:11px;color:var(--text-dim);font-family:var(--font-mono)">Audit Log: ${esc(data.audit_id)}</div>
-      </div>
-
-      <div class="s-card" style="margin-bottom:16px">
-        <div style="font-size:10px;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:16px">Verification Timeline</div>
-        <div class="s-timeline">
-          ${steps.map((step,i) => {
-            const ns = getNodeState(step.s); const ev = getEv(step.s); const isLast = i===steps.length-1;
-            const icons = {done:"✓",active:"→",error:"✕",pending:String(i+1)};
-            return `<div class="s-timeline-step">
-              <div class="s-timeline-left">
-                <div class="s-timeline-node ${ns}">${{verified:"✓",rejected:"✕"}[step.s]||icons[ns]}</div>
-                ${!isLast?`<div class="s-timeline-connector ${ns==="done"?"done":""}"></div>`:""}
-              </div>
-              <div class="s-timeline-content">
-                <div class="s-timeline-label ${ns}">${esc(step.l)}</div>
-                <div class="s-timeline-meta">${ev?fmtDate(ev.created_at)+" · "+ev.actor_type:"Pending"}</div>
-                ${ev?.note?`<div class="s-timeline-note">${esc(ev.note)}</div>`:""}
-                ${ev?`<div style="margin-top:4px;font-size:10px;color:var(--text-dim);font-family:var(--font-mono)">Audit: ${esc(ev.id)}</div>`:""}
-                ${step.s==="rejected"&&ns==="error"&&data.rejection_reason?`<div class="s-notice error" style="margin-top:10px"><span>⚠️</span><span><strong>Reason:</strong> ${esc(data.rejection_reason)}</span></div>`:""}
-              </div>
-            </div>`;
-          }).join("")}
-        </div>
-      </div>
-
-      ${isRej?`<div class="s-notice error" style="margin-bottom:16px"><span>⚠️</span><span><strong>Resubmission required.</strong> Previous UTR released. Enter correct UTR to proceed.</span></div><button class="s-btn-primary" onclick="renderUTRSubmit('${esc(data.order_id)}')">Resubmit UTR</button>`:""} 
-      ${isVer?`<button class="s-btn-primary" style="background:var(--green);box-shadow:none" onclick="renderSellerDashboard()">View Settlement →</button>`:""}
-      ${!isVer&&!isRej?`<div style="margin-bottom:14px;padding:14px;background:var(--surface-raised);border:1px solid var(--border);border-radius:var(--radius-md)"><div style="font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Simulate Admin Review</div><div style="font-size:11px;color:var(--text-dim);margin-bottom:10px">Simulates server-side admin verification for demo purposes.</div><button class="s-btn-ghost" style="color:var(--amber);font-weight:700;border:1px solid var(--amber-border);padding:6px 12px;border-radius:var(--radius-sm)" onclick="showModal('modal-admin')">Open Admin Review Panel</button></div>`:""}
-      <button class="s-btn-secondary" onclick="renderSellerDashboard()">← Dashboard</button>
-    </div>
-  </div>`;
-}
-
-function adminVerify(approved) {
-  const reason = ($("admin-reason")?.value||"").trim();
-  if (!approved && !reason) { toast("Enter rejection reason","error"); return; }
-  hideModal("modal-admin");
-  SELLER_API.adminResolve(SELLER_STATE.activeSubId, approved, reason);
-  setTimeout(() => { renderUTRStatus(SELLER_STATE.activeSubId); toast(approved?"UTR verified":"UTR rejected","success"); }, 300);
-}
-
-function downloadInvoicePDF(settId) {
-  const s = SELLER_DB.settlements.find(x => x.id === settId);
-  const seller = SELLER_DB.sellers[SELLER_STATE.currentSeller];
-  if (!s||!s.invoice_available) { toast("Invoice not available yet","error"); return; }
-  const jsPDF = window.jspdf?.jsPDF || window.jsPDF;
-  if (!jsPDF) { toast("PDF loading, try again","error"); return; }
-  const doc = new jsPDF({orientation:"portrait",unit:"mm",format:"a4"});
-  const W = doc.internal.pageSize.getWidth(); const M = 18;
-  doc.setFillColor(8,15,25);doc.rect(0,0,W,297,"F");
-  doc.setFillColor(255,103,31);doc.rect(0,0,W,42,"F");
-  doc.setFontSize(24);doc.setFont("helvetica","bold");doc.setTextColor(0,0,0);doc.text("Decide",M,16);
-  doc.setFontSize(9);doc.setFont("helvetica","normal");doc.text("Decide Technologies Private Limited",M,22);
-  doc.setFontSize(8);doc.text("GSTIN: 24AABCT1234M1Z5 · ONDC Verified Participant",M,28);
-  doc.setFontSize(18);doc.setFont("helvetica","bold");doc.setTextColor(255,255,255);doc.text("TAX INVOICE",W-M,16,{align:"right"});
-  doc.setFontSize(9);doc.setFont("helvetica","normal");doc.setTextColor(255,200,160);doc.text(s.invoice_number||"—",W-M,23,{align:"right"});
-  doc.setFontSize(8);doc.setTextColor(255,180,130);doc.text("Date: "+fmtDateOnly(s.settlement_date),W-M,29,{align:"right"});
-  let y=52;
-  doc.setFillColor(20,34,54);doc.setDrawColor(30,56,87);doc.roundedRect(M,y,(W-M*2)/2-4,36,3,3,"FD");
-  doc.setFontSize(7.5);doc.setFont("helvetica","bold");doc.setTextColor(100,130,160);doc.text("BILLED TO",M+5,y+8);
-  doc.setFont("helvetica","bold");doc.setTextColor(220,230,240);doc.setFontSize(10);doc.text(seller.name,M+5,y+15);
-  doc.setFont("helvetica","normal");doc.setTextColor(150,170,190);doc.setFontSize(8);doc.text("GSTIN: "+seller.gstin,M+5,y+22);doc.text("Seller ID: "+seller.id,M+5,y+28);
-  const c2=M+(W-M*2)/2+4;doc.setFillColor(20,34,54);doc.roundedRect(c2,y,(W-M*2)/2-4,36,3,3,"FD");
-  doc.setFontSize(7.5);doc.setFont("helvetica","bold");doc.setTextColor(100,130,160);doc.text("PAYMENT",c2+5,y+8);
-  doc.setFont("helvetica","normal");doc.setTextColor(150,170,190);doc.setFontSize(8);doc.text("Order: "+s.order_id,c2+5,y+15);doc.text("Method: "+s.payment_method,c2+5,y+22);if(s.settlement_utr)doc.text("UTR: "+s.settlement_utr,c2+5,y+28);
-  y+=44;
-  // Table
-  doc.setFillColor(28,50,80);doc.setDrawColor(40,70,110);doc.rect(M,y,W-M*2,9,"FD");
-  doc.setFontSize(7.5);doc.setFont("helvetica","bold");doc.setTextColor(150,175,205);doc.text("Description",M+5,y+6.2);doc.text("Amount",W-M-5,y+6.2,{align:"right"});y+=9;
-  [["Platform Services — Food Delivery",money(s.platform_fee)],["GST on Platform Services (18%)",money(s.tax_on_fee)]].forEach(([l,v],i)=>{doc.setFillColor(i%2===0?18:22,i%2===0?30:36,i%2===0?46:54);doc.rect(M,y,W-M*2,10,"FD");doc.setFont("helvetica","normal");doc.setTextColor(200,215,230);doc.setFontSize(8.5);doc.text(l,M+5,y+7);doc.setFont("helvetica","bold");doc.text(v,W-M-5,y+7,{align:"right"});y+=10;});
-  y+=4;
-  [["Gross Order Value",money(s.gross_amount)],["Less: Platform Fee","("+money(s.platform_fee)+")"],["Less: GST","("+money(s.tax_on_fee)+")"]].forEach(([l,v])=>{doc.setFont("helvetica","normal");doc.setFontSize(8.5);doc.setTextColor(170,185,200);doc.text(l,W*0.5,y);doc.text(v,W-M-5,y,{align:"right"});y+=7;});
-  doc.setFillColor(20,100,60);doc.roundedRect(W*0.5,y-2,W*0.5-M,13,2,2,"FD");doc.setFont("helvetica","bold");doc.setFontSize(10.5);doc.setTextColor(40,220,130);doc.text("Net Settlement",W*0.54,y+7);doc.text(money(s.net_amount),W-M-5,y+7,{align:"right"});
-  y+=22;doc.setFillColor(255,103,31);doc.rect(0,280,W,3,"F");doc.setFontSize(7);doc.setFont("helvetica","normal");doc.setTextColor(80,100,125);doc.text("Decide Technologies · support@decideindia.com · 1800-123-4567",W/2,288,{align:"center"});
-  doc.save("Decide-Invoice-"+(s.invoice_number||settId).replace(/\//g,"-")+".pdf");
-  toast("Invoice downloaded","success");
-}
-
-function exportCSV() {
-  const rows = [["Settlement ID","Order ID","Gross","Platform Fee","Tax","Net","Method","UTR","Date","Status"],...SELLER_DB.settlements.map(s=>[s.id,s.order_id,s.gross_amount,s.platform_fee,s.tax_on_fee,s.net_amount,s.payment_method,s.settlement_utr||"",fmtDateOnly(s.settlement_date),s.status])];
-  const csv = rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([csv],{type:"text/csv"})); a.download="Decide-Settlements.csv"; a.click(); toast("CSV exported","success");
-}
-
-/* ══════════════════════════════════════════════════════════
-   ████████████████  REPO PAGES MODE  ████████████████
-══════════════════════════════════════════════════════════ */
-
-const REPO = {
-  owner: "via-decide",
-  repo: "engine",
-  branch: "main",
-  apiBase: "https://api.github.com",
-  rawBase: "https://raw.githubusercontent.com",
-};
-
-let REPO_FILES = [];
-let REPO_LOADING = false;
-let ACTIVE_FILE = null;
-
-const PAGE_META = {
-  "index.html": { desc: "Main marketplace — buyer flow, food ordering, UPI", icon: "🏠", tag: "Marketplace" },
-  "seller.html": { desc: "Seller portal — UTR submission, settlements, invoices", icon: "🏪", tag: "Seller Portal" },
-  "privacy.html": { desc: "Privacy policy — DPDP Act 2023 compliance", icon: "🔒", tag: "Legal" },
-  "terms.html": { desc: "Terms of service — seller & buyer agreements", icon: "📄", tag: "Legal" },
-  "contact.html": { desc: "Contact page — support channels", icon: "💬", tag: "Support" },
-  "manifest.json": { desc: "PWA manifest for app install", icon: "📱", tag: "Config" },
-};
-
-function renderPagesExplorer() {
-  $("app").innerHTML = `
-  <div class="p-wrap page-enter">
-    <div class="p-hero">
-      <h1 class="p-hero-title">Repo Pages</h1>
-      <p class="p-hero-sub">Browse and preview all HTML pages from the <strong>via-decide/engine</strong> GitHub repository.</p>
-    </div>
-
-    <div class="p-repo-bar">
-      <span class="p-repo-icon">⚙️</span>
-      <span class="p-repo-url">github.com/${REPO.owner}/${REPO.repo} / ${REPO.branch}</span>
-      <span class="p-repo-status" id="repo-status" style="color:var(--text-dim)">Loading…</span>
-    </div>
-
-    <div id="pages-grid" class="p-page-grid">
-      <div class="p-loading"><div class="spinner" style="width:24px;height:24px;border-width:3px"></div><span>Fetching repository…</span></div>
-    </div>
-    <div id="preview-area"></div>
-  </div>`;
-
-  loadRepoFiles();
-}
-
-async function loadRepoFiles() {
-  const grid = $("pages-grid"); const status = $("repo-status");
-  if (!grid) return;
-  try {
-    const res = await fetch(`${REPO.apiBase}/repos/${REPO.owner}/${REPO.repo}/git/trees/${REPO.branch}?recursive=1`, {
-      headers: { Accept: "application/vnd.github.v3+json" }
-    });
-    if (!res.ok) throw new Error(`GitHub API: ${res.status}`);
-    const data = await res.json();
-    REPO_FILES = (data.tree || []).filter(f => f.type === "blob");
-    status.textContent = `${REPO_FILES.length} files`;
-    status.style.color = "var(--green)";
-    renderFileGrid();
-  } catch (err) {
-    status.textContent = "API error";
-    status.style.color = "var(--red)";
-    grid.innerHTML = `
-    <div style="grid-column:1/-1">
-      <div class="b-notice demo" style="margin-bottom:0">
-        <span>⚠️</span>
-        <div>
-          <strong>Could not reach GitHub API</strong> (possible CORS or rate limit)<br>
-          <span style="font-size:12px">Showing known pages from the repo instead.</span>
+      <div style="border-top:1px solid var(--border);padding-top:.85rem">
+        <p style="font-family:var(--font-m);font-size:.63rem;color:var(--muted);letter-spacing:.1em;margin-bottom:.6rem">LEGAL</p>
+        <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+          ${legalPages.map(p => `
+            <button onclick="loadPage('${p.name}')"
+                    style="font-family:var(--font-m);font-size:.7rem;padding:.28rem .65rem;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--muted2);cursor:pointer;transition:var(--ease)"
+                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
+              ${p.icon} ${escH(p.label)}
+            </button>`).join('')}
         </div>
       </div>
     </div>`;
-    // Fallback: show known pages
-    REPO_FILES = Object.keys(PAGE_META).map(name => ({path:name,size:0,type:"blob"}));
-    status.textContent = "fallback"; status.style.color = "var(--amber)";
-    renderFileGrid();
-  }
 }
 
-function renderFileGrid() {
-  const grid = $("pages-grid"); if (!grid) return;
-  // Separate HTML files and others
-  const htmlFiles = REPO_FILES.filter(f => f.path.endsWith(".html"));
-  const otherFiles = REPO_FILES.filter(f => !f.path.endsWith(".html") && f.path === f.path.split("/").pop()); // root level only
-  const allShow = [...htmlFiles, ...otherFiles.slice(0,8)];
-
-  if (!allShow.length) {
-    grid.innerHTML = `<div class="p-empty" style="grid-column:1/-1">No files found in repository</div>`; return;
-  }
-
-  grid.innerHTML = allShow.map(f => {
-    const name = f.path.split("/").pop();
-    const meta = PAGE_META[name] || {};
-    const isHtml = name.endsWith(".html");
-    const sizeKb = f.size ? (f.size/1024).toFixed(1)+"KB" : "";
-    return `<div class="p-page-card ${ACTIVE_FILE===f.path?'active':''}" onclick="loadFilePreview('${esc(f.path)}','${esc(name)}')">
-      <div class="p-page-name">${meta.icon||"📄"} ${esc(name)}</div>
-      <div style="display:flex;align-items:center;gap:8px">
-        <span class="p-page-size">${sizeKb}</span>
-        <span class="p-page-type" style="color:${isHtml?'var(--brand-orange)':'var(--text-muted)'}">${isHtml?"HTML":"FILE"}</span>
-      </div>
-      ${meta.desc?`<div class="p-page-desc">${esc(meta.desc)}</div>`:""}
-      ${meta.tag?`<span class="p-page-tag">${esc(meta.tag)}</span>`:""}
+/* ─────────────────────────────────────
+   SELLER PLACEHOLDER
+   TODO: Replace with renderSellerShell().
+   Add { id:"seller", label:"Seller Portal" } to MODES array.
+   Add seller pages with section:"seller" to PAGES array.
+───────────────────────────────────── */
+function renderSellerPlaceholder() {
+  activePageName = null; setActive(null);
+  document.getElementById('main-content').innerHTML = `
+    <div class="seller-ph">
+      <div class="s-icon">🏪</div>
+      <h3>Seller Portal</h3>
+      <p>Not yet available. This placeholder marks where the Seller Portal will be built.</p>
+      <span class="todo">TODO · ADD renderSellerShell()</span>
     </div>`;
-  }).join("") +
-  `<div class="p-page-card" onclick="refreshRepo()" style="border-style:dashed;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px">
-    <div style="font-size:2rem">🔄</div>
-    <div class="p-page-name" style="justify-content:center">Refresh Files</div>
-    <div class="p-page-desc">Re-fetch from GitHub</div>
-  </div>`;
 }
 
-function refreshRepo() { REPO_FILES = []; ACTIVE_FILE = null; renderPagesExplorer(); }
-
-async function loadFilePreview(filePath, fileName) {
-  ACTIVE_FILE = filePath;
-  renderFileGrid(); // update active state
-
-  const preview = $("preview-area"); if (!preview) return;
-  preview.innerHTML = `
-  <div class="p-preview-pane">
-    <div class="p-preview-header">
-      <span class="p-preview-filename">${esc(filePath)}</span>
-      <div class="p-preview-actions">
-        <button class="p-preview-btn" onclick="$('preview-area').innerHTML=''">✕ Close</button>
-        <a href="https://raw.githubusercontent.com/${REPO.owner}/${REPO.repo}/${REPO.branch}/${filePath}" target="_blank" class="p-preview-btn">Raw ↗</a>
-        <a href="https://github.com/${REPO.owner}/${REPO.repo}/blob/${REPO.branch}/${filePath}" target="_blank" class="p-preview-btn primary">GitHub ↗</a>
-      </div>
-    </div>
-    <div class="p-loading"><div class="spinner" style="width:22px;height:22px;border-width:3px"></div><span>Loading preview…</span></div>
-  </div>`;
-
-  preview.scrollIntoView({behavior:"smooth",block:"start"});
-
-  const isHtml = fileName.endsWith(".html");
-  const rawUrl = `${REPO.rawBase}/${REPO.owner}/${REPO.repo}/${REPO.branch}/${filePath}`;
-
-  try {
-    const res = await fetch(rawUrl);
-    if (!res.ok) throw new Error(res.status);
-    const content = await res.text();
-
-    if (isHtml) {
-      // Render in iframe via blob
-      const blob = new Blob([content], {type:"text/html"});
-      const blobUrl = URL.createObjectURL(blob);
-      preview.innerHTML = `
-      <div class="p-preview-pane">
-        <div class="p-preview-header">
-          <span class="p-preview-filename">${esc(filePath)}</span>
-          <div class="p-preview-actions">
-            <button class="p-preview-btn" onclick="toggleIframeSize('preview-iframe')">⤢ Resize</button>
-            <button class="p-preview-btn" onclick="$('preview-area').innerHTML=''">✕ Close</button>
-            <a href="${blobUrl}" target="_blank" class="p-preview-btn">Full Screen ↗</a>
-            <a href="https://github.com/${REPO.owner}/${REPO.repo}/blob/${REPO.branch}/${filePath}" target="_blank" class="p-preview-btn primary">GitHub ↗</a>
-          </div>
-        </div>
-        <div style="padding:12px;background:var(--surface-raised);border-bottom:1px solid var(--border);font-size:12px;color:var(--text-muted)">
-          🖼️ Live preview (blob URL) — JavaScript may have limited functionality
-        </div>
-        <iframe id="preview-iframe" class="p-preview-iframe" src="${blobUrl}" sandbox="allow-scripts allow-same-origin allow-forms" loading="lazy"></iframe>
-      </div>`;
-    } else {
-      // Code preview
-      const highlighted = esc(content.slice(0, 8000)) + (content.length>8000?"\n\n… (truncated)":"");
-      preview.innerHTML = `
-      <div class="p-preview-pane">
-        <div class="p-preview-header">
-          <span class="p-preview-filename">${esc(filePath)}</span>
-          <div class="p-preview-actions">
-            <button class="p-preview-btn" onclick="copyToClipboard(\`${content.replace(/`/g,"\\`").replace(/\\/g,"\\\\").slice(0,2000)}\`)">📋 Copy</button>
-            <button class="p-preview-btn" onclick="$('preview-area').innerHTML=''">✕ Close</button>
-            <a href="${rawUrl}" target="_blank" class="p-preview-btn primary">Raw ↗</a>
-          </div>
-        </div>
-        <pre style="margin:0;padding:20px;overflow-x:auto;font-size:12px;line-height:1.7;color:var(--text-secondary);font-family:var(--font-mono);background:transparent;max-height:500px;overflow-y:auto"><code>${highlighted}</code></pre>
-      </div>`;
-    }
-  } catch(err) {
-    preview.innerHTML = `
-    <div class="p-preview-pane">
-      <div class="p-preview-header">
-        <span class="p-preview-filename">${esc(filePath)}</span>
-        <div class="p-preview-actions"><button class="p-preview-btn" onclick="$('preview-area').innerHTML=''">✕ Close</button></div>
-      </div>
-      <div class="p-loading" style="flex-direction:column;color:var(--red)">
-        <span>⚠️ Failed to load file</span>
-        <a href="${rawUrl}" target="_blank" style="color:var(--brand-orange);font-size:13px;margin-top:8px">Open Raw on GitHub ↗</a>
-      </div>
-    </div>`;
+/* ─────────────────────────────────────
+   SEARCH — client-side filter
+───────────────────────────────────── */
+document.getElementById('searchInput').addEventListener('input', function () {
+  const q = this.value.toLowerCase().trim();
+  if (!q) { renderSidebar(); return; }
+  const results = [];
+  PRODUCTS.forEach(cat => cat.items.forEach(item => {
+    if (item.label.toLowerCase().includes(q)) results.push({ cat, item });
+  }));
+  const sb = document.getElementById('sidebar-left');
+  if (!results.length) {
+    sb.innerHTML = `<div class="sb-label">SEARCH</div><p style="padding:.75rem;font-size:.76rem;color:var(--muted)">No results for "${escH(q)}"</p>`;
+    return;
   }
+  sb.innerHTML = `
+    <div class="sb-label">RESULTS <span style="color:var(--orange)">${results.length}</span></div>
+    <div class="sb-section">
+      ${results.map(r => `
+        <div class="prod-item ${r.item.id === activeProductId ? 'active' : ''}"
+             onclick="selectProduct('${r.cat.id}','${r.item.id}','${escH(r.item.label)}')">
+          <span class="prod-dot"></span>${escH(r.item.label)}
+          <span style="margin-left:auto;font-size:.7rem">${r.cat.icon}</span>
+        </div>`).join('')}
+    </div>`;
+});
+
+/* ─────────────────────────────────────
+   UTILS
+───────────────────────────────────── */
+function escH(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-let iframeLarge = false;
-function toggleIframeSize(id) {
-  const iframe = $(id); if (!iframe) return;
-  iframeLarge = !iframeLarge;
-  iframe.style.minHeight = iframeLarge ? "90vh" : "600px";
-}
-
-function copyToClipboard(text) { try { navigator.clipboard.writeText(text); toast("Copied!","success"); } catch(e) { toast("Copy failed","error"); } }
-
-/* ══════════════════════════════════════════════════════════
-   FOOTER
-══════════════════════════════════════════════════════════ */
-function renderFooter() {
-  return `
-  <footer class="site-footer">
-    <div class="footer-inner">
-      <div class="footer-copy">© 2024 Decide Technologies Pvt Ltd · Gandhidham, Gujarat · <a href="mailto:support@decideindia.com" style="color:var(--brand-orange)">support@decideindia.com</a></div>
-      <div class="footer-links">
-        <a href="#" onclick="setMode('pages')">Privacy</a>
-        <a href="#" onclick="setMode('pages')">Terms</a>
-        <a href="#" onclick="showModal('modal-support')">Support</a>
-      </div>
-      <div class="footer-ondc"><span class="ondc-chip">ONDC</span> Verified Network Participant</div>
-    </div>
-  </footer>`;
-}
-
-/* ══ INIT ══ */
-window.addEventListener("DOMContentLoaded", () => {
-  loadOrders();
-  renderBuyerHome();
+/* ─────────────────────────────────────
+   BOOT
+───────────────────────────────────── */
+document.addEventListener('DOMContentLoaded', () => {
+  renderShell();
+  registerRoutes();
 });
 </script>
 </body>
-   </html>
+</html>
