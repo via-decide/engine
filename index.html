@@ -1,305 +1,960 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>VIA Decide — Engine</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet" />
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<meta name="theme-color" content="#0d0d0f"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>VIA Decide — Engine</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,300;0,400;1,300&display=swap" rel="stylesheet"/>
 
-    :root {
-      --bg: #0d0d0f;
-      --surface: #14141a;
-      --surface2: #1c1c24;
-      --border: #252530;
-      --border2: #1e1e28;
-      --orange: #ff6b2b;
-      --orange-dim: rgba(255,107,43,0.15);
-      --text: #e8e8f0;
-      --muted: #5a5a70;
-      --muted2: #8080a0;
-      --sidebar-w: 220px;
-      --right-w: 180px;
-      --header-h: 52px;
-      --font-d: 'Syne', sans-serif;
-      --font-m: 'DM Mono', monospace;
-      --ease: 0.18s ease;
-    }
+<style>
+/* ═══════════════════════════════════════════════════════════
+   RESET & TOKENS
+═══════════════════════════════════════════════════════════ */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+:root {
+  /* Colors */
+  --bg:         #0d0d0f;
+  --surface:    #111116;
+  --surface2:   #18181f;
+  --surface3:   #1f1f28;
+  --border:     #27272f;
+  --border2:    #1e1e26;
+  --orange:     #ff6b2b;
+  --orange2:    #e85a1e;
+  --orange-dim: rgba(255,107,43,0.13);
+  --orange-glow:rgba(255,107,43,0.25);
+  --text:       #eeeef5;
+  --text2:      #c0c0d0;
+  --muted:      #52526a;
+  --muted2:     #7878a0;
+  --red:        #ff4444;
+  --green:      #3ddc97;
+  --yellow:     #f0c040;
 
-    html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-d); }
-    body { overflow: hidden; }
+  /* Typography — fluid scale */
+  --font-d: 'Syne', sans-serif;
+  --font-m: 'DM Mono', monospace;
+  --text-xs:   clamp(0.6rem,  1.2vw, 0.72rem);
+  --text-sm:   clamp(0.72rem, 1.4vw, 0.85rem);
+  --text-base: clamp(0.85rem, 1.6vw, 1rem);
+  --text-lg:   clamp(1rem,    2vw,   1.25rem);
+  --text-xl:   clamp(1.2rem,  2.5vw, 1.6rem);
+  --text-2xl:  clamp(1.5rem,  3.5vw, 2.2rem);
 
-    ::-webkit-scrollbar { width: 3px; }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  /* Layout */
+  --header-h:    56px;
+  --sidebar-w:   240px;
+  --right-w:     190px;
+  --nav-h:       60px; /* mobile bottom nav */
+  --radius:      6px;
+  --radius-lg:   10px;
 
-    /* ════ HEADER ════ */
-    #header {
-      position: fixed; top: 0; left: 0; right: 0; height: var(--header-h);
-      background: var(--surface); border-bottom: 1px solid var(--border);
-      display: flex; align-items: center; padding: 0 0.85rem; gap: 0.6rem; z-index: 200;
-    }
-    .h-logo { font-size: 1.1rem; font-weight: 800; letter-spacing: -0.03em; color: var(--text); text-decoration: none; white-space: nowrap; flex-shrink: 0; }
-    .h-logo span { color: var(--orange); }
-    .h-mode-wrap { display: flex; gap: 2px; flex-shrink: 0; }
-    .mode-tab { font-family: var(--font-m); font-size: 0.65rem; letter-spacing: 0.08em; padding: 0.28rem 0.65rem; border: 1px solid var(--border); background: transparent; color: var(--muted2); cursor: pointer; transition: var(--ease); border-radius: 2px; }
-    .mode-tab.active { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
-    .mode-tab:hover:not(.active) { background: var(--surface2); color: var(--text); }
-    .h-spacer { flex: 1; min-width: 0; }
-    .h-search { display: flex; align-items: center; gap: 0.4rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 2px; padding: 0.28rem 0.6rem; }
-    .h-search input { background: transparent; border: none; outline: none; color: var(--text); font-family: var(--font-m); font-size: 0.75rem; width: 130px; }
-    .h-search input::placeholder { color: var(--muted); }
-    .btn-yt { display: inline-flex; align-items: center; gap: 0.4rem; border: 1px solid var(--border); background: transparent; color: var(--muted2); font-family: var(--font-m); font-size: 0.65rem; letter-spacing: 0.06em; padding: 0.3rem 0.75rem; cursor: pointer; text-decoration: none; border-radius: 2px; white-space: nowrap; transition: var(--ease); flex-shrink: 0; }
-    .btn-yt:hover { border-color: #f00; color: #f55; background: rgba(255,0,0,0.06); }
-    .btn-yt .yi { color: #f55; }
-    .btn-intro { font-family: var(--font-m); font-size: 0.65rem; color: var(--muted2); text-decoration: none; padding: 0.3rem 0.6rem; border: 1px solid var(--border); border-radius: 2px; transition: var(--ease); flex-shrink: 0; }
-    .btn-intro:hover { color: var(--text); border-color: var(--muted2); }
-    .btn-ham { display: none; background: transparent; border: 1px solid var(--border); border-radius: 2px; padding: 0.3rem 0.55rem; color: var(--muted2); cursor: pointer; font-size: 1rem; flex-shrink: 0; line-height: 1; }
+  /* Motion */
+  --ease:  0.16s ease;
+  --ease2: 0.28s cubic-bezier(0.4,0,0.2,1);
+}
 
-    /* ════ 3-COL SHELL ════ */
-    #shell { display: grid; grid-template-columns: var(--sidebar-w) 1fr var(--right-w); height: 100vh; padding-top: var(--header-h); }
+/* Larger hit targets & spacing on big screens */
+@media (min-width: 1600px) {
+  :root {
+    --header-h:  64px;
+    --sidebar-w: 280px;
+    --right-w:   220px;
+  }
+}
+/* TV / large display */
+@media (min-width: 2400px) {
+  :root {
+    --header-h:  80px;
+    --sidebar-w: 340px;
+    --right-w:   280px;
+    --text-xs:   0.9rem;
+    --text-sm:   1.05rem;
+    --text-base: 1.2rem;
+    --text-lg:   1.5rem;
+    --text-xl:   2rem;
+    --text-2xl:  2.8rem;
+  }
+}
 
-    /* ── LEFT SIDEBAR ── */
-    #sidebar-left { background: var(--surface); border-right: 1px solid var(--border); overflow-y: auto; display: flex; flex-direction: column; }
-    .sb-label { font-family: var(--font-m); font-size: 0.58rem; letter-spacing: 0.18em; color: var(--muted); padding: 0.65rem 0.75rem 0.45rem; border-bottom: 1px solid var(--border2); display: flex; align-items: center; justify-content: space-between; }
-    .sb-collapse { cursor: pointer; color: var(--orange); font-size: 0.9rem; line-height: 1; }
-    .sb-section { padding: 0.5rem 0.6rem 0.25rem; }
-    .cat-head { display: flex; align-items: center; gap: 0.45rem; padding: 0.38rem 0.45rem; cursor: pointer; border-radius: 3px; transition: var(--ease); user-select: none; }
-    .cat-head:hover { background: var(--surface2); }
-    .cat-icon { font-size: 0.85rem; }
-    .cat-name { font-size: 0.78rem; font-weight: 600; flex: 1; }
-    .cat-arrow { font-size: 0.6rem; color: var(--muted); transition: transform 0.2s; }
-    .cat-arrow.open { transform: rotate(90deg); }
-    .cat-items { overflow: hidden; max-height: 0; transition: max-height 0.22s ease; padding-left: 0.35rem; }
-    .cat-items.open { max-height: 600px; }
-    .prod-item { display: flex; align-items: center; gap: 0.45rem; padding: 0.38rem 0.45rem; border-radius: 3px; cursor: pointer; font-size: 0.77rem; color: var(--muted2); transition: var(--ease); }
-    .prod-item:hover { background: var(--surface2); color: var(--text); }
-    .prod-item.active { background: var(--orange-dim); color: var(--orange); }
-    .prod-dot { width: 4px; height: 4px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+html { height: 100%; }
+body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-d);
+  font-size: var(--text-base);
+  line-height: 1.6;
+  overflow: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-    /* ── MAIN AREA ── */
-    #main-wrap { display: flex; flex-direction: column; overflow: hidden; }
-    #tab-nav { background: var(--surface); border-bottom: 1px solid var(--border); padding: 0.55rem 0.85rem; display: flex; gap: 0.3rem; flex-wrap: wrap; flex-shrink: 0; }
-    .page-tab { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.76rem; padding: 0.32rem 0.78rem; border: 1px solid var(--border); border-radius: 2px; background: transparent; color: var(--muted2); cursor: pointer; transition: var(--ease); white-space: nowrap; }
-    .page-tab:hover { background: var(--surface2); color: var(--text); }
-    .page-tab.active { background: var(--orange-dim); border-color: var(--orange); color: var(--orange); }
-    .tab-ic { font-size: 0.82rem; }
-    #main-content { flex: 1; overflow-y: auto; padding: 1.4rem 1.2rem; position: relative; }
+/* ═══════════════════════════════════════════════════════════
+   SCROLLBARS
+═══════════════════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--muted); }
 
-    /* ── RIGHT SIDEBAR ── */
-    #sidebar-right { background: var(--surface); border-left: 1px solid var(--border); overflow-y: auto; }
-    .legal-item { display: flex; align-items: center; gap: 0.45rem; padding: 0.65rem 0.7rem; font-size: 0.76rem; color: var(--muted2); cursor: pointer; border-bottom: 1px solid var(--border2); transition: var(--ease); }
-    .legal-item:hover { background: var(--surface2); color: var(--text); }
-    .legal-item.active { background: var(--orange-dim); color: var(--orange); border-left: 2px solid var(--orange); }
-    .li-ic { font-size: 0.82rem; }
+/* ═══════════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════════ */
+#header {
+  position: fixed; top: 0; left: 0; right: 0;
+  height: var(--header-h);
+  background: rgba(17,17,22,0.95);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center;
+  padding: 0 clamp(0.75rem, 2vw, 1.5rem);
+  gap: clamp(0.4rem, 1vw, 0.85rem);
+  z-index: 500;
+}
 
-    /* ════ MOBILE DRAWER ════ */
-    #drawer-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.65); z-index: 300; }
-    #drawer-overlay.open { display: block; }
-    #drawer { position: fixed; top: 0; left: -285px; bottom: 0; width: 285px; background: var(--surface); border-right: 1px solid var(--border); z-index: 400; overflow-y: auto; transition: left 0.25s ease; padding-top: var(--header-h); }
-    #drawer.open { left: 0; }
-    .drawer-label { font-family: var(--font-m); font-size: 0.58rem; letter-spacing: 0.18em; color: var(--muted); padding: 0.6rem 0.75rem 0.4rem; border-bottom: 1px solid var(--border2); margin-bottom: 0.25rem; }
-    .drawer-section { padding: 0.25rem 0.6rem 0.5rem; }
-    .drawer-item { display: flex; align-items: center; gap: 0.5rem; padding: 0.55rem 0.45rem; border-radius: 3px; font-size: 0.82rem; color: var(--muted2); cursor: pointer; transition: var(--ease); }
-    .drawer-item:hover { background: var(--surface2); color: var(--text); }
-    .drawer-item.active { background: var(--orange-dim); color: var(--orange); }
-    .drawer-close { position: absolute; top: calc(var(--header-h) + 0.5rem); right: 0.75rem; background: transparent; border: 1px solid var(--border); border-radius: 2px; color: var(--muted2); cursor: pointer; font-size: 0.9rem; padding: 0.22rem 0.55rem; }
+/* Logo */
+.h-logo {
+  display: flex; align-items: center; gap: 0.15em;
+  font-size: clamp(1rem, 2vw, 1.25rem);
+  font-weight: 800; letter-spacing: -0.04em;
+  color: var(--text); text-decoration: none;
+  white-space: nowrap; flex-shrink: 0;
+  transition: opacity var(--ease);
+}
+.h-logo:hover { opacity: 0.8; }
+.h-logo span { color: var(--orange); }
+.h-logo-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--orange);
+  margin-left: 0.3em;
+  flex-shrink: 0;
+  animation: pulse-dot 2.5s ease-in-out infinite;
+}
+@keyframes pulse-dot {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.4; transform:scale(0.7); }
+}
 
-    /* ════ CONTENT STYLES ════ */
-    .loading-box { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 0.85rem; color: var(--muted2); }
-    .spinner { width: 30px; height: 30px; border: 2px solid var(--border); border-top-color: var(--orange); border-radius: 50%; animation: spin 0.7s linear infinite; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+/* Divider */
+.h-div {
+  width: 1px; height: 20px;
+  background: var(--border);
+  flex-shrink: 0;
+}
 
-    /* Home */
-    .home-wrap { max-width: 680px; margin: 0 auto; }
-    .home-wrap h2 { font-size: 1.5rem; font-weight: 800; margin-bottom: 0.4rem; }
-    .home-wrap h2 span { color: var(--orange); }
-    .home-sub { font-family: var(--font-m); font-size: 0.72rem; color: var(--muted2); letter-spacing: 0.06em; margin-bottom: 1.75rem; }
-    .card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px,1fr)); gap: 0.65rem; margin-bottom: 1.75rem; }
-    .card { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.9rem; cursor: pointer; transition: var(--ease); }
-    .card:hover { border-color: var(--orange); background: var(--orange-dim); }
-    .card-ic { font-size: 1.3rem; margin-bottom: 0.45rem; }
-    .card-t { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.2rem; }
-    .card-d { font-size: 0.73rem; color: var(--muted2); line-height: 1.5; }
+/* Mode tabs */
+.h-modes { display: flex; gap: 2px; flex-shrink: 0; }
+.mode-tab {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  letter-spacing: 0.08em; font-weight: 400;
+  padding: 0.35em 0.85em;
+  border: 1px solid var(--border);
+  background: transparent; color: var(--muted2);
+  cursor: pointer; border-radius: 4px;
+  transition: var(--ease); white-space: nowrap;
+  line-height: 1.4;
+}
+.mode-tab.active {
+  background: var(--orange-dim);
+  border-color: var(--orange); color: var(--orange);
+}
+.mode-tab:hover:not(.active) { background: var(--surface3); color: var(--text); }
 
-    /* Page content */
-    .pc { max-width: 720px; }
-    .pc h1 { font-size: 1.55rem; font-weight: 800; margin-bottom: 0.35rem; }
-    .pc .meta { font-family: var(--font-m); font-size: 0.65rem; color: var(--muted); letter-spacing: 0.12em; margin-bottom: 1.75rem; }
-    .pc h2 { font-size: 0.95rem; font-weight: 700; color: var(--muted2); border-bottom: 1px solid var(--border); padding-bottom: 0.3rem; margin: 1.75rem 0 0.65rem; }
-    .pc p { font-size: 0.86rem; line-height: 1.8; color: #a0a0b8; margin-bottom: 0.7rem; }
-    .pc ul { margin: 0.4rem 0 0.7rem 1.35rem; }
-    .pc li { font-size: 0.86rem; line-height: 1.8; color: #a0a0b8; }
-    .pc strong { color: var(--text); }
-    .pc .pill { display: inline-block; font-family: var(--font-m); font-size: 0.65rem; letter-spacing: 0.1em; border: 1px solid var(--border); padding: 0.2rem 0.55rem; border-radius: 2px; color: var(--muted2); margin-bottom: 0.5rem; }
-    .pc .stat-row { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0 1.5rem; }
-    .pc .stat { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.7rem 1rem; min-width: 100px; }
-    .pc .stat-val { font-size: 1.4rem; font-weight: 800; color: var(--orange); line-height: 1; margin-bottom: 0.2rem; }
-    .pc .stat-lbl { font-family: var(--font-m); font-size: 0.63rem; color: var(--muted2); letter-spacing: 0.08em; }
-    .pc .cg { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px,1fr)); gap: 0.6rem; margin: 0.75rem 0 1.25rem; }
-    .pc .cc { background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 0.8rem; }
-    .pc .cc-name { font-size: 0.82rem; font-weight: 700; margin-bottom: 0.5rem; }
-    .pc .cr { display: flex; justify-content: space-between; font-size: 0.74rem; color: var(--muted2); padding: 0.2rem 0; border-bottom: 1px solid var(--border2); }
-    .pc .cr:last-child { border-bottom: none; }
-    .pc .cv { color: var(--text); }
-    .pc .tr-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0; border-bottom: 1px solid var(--border2); }
-    .pc .tr-rank { font-family: var(--font-m); font-size: 0.68rem; color: var(--muted); width: 1.5rem; flex-shrink: 0; }
-    .pc .tr-name { font-size: 0.84rem; font-weight: 600; flex: 1; }
-    .pc .tr-tag { font-family: var(--font-m); font-size: 0.65rem; color: var(--orange); border: 1px solid var(--orange-dim); padding: 0.15rem 0.45rem; border-radius: 2px; }
-    .pc .wl-item { display: flex; align-items: center; gap: 0.75rem; padding: 0.65rem 0; border-bottom: 1px solid var(--border2); }
-    .pc .wl-ic { font-size: 1.1rem; }
-    .pc .wl-info { flex: 1; }
-    .pc .wl-name { font-size: 0.84rem; font-weight: 600; margin-bottom: 0.15rem; }
-    .pc .wl-meta { font-family: var(--font-m); font-size: 0.66rem; color: var(--muted2); }
-    .pc .wl-price { font-size: 0.88rem; font-weight: 700; color: var(--orange); }
+.h-spacer { flex: 1; min-width: 0; }
 
-    /* Seller placeholder */
-    .seller-ph { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 60vh; gap: 0.85rem; color: var(--muted2); text-align: center; }
-    .seller-ph .s-icon { font-size: 2.5rem; opacity: 0.35; }
-    .seller-ph h3 { font-size: 1.05rem; font-weight: 700; color: var(--text); }
-    .seller-ph p { font-size: 0.8rem; max-width: 300px; line-height: 1.6; }
-    .seller-ph .todo { font-family: var(--font-m); font-size: 0.62rem; letter-spacing: 0.1em; border: 1px dashed var(--border); padding: 0.22rem 0.6rem; border-radius: 2px; color: var(--muted); }
+/* Search */
+.h-search {
+  display: flex; align-items: center; gap: 0.5rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.4em 0.75em;
+  transition: border-color var(--ease);
+  min-width: 0;
+}
+.h-search:focus-within { border-color: var(--orange); }
+.h-search-icon { color: var(--muted); font-size: 0.9rem; flex-shrink: 0; }
+.h-search input {
+  background: transparent; border: none; outline: none;
+  color: var(--text); font-family: var(--font-m);
+  font-size: var(--text-xs); width: clamp(80px, 12vw, 180px);
+  min-width: 0;
+}
+.h-search input::placeholder { color: var(--muted); }
 
-    /* ════ RESPONSIVE ════ */
-    @media (max-width: 900px) {
-      #shell { grid-template-columns: var(--sidebar-w) 1fr; }
-      #sidebar-right { display: none; }
-    }
-    @media (max-width: 640px) {
-      :root { --header-h: 48px; }
-      #shell { grid-template-columns: 1fr; }
-      #sidebar-left { display: none; }
-      .h-search { display: none; }
-      .btn-intro { display: none; }
-      .btn-ham { display: block; }
-      #tab-nav { overflow-x: auto; flex-wrap: nowrap; padding: 0.45rem 0.6rem; }
-      #tab-nav::-webkit-scrollbar { height: 2px; }
-      #main-content { padding: 1rem 0.85rem; }
-      .h-logo { font-size: 0.92rem; }
-    }
-  </style>
+/* YouTube button */
+.btn-yt {
+  display: inline-flex; align-items: center; gap: 0.45em;
+  border: 1px solid var(--border); background: transparent;
+  color: var(--muted2); font-family: var(--font-m);
+  font-size: var(--text-xs); letter-spacing: 0.05em;
+  padding: 0.4em 0.9em; cursor: pointer;
+  text-decoration: none; border-radius: var(--radius);
+  white-space: nowrap; transition: var(--ease); flex-shrink: 0;
+}
+.btn-yt:hover { border-color: var(--red); color: var(--red); background: rgba(255,68,68,0.06); }
+.btn-yt-icon { color: var(--red); font-size: 0.7rem; }
+
+/* Home back button */
+.btn-home {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--muted2); text-decoration: none;
+  padding: 0.4em 0.75em; border: 1px solid var(--border);
+  border-radius: var(--radius); transition: var(--ease);
+  flex-shrink: 0; white-space: nowrap;
+}
+.btn-home:hover { color: var(--text); border-color: var(--muted2); }
+
+/* Hamburger — shown only on mobile */
+.btn-ham {
+  display: none;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.45em 0.65em;
+  color: var(--muted2); cursor: pointer; flex-shrink: 0;
+  transition: var(--ease); line-height: 1;
+}
+.btn-ham:hover { color: var(--text); border-color: var(--muted2); }
+.btn-ham svg { display: block; width: 18px; height: 18px; }
+
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT SHELL  —  3 columns on desktop
+═══════════════════════════════════════════════════════════ */
+#shell {
+  display: grid;
+  grid-template-columns: var(--sidebar-w) 1fr var(--right-w);
+  grid-template-rows: 1fr;
+  height: 100vh;
+  padding-top: var(--header-h);
+}
+
+/* ─────────────────────────────────────────────
+   LEFT SIDEBAR
+───────────────────────────────────────────── */
+#sidebar-left {
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  overflow-y: auto; overflow-x: hidden;
+  display: flex; flex-direction: column;
+}
+
+.sb-head {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border2);
+  display: flex; align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 0.85rem 0.6rem;
+}
+.sb-head-label {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  letter-spacing: 0.18em; color: var(--muted);
+}
+.sb-head-action {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--orange); cursor: pointer; line-height: 1;
+  background: none; border: none; padding: 0.15rem 0.25rem;
+  border-radius: 3px; transition: var(--ease);
+}
+.sb-head-action:hover { background: var(--orange-dim); }
+
+.sb-body { padding: 0.5rem 0.6rem 1rem; }
+
+/* Category */
+.cat-wrap { margin-bottom: 2px; }
+.cat-head {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: clamp(0.5rem, 1.2vw, 0.6rem) 0.6rem;
+  cursor: pointer; border-radius: var(--radius);
+  transition: background var(--ease);
+  user-select: none; -webkit-user-select: none;
+  min-height: 44px; /* accessible touch target */
+}
+.cat-head:hover { background: var(--surface2); }
+.cat-head:active { background: var(--surface3); }
+.cat-emoji { font-size: 1rem; flex-shrink: 0; line-height: 1; }
+.cat-name {
+  flex: 1; font-size: var(--text-sm); font-weight: 600;
+  color: var(--text2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.cat-count {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--muted); background: var(--surface3);
+  border-radius: 99px; padding: 0.1em 0.55em;
+  flex-shrink: 0;
+}
+.cat-chevron {
+  flex-shrink: 0; width: 14px; height: 14px;
+  color: var(--muted); transition: transform 0.22s ease;
+}
+.cat-chevron.open { transform: rotate(90deg); }
+
+.cat-items {
+  overflow: hidden; max-height: 0;
+  transition: max-height 0.26s cubic-bezier(0.4,0,0.2,1);
+}
+.cat-items.open { max-height: 800px; }
+
+.prod-item {
+  display: flex; align-items: center; gap: 0.5rem;
+  padding: clamp(0.45rem,1vw,0.55rem) 0.6rem clamp(0.45rem,1vw,0.55rem) 1.1rem;
+  border-radius: var(--radius); cursor: pointer;
+  color: var(--muted2); transition: var(--ease);
+  min-height: 40px;
+}
+.prod-item:hover { background: var(--surface2); color: var(--text); }
+.prod-item:active { background: var(--surface3); }
+.prod-item.active { background: var(--orange-dim); color: var(--orange); }
+.prod-dot {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: currentColor; flex-shrink: 0; opacity: 0.7;
+}
+.prod-name { font-size: var(--text-sm); flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ─────────────────────────────────────────────
+   MAIN AREA
+───────────────────────────────────────────── */
+#main-wrap { display: flex; flex-direction: column; overflow: hidden; min-width: 0; }
+
+/* Tab nav */
+#tab-nav {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 0 clamp(0.6rem, 1.5vw, 1rem);
+  display: flex; gap: 0;
+  flex-shrink: 0; overflow-x: auto; overflow-y: hidden;
+}
+#tab-nav::-webkit-scrollbar { height: 2px; }
+
+.page-tab {
+  display: inline-flex; align-items: center; gap: 0.4em;
+  font-size: var(--text-sm);
+  padding: 0 clamp(0.6rem, 1.5vw, 1rem);
+  height: 46px;
+  border: none; border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent; color: var(--muted2);
+  cursor: pointer; transition: var(--ease);
+  white-space: nowrap; flex-shrink: 0;
+  position: relative;
+}
+.page-tab:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+.page-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+.tab-ic { font-size: 0.85em; opacity: 0.8; }
+
+/* Main content area */
+#main-content {
+  flex: 1; overflow-y: auto; overflow-x: hidden;
+  padding: clamp(1rem, 2.5vw, 2rem) clamp(0.85rem, 2.5vw, 2rem);
+  scroll-behavior: smooth;
+}
+
+/* Page-in animation */
+.page-enter {
+  animation: pageEnter 0.22s ease both;
+}
+@keyframes pageEnter {
+  from { opacity:0; transform:translateY(10px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+
+/* ─────────────────────────────────────────────
+   RIGHT SIDEBAR — LEGAL
+───────────────────────────────────────────── */
+#sidebar-right {
+  background: var(--surface);
+  border-left: 1px solid var(--border);
+  overflow-y: auto; overflow-x: hidden;
+}
+.rs-head {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border2);
+  padding: 0.75rem 0.85rem 0.6rem;
+  font-family: var(--font-m); font-size: var(--text-xs);
+  letter-spacing: 0.18em; color: var(--muted);
+}
+
+.legal-item {
+  display: flex; align-items: center; gap: 0.55rem;
+  padding: clamp(0.65rem,1.2vw,0.85rem) clamp(0.7rem,1.2vw,1rem);
+  color: var(--muted2); cursor: pointer;
+  border-bottom: 1px solid var(--border2);
+  transition: var(--ease); min-height: 48px;
+  border-left: 3px solid transparent;
+}
+.legal-item:hover { background: var(--surface2); color: var(--text); }
+.legal-item:active { background: var(--surface3); }
+.legal-item.active { background: var(--orange-dim); color: var(--orange); border-left-color: var(--orange); }
+.li-icon { font-size: 0.85rem; flex-shrink: 0; }
+.li-label { font-size: var(--text-sm); flex: 1; }
+
+/* ═══════════════════════════════════════════════════════════
+   BOTTOM NAV  — mobile only
+═══════════════════════════════════════════════════════════ */
+#bottom-nav {
+  display: none;
+  position: fixed; bottom: 0; left: 0; right: 0;
+  height: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  padding-bottom: env(safe-area-inset-bottom);
+  background: rgba(17,17,22,0.97);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border-top: 1px solid var(--border);
+  z-index: 450;
+  display: none;
+  grid-template-columns: repeat(5, 1fr);
+  align-items: center;
+}
+.bn-item {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; gap: 0.22rem; padding: 0.5rem 0.25rem;
+  cursor: pointer; transition: var(--ease);
+  min-height: 56px; text-decoration: none;
+}
+.bn-item:active { opacity: 0.7; }
+.bn-icon { font-size: 1.15rem; line-height: 1; position: relative; }
+.bn-label {
+  font-family: var(--font-m); font-size: 0.58rem;
+  letter-spacing: 0.06em; color: var(--muted);
+  white-space: nowrap; text-align: center;
+}
+.bn-item.active .bn-icon { filter: drop-shadow(0 0 6px var(--orange-glow)); }
+.bn-item.active .bn-label { color: var(--orange); }
+
+/* ═══════════════════════════════════════════════════════════
+   DRAWER  — slides in from left, all breakpoints
+═══════════════════════════════════════════════════════════ */
+#overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(0,0,0,0.7); z-index: 600;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  opacity: 0; transition: opacity 0.25s ease;
+}
+#overlay.open { display: block; }
+#overlay.visible { opacity: 1; }
+
+#drawer {
+  position: fixed; top: 0; bottom: 0; left: 0;
+  width: min(320px, 88vw);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  z-index: 700; overflow-y: auto; overflow-x: hidden;
+  transform: translateX(-100%);
+  transition: transform var(--ease2);
+  padding-top: calc(var(--header-h) + 0.5rem);
+  padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom) + 1rem);
+}
+#drawer.open { transform: translateX(0); }
+
+.drawer-section { margin-bottom: 0.25rem; }
+.drawer-sec-label {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  letter-spacing: 0.18em; color: var(--muted);
+  padding: 0.7rem 1rem 0.4rem;
+  border-bottom: 1px solid var(--border2);
+  position: sticky; top: 0; background: var(--surface); z-index: 5;
+}
+.drawer-item {
+  display: flex; align-items: center; gap: 0.6rem;
+  padding: 0.75rem 1rem; cursor: pointer;
+  color: var(--muted2); font-size: var(--text-sm);
+  border-radius: 0; transition: var(--ease);
+  min-height: 52px;
+  border-left: 3px solid transparent;
+}
+.drawer-item:hover { background: var(--surface2); color: var(--text); }
+.drawer-item:active { background: var(--surface3); }
+.drawer-item.active { background: var(--orange-dim); color: var(--orange); border-left-color: var(--orange); }
+.drawer-item-icon { font-size: 1rem; flex-shrink: 0; width: 1.4rem; text-align: center; }
+.drawer-item-label { flex: 1; }
+
+.drawer-close-row {
+  padding: 0.75rem 1rem;
+  border-top: 1px solid var(--border2);
+  position: sticky; bottom: 0; background: var(--surface);
+}
+.btn-close-drawer {
+  width: 100%; padding: 0.75rem;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius); color: var(--muted2);
+  font-family: var(--font-m); font-size: var(--text-xs);
+  letter-spacing: 0.08em; cursor: pointer;
+  transition: var(--ease);
+}
+.btn-close-drawer:hover { background: var(--surface3); color: var(--text); }
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE CONTENT  — shared by all subpages
+═══════════════════════════════════════════════════════════ */
+.pc { max-width: 820px; margin: 0 auto; }
+.pc-wide { max-width: 1100px; margin: 0 auto; }
+
+/* Page header */
+.pc-header { margin-bottom: clamp(1.25rem, 3vw, 2rem); }
+.pc-pill {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--font-m); font-size: var(--text-xs);
+  letter-spacing: 0.12em; color: var(--muted2);
+  border: 1px solid var(--border);
+  padding: 0.25em 0.7em; border-radius: 99px;
+  margin-bottom: 0.7rem;
+}
+.pc-pill span { color: var(--orange); }
+.pc h1 {
+  font-size: var(--text-2xl); font-weight: 800;
+  letter-spacing: -0.03em; line-height: 1.15;
+  margin-bottom: 0.3rem;
+}
+.pc-meta {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--muted); letter-spacing: 0.1em;
+}
+.pc h2 {
+  font-size: var(--text-lg); font-weight: 700;
+  color: var(--text2); letter-spacing: -0.02em;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+  margin: clamp(1.5rem,3vw,2.25rem) 0 clamp(0.6rem,1.5vw,1rem);
+}
+.pc p { font-size: var(--text-base); line-height: 1.8; color: var(--text2); margin-bottom: 0.85rem; }
+.pc ul { margin: 0.5rem 0 0.85rem 1.5rem; }
+.pc li { font-size: var(--text-base); line-height: 1.8; color: var(--text2); margin-bottom: 0.2rem; }
+.pc strong { color: var(--text); }
+code.inline {
+  font-family: var(--font-m); font-size: 0.9em;
+  color: var(--orange); background: var(--orange-dim);
+  padding: 0.1em 0.4em; border-radius: 3px;
+}
+
+/* Stat row */
+.stat-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(clamp(90px, 15vw, 130px), 1fr));
+  gap: clamp(0.5rem, 1.5vw, 0.85rem);
+  margin: clamp(1rem,2vw,1.5rem) 0 clamp(1.25rem,3vw,2rem);
+}
+.stat-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: clamp(0.75rem,2vw,1.1rem);
+  transition: var(--ease);
+}
+.stat-card:hover { border-color: var(--orange); }
+.stat-val {
+  font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 800;
+  color: var(--orange); letter-spacing: -0.04em; line-height: 1;
+  margin-bottom: 0.25rem;
+}
+.stat-lbl {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--muted2); letter-spacing: 0.1em;
+}
+
+/* Comparison grid */
+.cmp-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(160px, 22vw, 220px), 1fr));
+  gap: clamp(0.5rem, 1.5vw, 0.85rem);
+  margin: clamp(0.75rem,1.5vw,1rem) 0 clamp(1.25rem,3vw,2rem);
+}
+.cmp-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: clamp(0.75rem,2vw,1.1rem);
+  transition: border-color var(--ease);
+}
+.cmp-card:hover { border-color: var(--border); }
+.cmp-name {
+  font-size: var(--text-sm); font-weight: 700;
+  margin-bottom: 0.65rem; padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border2);
+}
+.cmp-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: var(--text-xs); color: var(--muted2);
+  padding: 0.28rem 0;
+  border-bottom: 1px solid var(--border2);
+  gap: 0.5rem;
+}
+.cmp-row:last-child { border-bottom: none; }
+.cmp-row span:first-child { flex: 1; }
+.cmp-val { color: var(--text); font-family: var(--font-m); text-align: right; flex-shrink: 0; }
+.cmp-val.good { color: var(--green); }
+.cmp-val.warn { color: var(--yellow); }
+
+/* Trending list */
+.trend-list { margin: clamp(0.75rem,1.5vw,1rem) 0 clamp(1.25rem,3vw,2rem); }
+.trend-item {
+  display: flex; align-items: center; gap: clamp(0.75rem, 2vw, 1.25rem);
+  padding: clamp(0.65rem,1.5vw,0.9rem) 0;
+  border-bottom: 1px solid var(--border2);
+  transition: var(--ease);
+}
+.trend-item:hover { padding-left: 0.25rem; }
+.trend-rank {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--muted); width: 1.6rem; flex-shrink: 0; text-align: right;
+}
+.trend-info { flex: 1; min-width: 0; }
+.trend-name { font-size: var(--text-base); font-weight: 600; margin-bottom: 0.15rem; }
+.trend-sub { font-size: var(--text-xs); color: var(--muted2); font-family: var(--font-m); }
+.trend-badge {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  padding: 0.2em 0.6em; border-radius: 99px;
+  border: 1px solid; flex-shrink: 0;
+  white-space: nowrap;
+}
+.badge-up    { color: var(--green);  border-color: rgba(61,220,151,0.3);  background: rgba(61,220,151,0.08); }
+.badge-down  { color: var(--red);    border-color: rgba(255,68,68,0.3);   background: rgba(255,68,68,0.08); }
+.badge-new   { color: var(--orange); border-color: var(--orange-dim);     background: var(--orange-dim); }
+.badge-stable{ color: var(--muted2); border-color: var(--border);         background: transparent; }
+
+/* Watchlist */
+.wl-list { margin: clamp(0.75rem,1.5vw,1rem) 0; }
+.wl-item {
+  display: flex; align-items: center; gap: clamp(0.65rem, 2vw, 1rem);
+  padding: clamp(0.7rem,1.5vw,1rem) clamp(0.75rem,2vw,1rem);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); margin-bottom: 0.5rem;
+  transition: var(--ease);
+}
+.wl-item:hover { border-color: var(--border); background: var(--surface3); }
+.wl-emoji { font-size: clamp(1.1rem, 2.5vw, 1.4rem); flex-shrink: 0; }
+.wl-info { flex: 1; min-width: 0; }
+.wl-name { font-size: var(--text-sm); font-weight: 700; margin-bottom: 0.2rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wl-sub  { font-family: var(--font-m); font-size: var(--text-xs); color: var(--muted2); }
+.wl-price { font-family: var(--font-m); font-size: var(--text-sm); font-weight: 700; color: var(--orange); flex-shrink: 0; }
+.wl-price.drop { color: var(--green); }
+
+/* Home screen */
+.home-wrap { max-width: 820px; margin: 0 auto; }
+.home-hero { margin-bottom: clamp(1.5rem,3vw,2.5rem); }
+.home-hero h1 {
+  font-size: var(--text-2xl); font-weight: 800;
+  letter-spacing: -0.04em; line-height: 1.1;
+  margin-bottom: 0.5rem;
+}
+.home-hero h1 em { font-style: normal; color: var(--orange); }
+.home-hero p {
+  font-size: var(--text-base); color: var(--muted2);
+  max-width: 480px; line-height: 1.7;
+}
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(clamp(140px, 20vw, 200px), 1fr));
+  gap: clamp(0.5rem, 1.5vw, 0.85rem);
+  margin-bottom: clamp(1.5rem, 3vw, 2.5rem);
+}
+.home-card {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-lg); padding: clamp(0.9rem, 2vw, 1.25rem);
+  cursor: pointer; transition: var(--ease2);
+}
+.home-card:hover {
+  border-color: var(--orange);
+  background: var(--surface3);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+}
+.home-card:active { transform: translateY(0); }
+.home-card-icon { font-size: clamp(1.5rem, 3vw, 2rem); margin-bottom: 0.7rem; line-height: 1; }
+.home-card-title { font-size: var(--text-sm); font-weight: 700; margin-bottom: 0.25rem; }
+.home-card-desc { font-size: var(--text-xs); color: var(--muted2); line-height: 1.5; }
+.home-card-arrow { color: var(--orange); font-size: var(--text-xs); margin-top: 0.5rem; opacity: 0; transition: opacity var(--ease); }
+.home-card:hover .home-card-arrow { opacity: 1; }
+
+.home-legal {
+  border-top: 1px solid var(--border);
+  padding-top: clamp(0.85rem, 2vw, 1.25rem);
+}
+.home-legal-label {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--muted); letter-spacing: 0.15em; margin-bottom: 0.65rem;
+}
+.home-legal-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.home-legal-btn {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--muted2); padding: 0.4em 0.9em;
+  border: 1px solid var(--border); border-radius: 99px;
+  background: transparent; cursor: pointer;
+  transition: var(--ease);
+}
+.home-legal-btn:hover { color: var(--text); border-color: var(--muted2); background: var(--surface2); }
+
+/* Product placeholder */
+.prod-detail { max-width: 640px; margin: 0 auto; }
+.prod-detail-header {
+  display: flex; align-items: flex-start; gap: 1rem;
+  margin-bottom: clamp(1.25rem, 3vw, 2rem);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+.prod-detail-icon { font-size: clamp(2rem, 5vw, 3rem); flex-shrink: 0; }
+.prod-detail-name { font-size: var(--text-xl); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 0.25rem; }
+.prod-detail-cat { font-family: var(--font-m); font-size: var(--text-xs); color: var(--orange); letter-spacing: 0.1em; }
+.prod-todo {
+  background: var(--surface2); border: 1px dashed var(--border);
+  border-radius: var(--radius-lg); padding: 1.25rem;
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--muted); letter-spacing: 0.05em; line-height: 1.7;
+  margin-top: 1rem;
+}
+.prod-todo .todo-badge {
+  display: inline-block; background: var(--orange-dim);
+  color: var(--orange); padding: 0.2em 0.6em; border-radius: 3px;
+  margin-bottom: 0.5rem; font-size: var(--text-xs); letter-spacing: 0.12em;
+}
+
+/* Seller placeholder */
+.seller-ph {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 60vh; gap: 0.85rem;
+  text-align: center; color: var(--muted2); padding: 2rem;
+}
+.seller-ph-icon { font-size: clamp(2.5rem, 6vw, 4rem); opacity: 0.35; }
+.seller-ph h3 { font-size: var(--text-xl); font-weight: 800; color: var(--text); }
+.seller-ph p { font-size: var(--text-base); max-width: 380px; line-height: 1.7; }
+.seller-ph .todo {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  letter-spacing: 0.1em; border: 1px dashed var(--border);
+  padding: 0.35em 0.85em; border-radius: 99px; color: var(--muted);
+}
+
+/* Loading & error */
+.loading-box {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; min-height: 50vh; gap: 1rem; color: var(--muted2);
+}
+.spinner {
+  width: 36px; height: 36px;
+  border: 2px solid var(--border);
+  border-top-color: var(--orange);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading-text { font-family: var(--font-m); font-size: var(--text-xs); letter-spacing: 0.15em; }
+
+.error-box {
+  max-width: 480px; margin: 3rem auto;
+  display: flex; flex-direction: column; gap: 0.85rem;
+}
+.error-badge {
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--red); border: 1px solid rgba(255,68,68,0.3);
+  padding: 0.25em 0.75em; border-radius: 99px; width: fit-content;
+  letter-spacing: 0.1em;
+}
+.error-title { font-size: var(--text-xl); font-weight: 800; }
+.error-msg { font-size: var(--text-sm); color: var(--muted2); line-height: 1.6; }
+.error-code { font-family: var(--font-m); font-size: var(--text-xs); color: var(--muted); }
+.btn-rawfile {
+  display: inline-flex; align-items: center; gap: 0.4rem;
+  font-family: var(--font-m); font-size: var(--text-xs);
+  color: var(--orange); border: 1px solid var(--orange-dim);
+  padding: 0.5em 1.1em; border-radius: var(--radius);
+  text-decoration: none; width: fit-content;
+  transition: var(--ease);
+}
+.btn-rawfile:hover { background: var(--orange-dim); }
+
+/* ═══════════════════════════════════════════════════════════
+   RESPONSIVE BREAKPOINTS
+═══════════════════════════════════════════════════════════ */
+
+/* Tablet — hide right sidebar */
+@media (max-width: 1024px) {
+  #shell { grid-template-columns: var(--sidebar-w) 1fr; }
+  #sidebar-right { display: none; }
+}
+
+/* Mobile — single column, bottom nav */
+@media (max-width: 680px) {
+  #shell {
+    grid-template-columns: 1fr;
+    padding-bottom: calc(var(--nav-h) + env(safe-area-inset-bottom));
+  }
+  #sidebar-left   { display: none; }
+  #sidebar-right  { display: none; }
+  .h-search       { display: none; }
+  .btn-home       { display: none; }
+  .btn-yt span    { display: none; }
+  .btn-ham        { display: flex; }
+  #bottom-nav     { display: grid; }
+
+  #tab-nav { display: none; } /* replaced by bottom nav */
+}
+
+/* Very small phones */
+@media (max-width: 360px) {
+  :root { --header-h: 50px; --nav-h: 56px; }
+  .h-logo { font-size: 0.9rem; }
+  .h-modes { display: none; }
+}
+
+/* Landscape phone */
+@media (max-width: 680px) and (orientation: landscape) {
+  :root { --nav-h: 52px; }
+  #bottom-nav .bn-label { display: none; }
+}
+
+/* Tablet portrait — show tabs, hide bottom nav */
+@media (min-width: 681px) and (max-width: 1024px) {
+  #bottom-nav { display: none; }
+  #shell { grid-template-columns: var(--sidebar-w) 1fr; }
+}
+
+/* Large / TV: spacious */
+@media (min-width: 2000px) {
+  #shell { grid-template-columns: var(--sidebar-w) 1fr var(--right-w); }
+  .page-tab { height: 56px; }
+  .prod-item { min-height: 48px; }
+  .legal-item { min-height: 56px; }
+}
+</style>
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     ALL SUBPAGE TEMPLATES
-     Every page is embedded here — zero external file fetches needed.
-     Works on file://, localhost, and any static host.
-═══════════════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════════════
+     ALL EMBEDDED TEMPLATES  (zero-fetch design)
+═══════════════════════════════════════════ -->
 
 <template id="tpl-overview">
-<div class="pc">
-  <span class="pill">PRODUCTS · OVERVIEW</span>
-  <h1>Product Overview</h1>
-  <p class="meta">BUYER MODE · 4 CATEGORIES · 16 PRODUCTS TRACKED</p>
-  <p>Your central hub for product intelligence. Track the tech landscape across phones, laptops, earbuds, and monitors — structured, unbiased, noise-free.</p>
+<div class="pc page-enter">
+  <div class="pc-header">
+    <div class="pc-pill"><span>◈</span> PRODUCTS</div>
+    <h1>Product Overview</h1>
+    <p class="pc-meta">BUYER MODE · 4 CATEGORIES · 16 PRODUCTS TRACKED</p>
+  </div>
+  <p>Your central intelligence hub. Browse phones, laptops, earbuds, and monitors with structured, unbiased data — no ads, no affiliate noise.</p>
   <div class="stat-row">
-    <div class="stat"><div class="stat-val">4</div><div class="stat-lbl">CATEGORIES</div></div>
-    <div class="stat"><div class="stat-val">16</div><div class="stat-lbl">PRODUCTS</div></div>
-    <div class="stat"><div class="stat-val">3</div><div class="stat-lbl">TRENDING ↑</div></div>
-    <div class="stat"><div class="stat-val">5</div><div class="stat-lbl">WATCHLISTED</div></div>
+    <div class="stat-card"><div class="stat-val">4</div><div class="stat-lbl">CATEGORIES</div></div>
+    <div class="stat-card"><div class="stat-val">16</div><div class="stat-lbl">PRODUCTS</div></div>
+    <div class="stat-card"><div class="stat-val">3</div><div class="stat-lbl">TRENDING ↑</div></div>
+    <div class="stat-card"><div class="stat-val">5</div><div class="stat-lbl">WATCHLISTED</div></div>
   </div>
   <h2>Categories at a Glance</h2>
-  <div class="cg">
-    <div class="cc"><div class="cc-name">📱 Phones</div><div class="cr"><span>Models tracked</span><span class="cv">4</span></div><div class="cr"><span>Top pick</span><span class="cv">Pixel 9 Pro</span></div><div class="cr"><span>Price range</span><span class="cv">$799–$1,299</span></div></div>
-    <div class="cc"><div class="cc-name">💻 Laptops</div><div class="cr"><span>Models tracked</span><span class="cv">4</span></div><div class="cr"><span>Top pick</span><span class="cv">MacBook Pro M4</span></div><div class="cr"><span>Price range</span><span class="cv">$999–$2,499</span></div></div>
-    <div class="cc"><div class="cc-name">🎧 Earbuds</div><div class="cr"><span>Models tracked</span><span class="cv">4</span></div><div class="cr"><span>Top pick</span><span class="cv">Sony WF-1000XM6</span></div><div class="cr"><span>Price range</span><span class="cv">$199–$349</span></div></div>
-    <div class="cc"><div class="cc-name">🖥️ Monitors</div><div class="cr"><span>Models tracked</span><span class="cv">3</span></div><div class="cr"><span>Top pick</span><span class="cv">LG OLED 27 4K</span></div><div class="cr"><span>Price range</span><span class="cv">$449–$1,299</span></div></div>
+  <div class="cmp-grid">
+    <div class="cmp-card"><div class="cmp-name">📱 Phones</div><div class="cmp-row"><span>Models tracked</span><span class="cmp-val">4</span></div><div class="cmp-row"><span>Top pick</span><span class="cmp-val good">Pixel 9 Pro</span></div><div class="cmp-row"><span>Price range</span><span class="cmp-val">$799–$1,299</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">💻 Laptops</div><div class="cmp-row"><span>Models tracked</span><span class="cmp-val">4</span></div><div class="cmp-row"><span>Top pick</span><span class="cmp-val good">MacBook Pro M4</span></div><div class="cmp-row"><span>Price range</span><span class="cmp-val">$999–$2,499</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">🎧 Earbuds</div><div class="cmp-row"><span>Models tracked</span><span class="cmp-val">4</span></div><div class="cmp-row"><span>Top pick</span><span class="cmp-val good">Sony WF-1000XM6</span></div><div class="cmp-row"><span>Price range</span><span class="cmp-val">$199–$349</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">🖥️ Monitors</div><div class="cmp-row"><span>Models tracked</span><span class="cmp-val">3</span></div><div class="cmp-row"><span>Top pick</span><span class="cmp-val good">LG OLED 27 4K</span></div><div class="cmp-row"><span>Price range</span><span class="cmp-val">$449–$1,299</span></div></div>
   </div>
-  <h2>How to Use This App</h2>
-  <p>Browse products in the <strong>left panel</strong> (or the ☰ menu on mobile). Use <strong>Compare</strong> to view specs side-by-side. <strong>Trending</strong> shows momentum rankings. Add items to your <strong>Watchlist</strong> to track them. Legal documents are in the right panel or menu.</p>
-  <p>All product data lives in the <code style="font-family:var(--font-m);font-size:0.8rem;color:var(--orange)">PRODUCTS</code> array at the top of <code style="font-family:var(--font-m);font-size:0.8rem;color:var(--orange)">index.html</code> — edit it to add categories and items without touching any other code.</p>
+  <h2>How to Use</h2>
+  <p>On desktop, browse products in the <strong>left panel</strong>. On mobile, tap <strong>☰</strong> or use the <strong>bottom nav</strong> to navigate between views and products. Use <strong>Compare</strong> for side-by-side specs, <strong>Trending</strong> for momentum rankings, and <strong>Watchlist</strong> to track items.</p>
+  <p>All product data lives in the <code class="inline">PRODUCTS</code> array inside <code class="inline">index.html</code> — edit that array to add or remove categories and items instantly.</p>
 </div>
 </template>
 
 <template id="tpl-compare">
-<div class="pc" style="max-width:820px">
-  <span class="pill">PRODUCTS · COMPARE</span>
-  <h1>Compare Products</h1>
-  <p class="meta">SIDE-BY-SIDE SPECS · PLACEHOLDER DATA · REPLACE WITH LIVE SOURCE</p>
-  <p>Compare specifications across top models in each category. Data below is illustrative — wire up your data source to populate this view dynamically.</p>
+<div class="pc-wide page-enter">
+  <div class="pc-header">
+    <div class="pc-pill"><span>⇄</span> COMPARE</div>
+    <h1>Compare Products</h1>
+    <p class="pc-meta">SIDE-BY-SIDE SPECS · PLACEHOLDER DATA · REPLACE WITH LIVE SOURCE</p>
+  </div>
+  <p>Spec comparisons across top models in each category. Replace this placeholder data with your live source — the card structure stays the same.</p>
+
   <h2>📱 Flagship Phones</h2>
-  <div class="cg">
-    <div class="cc"><div class="cc-name">iPhone 16 Pro</div><div class="cr"><span>Chip</span><span class="cv">A18 Pro</span></div><div class="cr"><span>RAM</span><span class="cv">8 GB</span></div><div class="cr"><span>Display</span><span class="cv">6.3″ OLED 120Hz</span></div><div class="cr"><span>Battery</span><span class="cv">3,582 mAh</span></div><div class="cr"><span>Price</span><span class="cv">$999</span></div></div>
-    <div class="cc"><div class="cc-name">Pixel 9 Pro</div><div class="cr"><span>Chip</span><span class="cv">Tensor G4</span></div><div class="cr"><span>RAM</span><span class="cv">16 GB</span></div><div class="cr"><span>Display</span><span class="cv">6.3″ LTPO 120Hz</span></div><div class="cr"><span>Battery</span><span class="cv">4,700 mAh</span></div><div class="cr"><span>Price</span><span class="cv">$999</span></div></div>
-    <div class="cc"><div class="cc-name">Galaxy S25 Ultra</div><div class="cr"><span>Chip</span><span class="cv">SD 8 Elite</span></div><div class="cr"><span>RAM</span><span class="cv">12 GB</span></div><div class="cr"><span>Display</span><span class="cv">6.9″ AMOLED 120Hz</span></div><div class="cr"><span>Battery</span><span class="cv">5,000 mAh</span></div><div class="cr"><span>Price</span><span class="cv">$1,299</span></div></div>
-    <div class="cc"><div class="cc-name">OnePlus 13</div><div class="cr"><span>Chip</span><span class="cv">SD 8 Elite</span></div><div class="cr"><span>RAM</span><span class="cv">16 GB</span></div><div class="cr"><span>Display</span><span class="cv">6.82″ AMOLED 120Hz</span></div><div class="cr"><span>Battery</span><span class="cv">6,000 mAh</span></div><div class="cr"><span>Price</span><span class="cv">$899</span></div></div>
+  <div class="cmp-grid">
+    <div class="cmp-card"><div class="cmp-name">iPhone 16 Pro</div><div class="cmp-row"><span>Chip</span><span class="cmp-val">A18 Pro</span></div><div class="cmp-row"><span>RAM</span><span class="cmp-val">8 GB</span></div><div class="cmp-row"><span>Display</span><span class="cmp-val">6.3″ OLED 120Hz</span></div><div class="cmp-row"><span>Battery</span><span class="cmp-val">3,582 mAh</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val">$999</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">Pixel 9 Pro</div><div class="cmp-row"><span>Chip</span><span class="cmp-val">Tensor G4</span></div><div class="cmp-row"><span>RAM</span><span class="cmp-val good">16 GB</span></div><div class="cmp-row"><span>Display</span><span class="cmp-val">6.3″ LTPO 120Hz</span></div><div class="cmp-row"><span>Battery</span><span class="cmp-val good">4,700 mAh</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val">$999</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">Galaxy S25 Ultra</div><div class="cmp-row"><span>Chip</span><span class="cmp-val">SD 8 Elite</span></div><div class="cmp-row"><span>RAM</span><span class="cmp-val">12 GB</span></div><div class="cmp-row"><span>Display</span><span class="cmp-val good">6.9″ AMOLED 120Hz</span></div><div class="cmp-row"><span>Battery</span><span class="cmp-val good">5,000 mAh</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val warn">$1,299</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">OnePlus 13</div><div class="cmp-row"><span>Chip</span><span class="cmp-val">SD 8 Elite</span></div><div class="cmp-row"><span>RAM</span><span class="cmp-val good">16 GB</span></div><div class="cmp-row"><span>Display</span><span class="cmp-val">6.82″ AMOLED 120Hz</span></div><div class="cmp-row"><span>Battery</span><span class="cmp-val good">6,000 mAh</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val good">$899</span></div></div>
   </div>
+
   <h2>💻 Ultrabooks</h2>
-  <div class="cg">
-    <div class="cc"><div class="cc-name">MacBook Pro M4</div><div class="cr"><span>Chip</span><span class="cv">Apple M4 Pro</span></div><div class="cr"><span>RAM</span><span class="cv">24 GB</span></div><div class="cr"><span>Storage</span><span class="cv">512 GB SSD</span></div><div class="cr"><span>Display</span><span class="cv">14.2″ Liquid Retina</span></div><div class="cr"><span>Price</span><span class="cv">$1,999</span></div></div>
-    <div class="cc"><div class="cc-name">ThinkPad X1 Carbon</div><div class="cr"><span>Chip</span><span class="cv">Core Ultra 7</span></div><div class="cr"><span>RAM</span><span class="cv">32 GB</span></div><div class="cr"><span>Storage</span><span class="cv">1 TB SSD</span></div><div class="cr"><span>Display</span><span class="cv">14″ IPS 2.8K</span></div><div class="cr"><span>Price</span><span class="cv">$1,649</span></div></div>
-    <div class="cc"><div class="cc-name">Dell XPS 15</div><div class="cr"><span>Chip</span><span class="cv">Core Ultra 9</span></div><div class="cr"><span>RAM</span><span class="cv">32 GB</span></div><div class="cr"><span>Storage</span><span class="cv">1 TB SSD</span></div><div class="cr"><span>Display</span><span class="cv">15.6″ OLED 3.5K</span></div><div class="cr"><span>Price</span><span class="cv">$1,799</span></div></div>
-    <div class="cc"><div class="cc-name">LG Gram 16</div><div class="cr"><span>Chip</span><span class="cv">Core Ultra 7</span></div><div class="cr"><span>RAM</span><span class="cv">16 GB</span></div><div class="cr"><span>Storage</span><span class="cv">512 GB SSD</span></div><div class="cr"><span>Display</span><span class="cv">16″ IPS WQXGA</span></div><div class="cr"><span>Price</span><span class="cv">$1,299</span></div></div>
+  <div class="cmp-grid">
+    <div class="cmp-card"><div class="cmp-name">MacBook Pro M4</div><div class="cmp-row"><span>Chip</span><span class="cmp-val">Apple M4 Pro</span></div><div class="cmp-row"><span>RAM</span><span class="cmp-val">24 GB</span></div><div class="cmp-row"><span>Storage</span><span class="cmp-val">512 GB SSD</span></div><div class="cmp-row"><span>Battery life</span><span class="cmp-val good">22 hrs</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val">$1,999</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">ThinkPad X1 Carbon</div><div class="cmp-row"><span>Chip</span><span class="cmp-val">Core Ultra 7</span></div><div class="cmp-row"><span>RAM</span><span class="cmp-val good">32 GB</span></div><div class="cmp-row"><span>Storage</span><span class="cmp-val">1 TB SSD</span></div><div class="cmp-row"><span>Battery life</span><span class="cmp-val">15 hrs</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val">$1,649</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">Dell XPS 15</div><div class="cmp-row"><span>Chip</span><span class="cmp-val">Core Ultra 9</span></div><div class="cmp-row"><span>RAM</span><span class="cmp-val good">32 GB</span></div><div class="cmp-row"><span>Storage</span><span class="cmp-val">1 TB SSD</span></div><div class="cmp-row"><span>Battery life</span><span class="cmp-val">13 hrs</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val warn">$1,799</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">LG Gram 16</div><div class="cmp-row"><span>Chip</span><span class="cmp-val">Core Ultra 7</span></div><div class="cmp-row"><span>RAM</span><span class="cmp-val">16 GB</span></div><div class="cmp-row"><span>Storage</span><span class="cmp-val">512 GB SSD</span></div><div class="cmp-row"><span>Battery life</span><span class="cmp-val good">20 hrs</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val good">$1,299</span></div></div>
   </div>
+
   <h2>🎧 ANC Earbuds</h2>
-  <div class="cg">
-    <div class="cc"><div class="cc-name">AirPods Pro 2</div><div class="cr"><span>ANC</span><span class="cv">Yes (H2)</span></div><div class="cr"><span>Battery</span><span class="cv">6h + 24h case</span></div><div class="cr"><span>Codec</span><span class="cv">AAC</span></div><div class="cr"><span>Price</span><span class="cv">$249</span></div></div>
-    <div class="cc"><div class="cc-name">Sony WF-1000XM6</div><div class="cr"><span>ANC</span><span class="cv">Yes (QN3)</span></div><div class="cr"><span>Battery</span><span class="cv">8h + 24h case</span></div><div class="cr"><span>Codec</span><span class="cv">LDAC / AAC</span></div><div class="cr"><span>Price</span><span class="cv">$279</span></div></div>
-    <div class="cc"><div class="cc-name">Bose QC Ultra</div><div class="cr"><span>ANC</span><span class="cv">Yes (CustomTune)</span></div><div class="cr"><span>Battery</span><span class="cv">6h + 24h case</span></div><div class="cr"><span>Codec</span><span class="cv">aptX Adaptive</span></div><div class="cr"><span>Price</span><span class="cv">$299</span></div></div>
-    <div class="cc"><div class="cc-name">Galaxy Buds3 Pro</div><div class="cr"><span>ANC</span><span class="cv">Yes (Blade design)</span></div><div class="cr"><span>Battery</span><span class="cv">6h + 18h case</span></div><div class="cr"><span>Codec</span><span class="cv">SSC HiFi</span></div><div class="cr"><span>Price</span><span class="cv">$249</span></div></div>
+  <div class="cmp-grid">
+    <div class="cmp-card"><div class="cmp-name">AirPods Pro 2</div><div class="cmp-row"><span>ANC</span><span class="cmp-val">H2 chip</span></div><div class="cmp-row"><span>Bud battery</span><span class="cmp-val">6 hrs</span></div><div class="cmp-row"><span>Case total</span><span class="cmp-val">30 hrs</span></div><div class="cmp-row"><span>Codec</span><span class="cmp-val">AAC</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val">$249</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">Sony WF-1000XM6</div><div class="cmp-row"><span>ANC</span><span class="cmp-val good">QN3 chip</span></div><div class="cmp-row"><span>Bud battery</span><span class="cmp-val good">8 hrs</span></div><div class="cmp-row"><span>Case total</span><span class="cmp-val">32 hrs</span></div><div class="cmp-row"><span>Codec</span><span class="cmp-val good">LDAC / AAC</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val">$279</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">Bose QC Ultra</div><div class="cmp-row"><span>ANC</span><span class="cmp-val">CustomTune</span></div><div class="cmp-row"><span>Bud battery</span><span class="cmp-val">6 hrs</span></div><div class="cmp-row"><span>Case total</span><span class="cmp-val">24 hrs</span></div><div class="cmp-row"><span>Codec</span><span class="cmp-val">aptX Adaptive</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val warn">$299</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">Galaxy Buds3 Pro</div><div class="cmp-row"><span>ANC</span><span class="cmp-val">Blade design</span></div><div class="cmp-row"><span>Bud battery</span><span class="cmp-val">6 hrs</span></div><div class="cmp-row"><span>Case total</span><span class="cmp-val">24 hrs</span></div><div class="cmp-row"><span>Codec</span><span class="cmp-val">SSC HiFi</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val good">$249</span></div></div>
+  </div>
+
+  <h2>🖥️ Monitors</h2>
+  <div class="cmp-grid">
+    <div class="cmp-card"><div class="cmp-name">LG UltraFine 5K</div><div class="cmp-row"><span>Panel</span><span class="cmp-val">IPS 5K</span></div><div class="cmp-row"><span>Refresh</span><span class="cmp-val">60 Hz</span></div><div class="cmp-row"><span>USB-C</span><span class="cmp-val good">96W PD</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val warn">$1,299</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">Dell UltraSharp 27</div><div class="cmp-row"><span>Panel</span><span class="cmp-val">IPS 4K</span></div><div class="cmp-row"><span>Refresh</span><span class="cmp-val">60 Hz</span></div><div class="cmp-row"><span>USB-C</span><span class="cmp-val">90W PD</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val">$549</span></div></div>
+    <div class="cmp-card"><div class="cmp-name">LG OLED 27 4K</div><div class="cmp-row"><span>Panel</span><span class="cmp-val good">OLED 4K</span></div><div class="cmp-row"><span>Refresh</span><span class="cmp-val good">240 Hz</span></div><div class="cmp-row"><span>USB-C</span><span class="cmp-val">90W PD</span></div><div class="cmp-row"><span>Price</span><span class="cmp-val">$799</span></div></div>
   </div>
 </div>
 </template>
 
 <template id="tpl-trending">
-<div class="pc">
-  <span class="pill">PRODUCTS · TRENDING</span>
-  <h1>Trending Now</h1>
-  <p class="meta">RANKED BY SEARCH MOMENTUM · PLACEHOLDER DATA · WEEK OF 2025-01</p>
-  <p>Products generating the most research activity this week. Signals derived from search volume, review velocity, and price movement.</p>
-  <h2>🔥 Top 10 This Week</h2>
-  <div class="tr-item"><span class="tr-rank">01</span><div style="flex:1"><div class="tr-name">Sony WF-1000XM6</div><div style="font-size:.74rem;color:var(--muted2)">Earbuds · ANC · $279</div></div><span class="tr-tag">↑ NEW</span></div>
-  <div class="tr-item"><span class="tr-rank">02</span><div style="flex:1"><div class="tr-name">MacBook Pro M4</div><div style="font-size:.74rem;color:var(--muted2)">Laptop · Apple Silicon · $1,999</div></div><span class="tr-tag">↑ +3</span></div>
-  <div class="tr-item"><span class="tr-rank">03</span><div style="flex:1"><div class="tr-name">Galaxy S25 Ultra</div><div style="font-size:.74rem;color:var(--muted2)">Phone · Android · $1,299</div></div><span class="tr-tag">→ STABLE</span></div>
-  <div class="tr-item"><span class="tr-rank">04</span><div style="flex:1"><div class="tr-name">LG OLED 27 4K</div><div style="font-size:.74rem;color:var(--muted2)">Monitor · OLED · $799</div></div><span class="tr-tag">↑ +1</span></div>
-  <div class="tr-item"><span class="tr-rank">05</span><div style="flex:1"><div class="tr-name">Pixel 9 Pro</div><div style="font-size:.74rem;color:var(--muted2)">Phone · Android · $999</div></div><span class="tr-tag">↓ -2</span></div>
-  <div class="tr-item"><span class="tr-rank">06</span><div style="flex:1"><div class="tr-name">OnePlus 13</div><div style="font-size:.74rem;color:var(--muted2)">Phone · Android · $899</div></div><span class="tr-tag">↑ +4</span></div>
-  <div class="tr-item"><span class="tr-rank">07</span><div style="flex:1"><div class="tr-name">Dell UltraSharp 27</div><div style="font-size:.74rem;color:var(--muted2)">Monitor · IPS · $549</div></div><span class="tr-tag">→ STABLE</span></div>
-  <div class="tr-item"><span class="tr-rank">08</span><div style="flex:1"><div class="tr-name">AirPods Pro 2</div><div style="font-size:.74rem;color:var(--muted2)">Earbuds · ANC · $249</div></div><span class="tr-tag">↓ -1</span></div>
-  <div class="tr-item"><span class="tr-rank">09</span><div style="flex:1"><div class="tr-name">ThinkPad X1 Carbon</div><div style="font-size:.74rem;color:var(--muted2)">Laptop · Business · $1,649</div></div><span class="tr-tag">↑ +2</span></div>
-  <div class="tr-item"><span class="tr-rank">10</span><div style="flex:1"><div class="tr-name">iPhone 16 Pro</div><div style="font-size:.74rem;color:var(--muted2)">Phone · iOS · $999</div></div><span class="tr-tag">↓ -3</span></div>
+<div class="pc page-enter">
+  <div class="pc-header">
+    <div class="pc-pill"><span>↑</span> TRENDING</div>
+    <h1>Trending Now</h1>
+    <p class="pc-meta">RANKED BY SEARCH MOMENTUM · PLACEHOLDER DATA · WEEK OF 2025-01</p>
+  </div>
+  <p>Products generating the most research activity this week. Signals derived from search volume, review velocity, and price movement patterns.</p>
+  <div class="trend-list">
+    <div class="trend-item"><span class="trend-rank">01</span><div class="trend-info"><div class="trend-name">Sony WF-1000XM6</div><div class="trend-sub">Earbuds · ANC · $279</div></div><span class="trend-badge badge-new">↑ NEW ENTRY</span></div>
+    <div class="trend-item"><span class="trend-rank">02</span><div class="trend-info"><div class="trend-name">MacBook Pro M4</div><div class="trend-sub">Laptop · Apple Silicon · $1,999</div></div><span class="trend-badge badge-up">↑ +3</span></div>
+    <div class="trend-item"><span class="trend-rank">03</span><div class="trend-info"><div class="trend-name">Galaxy S25 Ultra</div><div class="trend-sub">Phone · Android · $1,299</div></div><span class="trend-badge badge-stable">→ STABLE</span></div>
+    <div class="trend-item"><span class="trend-rank">04</span><div class="trend-info"><div class="trend-name">LG OLED 27 4K</div><div class="trend-sub">Monitor · OLED · $799</div></div><span class="trend-badge badge-up">↑ +1</span></div>
+    <div class="trend-item"><span class="trend-rank">05</span><div class="trend-info"><div class="trend-name">Pixel 9 Pro</div><div class="trend-sub">Phone · Android · $999</div></div><span class="trend-badge badge-down">↓ −2</span></div>
+    <div class="trend-item"><span class="trend-rank">06</span><div class="trend-info"><div class="trend-name">OnePlus 13</div><div class="trend-sub">Phone · Android · $899</div></div><span class="trend-badge badge-up">↑ +4</span></div>
+    <div class="trend-item"><span class="trend-rank">07</span><div class="trend-info"><div class="trend-name">Dell UltraSharp 27</div><div class="trend-sub">Monitor · IPS 4K · $549</div></div><span class="trend-badge badge-stable">→ STABLE</span></div>
+    <div class="trend-item"><span class="trend-rank">08</span><div class="trend-info"><div class="trend-name">AirPods Pro 2</div><div class="trend-sub">Earbuds · ANC · $249</div></div><span class="trend-badge badge-down">↓ −1</span></div>
+    <div class="trend-item"><span class="trend-rank">09</span><div class="trend-info"><div class="trend-name">ThinkPad X1 Carbon</div><div class="trend-sub">Laptop · Business · $1,649</div></div><span class="trend-badge badge-up">↑ +2</span></div>
+    <div class="trend-item"><span class="trend-rank">10</span><div class="trend-info"><div class="trend-name">iPhone 16 Pro</div><div class="trend-sub">Phone · iOS · $999</div></div><span class="trend-badge badge-down">↓ −3</span></div>
+  </div>
 </div>
 </template>
 
 <template id="tpl-watchlist">
-<div class="pc">
-  <span class="pill">PRODUCTS · WATCHLIST</span>
-  <h1>Your Watchlist</h1>
-  <p class="meta">5 ITEMS · DEMO DATA · CONNECT BACKEND FOR LIVE ALERTS</p>
-  <p>Products you're tracking. Price drops and stock changes will alert you here once connected to a live data source.</p>
-  <h2>Tracked Items</h2>
-  <div class="wl-item"><span class="wl-ic">📱</span><div class="wl-info"><div class="wl-name">Pixel 9 Pro</div><div class="wl-meta">Added 3 days ago · In Stock</div></div><span class="wl-price">$999</span></div>
-  <div class="wl-item"><span class="wl-ic">💻</span><div class="wl-info"><div class="wl-name">MacBook Pro M4</div><div class="wl-meta">Added 1 week ago · In Stock</div></div><span class="wl-price">$1,999</span></div>
-  <div class="wl-item"><span class="wl-ic">🎧</span><div class="wl-info"><div class="wl-name">Sony WF-1000XM6</div><div class="wl-meta">Added today · Limited Stock</div></div><span class="wl-price" style="color:#f0c040">$279</span></div>
-  <div class="wl-item"><span class="wl-ic">🖥️</span><div class="wl-info"><div class="wl-name">LG OLED 27 4K</div><div class="wl-meta">Added 2 weeks ago · In Stock</div></div><span class="wl-price">$799</span></div>
-  <div class="wl-item"><span class="wl-ic">📱</span><div class="wl-info"><div class="wl-name">Galaxy S25 Ultra</div><div class="wl-meta">Added 5 days ago · In Stock</div></div><span class="wl-price">$1,299</span></div>
-  <p style="margin-top:1.5rem;font-family:var(--font-m);font-size:0.68rem;color:var(--muted)">
-    TODO: Connect to a backend API for real-time price tracking and stock alerts.
-  </p>
+<div class="pc page-enter">
+  <div class="pc-header">
+    <div class="pc-pill"><span>☆</span> WATCHLIST</div>
+    <h1>Your Watchlist</h1>
+    <p class="pc-meta">5 ITEMS · DEMO DATA · CONNECT BACKEND FOR LIVE ALERTS</p>
+  </div>
+  <p>Products you're tracking. Price drops and stock changes will surface here once connected to a live data source.</p>
+  <div class="wl-list">
+    <div class="wl-item"><span class="wl-emoji">📱</span><div class="wl-info"><div class="wl-name">Pixel 9 Pro</div><div class="wl-sub">Added 3 days ago · In Stock</div></div><span class="wl-price">$999</span></div>
+    <div class="wl-item"><span class="wl-emoji">💻</span><div class="wl-info"><div class="wl-name">MacBook Pro M4</div><div class="wl-sub">Added 1 week ago · In Stock</div></div><span class="wl-price">$1,999</span></div>
+    <div class="wl-item"><span class="wl-emoji">🎧</span><div class="wl-info"><div class="wl-name">Sony WF-1000XM6</div><div class="wl-sub">Added today · Limited Stock ⚠️</div></div><span class="wl-price drop">$279</span></div>
+    <div class="wl-item"><span class="wl-emoji">🖥️</span><div class="wl-info"><div class="wl-name">LG OLED 27 4K</div><div class="wl-sub">Added 2 weeks ago · In Stock</div></div><span class="wl-price">$799</span></div>
+    <div class="wl-item"><span class="wl-emoji">📱</span><div class="wl-info"><div class="wl-name">Galaxy S25 Ultra</div><div class="wl-sub">Added 5 days ago · In Stock</div></div><span class="wl-price">$1,299</span></div>
+  </div>
+  <div class="prod-todo"><div class="todo-badge">TODO</div><br>Connect to a backend API for real-time price tracking, stock monitoring, and push alerts. Replace demo data above with dynamic user state from <code class="inline">watchlist</code> storage key.</div>
 </div>
 </template>
 
 <template id="tpl-terms">
-<div class="pc">
-  <span class="pill">LEGAL · TERMS OF SERVICE</span>
-  <h1>Terms of Service</h1>
-  <p class="meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
-  <p>By accessing or using VIA Decide ("the Service"), you agree to be bound by these Terms of Service. Please read them carefully before using the platform.</p>
+<div class="pc page-enter">
+  <div class="pc-header">
+    <div class="pc-pill"><span>§</span> LEGAL</div>
+    <h1>Terms of Service</h1>
+    <p class="pc-meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+  </div>
+  <p>By accessing or using VIA Decide ("the Service"), you agree to be bound by these Terms. Please read them carefully before using the platform.</p>
   <h2>1. Acceptance of Terms</h2>
   <p>Your access to and use of the Service is conditioned on your acceptance of and compliance with these Terms. These Terms apply to all visitors, users, and others who access or use the Service.</p>
   <h2>2. Use of the Service</h2>
-  <p>You agree to use the Service only for lawful purposes and in a way that does not infringe the rights of others or restrict anyone else's use and enjoyment of the Service.</p>
+  <p>You agree to use the Service only for lawful purposes and in a way that does not infringe the rights of others or restrict anyone else's enjoyment of the Service.</p>
   <ul>
     <li>Do not attempt to gain unauthorized access to any part of the Service.</li>
-    <li>Do not transmit any unsolicited commercial communications.</li>
-    <li>Do not use automated tools to scrape or harvest data.</li>
+    <li>Do not transmit unsolicited commercial communications.</li>
+    <li>Do not use automated tools to scrape or harvest data without permission.</li>
   </ul>
   <h2>3. Intellectual Property</h2>
   <p>The Service and its original content, features, and functionality are and will remain the exclusive property of VIA Decide and its licensors. The Service is protected by copyright, trademark, and other applicable laws.</p>
   <h2>4. Limitation of Liability</h2>
-  <p>In no event shall VIA Decide, its directors, employees, partners, agents, suppliers, or affiliates, be liable for any indirect, incidental, special, consequential, or punitive damages arising out of your use of the Service.</p>
+  <p>In no event shall VIA Decide, its directors, employees, partners, agents, suppliers, or affiliates be liable for any indirect, incidental, special, consequential, or punitive damages arising from your use of the Service.</p>
   <h2>5. Changes to Terms</h2>
   <p>We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide reasonable notice prior to any new terms taking effect.</p>
   <h2>6. Contact</h2>
@@ -308,10 +963,12 @@
 </template>
 
 <template id="tpl-privacy">
-<div class="pc">
-  <span class="pill">LEGAL · PRIVACY POLICY</span>
-  <h1>Privacy Policy</h1>
-  <p class="meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+<div class="pc page-enter">
+  <div class="pc-header">
+    <div class="pc-pill"><span>⬡</span> LEGAL</div>
+    <h1>Privacy Policy</h1>
+    <p class="pc-meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+  </div>
   <p>VIA Decide is committed to protecting your personal information and your right to privacy.</p>
   <h2>1. Information We Collect</h2>
   <ul>
@@ -333,10 +990,12 @@
 </template>
 
 <template id="tpl-conditions">
-<div class="pc">
-  <span class="pill">LEGAL · CONDITIONS OF USE</span>
-  <h1>Conditions of Use</h1>
-  <p class="meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+<div class="pc page-enter">
+  <div class="pc-header">
+    <div class="pc-pill"><span>⊞</span> LEGAL</div>
+    <h1>Conditions of Use</h1>
+    <p class="pc-meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+  </div>
   <p>These Conditions of Use govern your access to and use of the VIA Decide platform. Continued use constitutes acceptance.</p>
   <h2>1. Eligibility</h2>
   <p>You must be at least 18 years of age to use this Service.</p>
@@ -357,10 +1016,12 @@
 </template>
 
 <template id="tpl-rules">
-<div class="pc">
-  <span class="pill">LEGAL · COMMUNITY RULES</span>
-  <h1>Community Rules</h1>
-  <p class="meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+<div class="pc page-enter">
+  <div class="pc-header">
+    <div class="pc-pill"><span>▤</span> LEGAL</div>
+    <h1>Community Rules</h1>
+    <p class="pc-meta">LAST UPDATED · 2025-01-01 · VERSION 1.0</p>
+  </div>
   <p>These rules ensure VIA Decide remains a high-signal, zero-noise environment for product intelligence.</p>
   <h2>Rule 1 · Be Accurate</h2>
   <p>Only submit product information you can verify. Speculation must be clearly labeled. Fabricated specs result in immediate removal and possible account suspension.</p>
@@ -377,135 +1038,169 @@
 </div>
 </template>
 
-<!-- ═══════════════════════════════════════════════════════
-     MOBILE DRAWER
-═══════════════════════════════════════════════════════ -->
-<div id="drawer-overlay" onclick="closeDrawer()"></div>
-<div id="drawer">
-  <button class="drawer-close" onclick="closeDrawer()">✕</button>
+<!-- ═══════════════════════════════════
+     OVERLAY + DRAWER
+═══════════════════════════════════ -->
+<div id="overlay" onclick="closeDrawer()"></div>
+<nav id="drawer" role="navigation" aria-label="Main menu">
   <div id="drawer-inner"></div>
-</div>
+</nav>
 
-<!-- ═══════════════════════════════════════════════════════
+<!-- ═══════════════════════════════════
      HEADER
-═══════════════════════════════════════════════════════ -->
-<header id="header">
-  <a class="h-logo" href="intro.html">VIA<span>.</span>DECIDE</a>
-  <div class="h-mode-wrap" id="modeTabs"></div>
-  <div class="h-spacer"></div>
-  <div class="h-search">
-    <span style="color:var(--muted);font-size:0.85rem">⌕</span>
-    <input type="text" id="searchInput" placeholder="Search products…" autocomplete="off" />
-  </div>
-  <a class="btn-yt" id="ytBtn" href="#" target="_blank" rel="noopener">
-    <span class="yi">▶</span><span>Watch Demo</span>
+═══════════════════════════════════ -->
+<header id="header" role="banner">
+
+  <a class="h-logo" href="intro.html" aria-label="VIA Decide home">
+    VIA<span>.</span>DECIDE
+    <span class="h-logo-dot" aria-hidden="true"></span>
   </a>
-  <a class="btn-intro" href="intro.html">← Home</a>
-  <button class="btn-ham" id="hamBtn" onclick="openDrawer()" aria-label="Open menu">☰</button>
+
+  <div class="h-div" aria-hidden="true"></div>
+
+  <div class="h-modes" id="modeTabs" role="tablist" aria-label="App mode"></div>
+
+  <div class="h-spacer"></div>
+
+  <div class="h-search" role="search">
+    <span class="h-search-icon" aria-hidden="true">⌕</span>
+    <input type="search" id="searchInput"
+           placeholder="Search products…"
+           autocomplete="off"
+           aria-label="Search products"/>
+  </div>
+
+  <a class="btn-yt" id="ytBtn" href="#" target="_blank" rel="noopener noreferrer"
+     aria-label="Watch demo on YouTube">
+    <span class="btn-yt-icon" aria-hidden="true">▶</span>
+    <span>Watch Demo</span>
+  </a>
+
+  <a class="btn-home" href="intro.html">← Home</a>
+
+  <button class="btn-ham" id="hamBtn" onclick="openDrawer()"
+          aria-label="Open navigation menu" aria-expanded="false">
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+      <line x1="2" y1="5"  x2="18" y2="5"/>
+      <line x1="2" y1="10" x2="18" y2="10"/>
+      <line x1="2" y1="15" x2="18" y2="15"/>
+    </svg>
+  </button>
+
 </header>
 
-<!-- ═══════════════════════════════════════════════════════
-     SHELL
-═══════════════════════════════════════════════════════ -->
+<!-- ═══════════════════════════════════
+     MAIN SHELL
+═══════════════════════════════════ -->
 <div id="shell">
-  <aside id="sidebar-left"></aside>
+
+  <aside id="sidebar-left" role="complementary" aria-label="Product categories">
+    <!-- rendered by JS -->
+  </aside>
+
   <div id="main-wrap">
-    <nav id="tab-nav"></nav>
-    <main id="main-content"></main>
+    <nav id="tab-nav" role="tablist" aria-label="Page views">
+      <!-- rendered by JS -->
+    </nav>
+    <main id="main-content" role="main" tabindex="-1">
+      <!-- rendered by JS -->
+    </main>
   </div>
-  <aside id="sidebar-right"></aside>
+
+  <aside id="sidebar-right" role="complementary" aria-label="Legal links">
+    <!-- rendered by JS -->
+  </aside>
+
 </div>
 
+<!-- ═══════════════════════════════════
+     BOTTOM NAV  (mobile)
+═══════════════════════════════════ -->
+<nav id="bottom-nav" role="navigation" aria-label="Bottom navigation">
+  <!-- rendered by JS -->
+</nav>
+
+<!-- ═══════════════════════════════════
+     APPLICATION SCRIPT
+═══════════════════════════════════ -->
 <script>
 'use strict';
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    CONSTANTS
-───────────────────────────────────── */
-const YOUTUBE_CHANNEL_URL = "https://youtube.com/@yourchannel"; // TODO: update URL
+══════════════════════════════════════════════ */
+const YOUTUBE_CHANNEL_URL = "https://youtube.com/@yourchannel"; // TODO: update
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    MODE SYSTEM
-   Add { id:"seller", label:"Seller Portal" } to enable seller tab.
-   Then call renderSellerShell() from switchMode().
-───────────────────────────────────── */
+   Add { id:"seller", label:"Seller Portal" } + renderSellerShell() to enable.
+══════════════════════════════════════════════ */
 let MODE = "buyer";
 const MODES = [
-  { id: "buyer", label: "Buyer Mode" },
+  { id: "buyer",  label: "Buyer Mode" },
   // TODO: { id: "seller", label: "Seller Portal" },
 ];
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    PAGES REGISTRY
-   name    → matches tpl-{name} template id
-   file    → used as fallback href / fetch target
-   section → "products" | "legal"
-   icon    → display symbol
-───────────────────────────────────── */
+   name     → matches <template id="tpl-{name}">
+   file     → href/fetch fallback if template missing
+   section  → "products" | "legal"
+   icon     → symbol
+   bnIcon   → emoji for bottom nav (mobile)
+   bnLabel  → short label for bottom nav
+══════════════════════════════════════════════ */
 const PAGES = [
-  { name: "overview",   label: "Overview",       file: "overview.html",   section: "products", icon: "◈" },
-  { name: "compare",    label: "Compare",         file: "compare.html",    section: "products", icon: "⇄" },
-  { name: "trending",   label: "Trending",        file: "trending.html",   section: "products", icon: "↑" },
-  { name: "watchlist",  label: "Watchlist",       file: "watchlist.html",  section: "products", icon: "☆" },
-  { name: "terms",      label: "Terms",           file: "terms.html",      section: "legal",    icon: "§" },
-  { name: "privacy",    label: "Privacy Policy",  file: "privacy.html",    section: "legal",    icon: "⬡" },
-  { name: "conditions", label: "Conditions",      file: "conditions.html", section: "legal",    icon: "⊞" },
-  { name: "rules",      label: "Rules",           file: "rules.html",      section: "legal",    icon: "▤" },
-  // TODO: Seller pages:
-  // { name: "dashboard", label: "Dashboard", file: "seller/dashboard.html", section: "seller", icon: "⊡" },
+  { name:"overview",   label:"Overview",      file:"overview.html",   section:"products", icon:"◈", bnIcon:"◈", bnLabel:"Overview" },
+  { name:"compare",    label:"Compare",        file:"compare.html",    section:"products", icon:"⇄", bnIcon:"⇄", bnLabel:"Compare"  },
+  { name:"trending",   label:"Trending",       file:"trending.html",   section:"products", icon:"↑", bnIcon:"🔥",bnLabel:"Trending"  },
+  { name:"watchlist",  label:"Watchlist",      file:"watchlist.html",  section:"products", icon:"☆", bnIcon:"☆", bnLabel:"Watchlist" },
+  { name:"terms",      label:"Terms",          file:"terms.html",      section:"legal",    icon:"§" },
+  { name:"privacy",    label:"Privacy Policy", file:"privacy.html",    section:"legal",    icon:"⬡" },
+  { name:"conditions", label:"Conditions",     file:"conditions.html", section:"legal",    icon:"⊞" },
+  { name:"rules",      label:"Rules",          file:"rules.html",      section:"legal",    icon:"▤" },
+  // TODO: seller pages → section:"seller"
 ];
 
-/* ─────────────────────────────────────
-   PRODUCTS DATA  ← edit freely
-───────────────────────────────────── */
+/* ══════════════════════════════════════════════
+   PRODUCTS  ← edit this array to add/remove items
+══════════════════════════════════════════════ */
 const PRODUCTS = [
-  {
-    id: "phones", label: "Phones", icon: "📱",
-    items: [
-      { id: "iphone-16",  label: "iPhone 16 Pro" },
-      { id: "pixel-9",    label: "Pixel 9 Pro" },
-      { id: "s25-ultra",  label: "Galaxy S25 Ultra" },
-      { id: "oneplus-13", label: "OnePlus 13" },
-    ],
-  },
-  {
-    id: "laptops", label: "Laptops", icon: "💻",
-    items: [
-      { id: "mbp-m4",      label: "MacBook Pro M4" },
-      { id: "thinkpad-x1", label: "ThinkPad X1 Carbon" },
-      { id: "dell-xps15",  label: "Dell XPS 15" },
-      { id: "lg-gram",     label: "LG Gram 16" },
-    ],
-  },
-  {
-    id: "earbuds", label: "Earbuds", icon: "🎧",
-    items: [
-      { id: "airpods-pro", label: "AirPods Pro 2" },
-      { id: "buds3-pro",   label: "Galaxy Buds3 Pro" },
-      { id: "bose-qc",     label: "Bose QC Ultra" },
-      { id: "wf1000xm6",   label: "Sony WF-1000XM6" },
-    ],
-  },
-  {
-    id: "monitors", label: "Monitors", icon: "🖥️",
-    items: [
-      { id: "lg-ultrafine", label: "LG UltraFine 5K" },
-      { id: "dell-u2723d",  label: "Dell UltraSharp 27" },
-      { id: "lg-oled",      label: "LG OLED 27 4K" },
-    ],
-  },
+  { id:"phones",   label:"Phones",   icon:"📱", items:[
+    { id:"iphone-16",  label:"iPhone 16 Pro" },
+    { id:"pixel-9",    label:"Pixel 9 Pro" },
+    { id:"s25-ultra",  label:"Galaxy S25 Ultra" },
+    { id:"oneplus-13", label:"OnePlus 13" },
+  ]},
+  { id:"laptops",  label:"Laptops",  icon:"💻", items:[
+    { id:"mbp-m4",      label:"MacBook Pro M4" },
+    { id:"thinkpad-x1", label:"ThinkPad X1 Carbon" },
+    { id:"dell-xps15",  label:"Dell XPS 15" },
+    { id:"lg-gram",     label:"LG Gram 16" },
+  ]},
+  { id:"earbuds",  label:"Earbuds",  icon:"🎧", items:[
+    { id:"airpods-pro", label:"AirPods Pro 2" },
+    { id:"buds3-pro",   label:"Galaxy Buds3 Pro" },
+    { id:"bose-qc",     label:"Bose QC Ultra" },
+    { id:"wf1000xm6",   label:"Sony WF-1000XM6" },
+  ]},
+  { id:"monitors", label:"Monitors", icon:"🖥️", items:[
+    { id:"lg-ultrafine", label:"LG UltraFine 5K" },
+    { id:"dell-u2723d",  label:"Dell UltraSharp 27" },
+    { id:"lg-oled",      label:"LG OLED 27 4K" },
+  ]},
 ];
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    STATE
-───────────────────────────────────── */
-let activePageName  = null;
-let activeProductId = null;
-let isLoading       = false;
+══════════════════════════════════════════════ */
+let activePageName   = null;
+let activeProductId  = null;
+let isLoading        = false;
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    ROUTING
-───────────────────────────────────── */
+══════════════════════════════════════════════ */
 function registerRoutes() {
   window.addEventListener('hashchange', handleRoute);
   handleRoute();
@@ -521,24 +1216,27 @@ function handleRoute() {
   renderHomePage();
 }
 
-/* ─────────────────────────────────────
-   SHELL
-───────────────────────────────────── */
+/* ══════════════════════════════════════════════
+   RENDER SHELL
+══════════════════════════════════════════════ */
 function renderShell() {
   document.getElementById('ytBtn').href = YOUTUBE_CHANNEL_URL;
   renderModeTabs();
   renderSidebar();
-  renderSubpageNav();
+  renderTabNav();
   renderRightSidebar();
-  renderDrawer();
+  renderBottomNav();
+  renderDrawerContent();
 }
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    MODE TABS
-───────────────────────────────────── */
+══════════════════════════════════════════════ */
 function renderModeTabs() {
   document.getElementById('modeTabs').innerHTML = MODES.map(m =>
-    `<button class="mode-tab ${m.id === MODE ? 'active' : ''}" onclick="switchMode('${m.id}')">${escH(m.label)}</button>`
+    `<button class="mode-tab ${m.id===MODE?'active':''}"
+             onclick="switchMode('${m.id}')"
+             role="tab" aria-selected="${m.id===MODE}">${escH(m.label)}</button>`
   ).join('');
 }
 
@@ -547,33 +1245,43 @@ function switchMode(mode) {
   renderModeTabs();
   if (mode === 'buyer') renderHomePage();
   else renderSellerPlaceholder();
+  // TODO: else if (mode === 'seller') renderSellerShell();
 }
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    LEFT SIDEBAR
-───────────────────────────────────── */
+══════════════════════════════════════════════ */
 function renderSidebar() {
   const open = getOpenCats();
   document.getElementById('sidebar-left').innerHTML = `
-    <div class="sb-label">MY PRODUCTS <span class="sb-collapse" onclick="collapseAll()" title="Collapse">−</span></div>
-    <div class="sb-section">${PRODUCTS.map(c => renderCat(c, open)).join('')}</div>
+    <div class="sb-head">
+      <span class="sb-head-label">MY PRODUCTS</span>
+      <button class="sb-head-action" onclick="collapseAll()" title="Collapse all">−</button>
+    </div>
+    <div class="sb-body">${PRODUCTS.map(c => renderCat(c, open)).join('')}</div>
   `;
 }
 
 function renderCat(cat, open) {
   const isOpen = open.includes(cat.id);
   return `
-    <div>
-      <div class="cat-head" onclick="toggleCat('${cat.id}')">
-        <span class="cat-icon">${cat.icon}</span>
+    <div class="cat-wrap">
+      <div class="cat-head" onclick="toggleCat('${cat.id}')"
+           role="button" aria-expanded="${isOpen}" tabindex="0"
+           onkeydown="if(event.key==='Enter'||event.key===' ')toggleCat('${cat.id}')">
+        <span class="cat-emoji" aria-hidden="true">${cat.icon}</span>
         <span class="cat-name">${escH(cat.label)}</span>
-        <span class="cat-arrow ${isOpen ? 'open' : ''}">▶</span>
+        <span class="cat-count">${cat.items.length}</span>
+        <svg class="cat-chevron ${isOpen?'open':''}" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><polyline points="3,2 9,6 3,10"/></svg>
       </div>
-      <div class="cat-items ${isOpen ? 'open' : ''}">
+      <div class="cat-items ${isOpen?'open':''}" role="list">
         ${cat.items.map(item => `
-          <div class="prod-item ${item.id === activeProductId ? 'active' : ''}"
-               onclick="selectProduct('${cat.id}','${item.id}','${escH(item.label)}')">
-            <span class="prod-dot"></span>${escH(item.label)}
+          <div class="prod-item ${item.id===activeProductId?'active':''}"
+               onclick="selectProduct('${cat.id}','${item.id}','${escH(item.label)}','${cat.icon}')"
+               role="listitem" tabindex="0"
+               onkeydown="if(event.key==='Enter')selectProduct('${cat.id}','${item.id}','${escH(item.label)}','${cat.icon}')">
+            <span class="prod-dot" aria-hidden="true"></span>
+            <span class="prod-name">${escH(item.label)}</span>
           </div>`).join('')}
       </div>
     </div>`;
@@ -583,115 +1291,203 @@ function getOpenCats() {
   try { return JSON.parse(sessionStorage.getItem('openCats') || '["phones"]'); }
   catch(e) { return ["phones"]; }
 }
+
 function toggleCat(id) {
   let o = getOpenCats();
   o = o.includes(id) ? o.filter(x => x !== id) : [...o, id];
   sessionStorage.setItem('openCats', JSON.stringify(o));
   renderSidebar();
 }
-function collapseAll() { sessionStorage.setItem('openCats', '[]'); renderSidebar(); }
 
-function selectProduct(catId, itemId, label) {
+function collapseAll() {
+  sessionStorage.setItem('openCats', '[]');
+  renderSidebar();
+}
+
+function selectProduct(catId, itemId, label, emoji) {
   activeProductId = itemId;
   activePageName  = null;
   setActive(null);
   closeDrawer();
+  history.replaceState(null, '', window.location.pathname);
   document.getElementById('main-content').innerHTML = `
-    <div class="pc">
-      <span class="pill">${escH(catId.toUpperCase())} · PRODUCT</span>
-      <h1>${escH(label)}</h1>
-      <p class="meta">SELECT A VIEW TAB ABOVE TO SEE STRUCTURED DATA</p>
-      <p>Product detail panel for <strong>${escH(label)}</strong>. Use the tabs above — <strong>Compare</strong>, <strong>Trending</strong>, etc. — to explore structured data, or click another product in the panel.</p>
-      <p style="font-family:var(--font-m);font-size:0.68rem;color:var(--muted);margin-top:1.5rem">
-        TODO: Connect product ID <code style="color:var(--orange)">${escH(itemId)}</code> to a live data source.
+    <div class="prod-detail page-enter">
+      <div class="prod-detail-header">
+        <div class="prod-detail-icon">${emoji}</div>
+        <div>
+          <div class="prod-detail-name">${escH(label)}</div>
+          <div class="prod-detail-cat">${escH(catId.toUpperCase())}</div>
+        </div>
+      </div>
+      <p style="font-size:var(--text-base);color:var(--text2);line-height:1.7">
+        Use the <strong>Compare</strong>, <strong>Trending</strong>, or <strong>Overview</strong> tabs above to explore structured data across all products. This panel is reserved for product-specific deep dives.
       </p>
+      <div class="prod-todo">
+        <div class="todo-badge">TODO</div><br>
+        Connect product ID <code class="inline">${escH(itemId)}</code> to a live data source. Render specs, pricing history, user reviews, and availability here.
+      </div>
     </div>`;
 }
 
-/* ─────────────────────────────────────
-   SUBPAGE NAV TABS
-───────────────────────────────────── */
-function renderSubpageNav() {
+/* ══════════════════════════════════════════════
+   TAB NAV (desktop/tablet)
+══════════════════════════════════════════════ */
+function renderTabNav() {
   document.getElementById('tab-nav').innerHTML = PAGES
     .filter(p => p.section === 'products')
-    .map(p => `<button class="page-tab ${activePageName === p.name ? 'active' : ''}" onclick="loadPage('${p.name}')"><span class="tab-ic">${p.icon}</span>${escH(p.label)}</button>`)
-    .join('');
+    .map(p => `
+      <button class="page-tab ${activePageName===p.name?'active':''}"
+              onclick="loadPage('${p.name}')"
+              role="tab" aria-selected="${activePageName===p.name}">
+        <span class="tab-ic" aria-hidden="true">${p.icon}</span>${escH(p.label)}
+      </button>`).join('');
 }
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    RIGHT SIDEBAR
-───────────────────────────────────── */
+══════════════════════════════════════════════ */
 function renderRightSidebar() {
   document.getElementById('sidebar-right').innerHTML =
-    `<div class="sb-label" style="padding:.65rem .7rem;border-bottom:1px solid var(--border2)">LEGAL</div>` +
-    PAGES.filter(p => p.section === 'legal').map(p =>
-      `<div class="legal-item ${activePageName === p.name ? 'active' : ''}" onclick="loadPage('${p.name}')">
-         <span class="li-ic">${p.icon}</span>${escH(p.label)}
-       </div>`
-    ).join('');
+    `<div class="rs-head">LEGAL</div>` +
+    PAGES.filter(p => p.section === 'legal').map(p => `
+      <div class="legal-item ${activePageName===p.name?'active':''}"
+           onclick="loadPage('${p.name}')"
+           role="button" tabindex="0"
+           onkeydown="if(event.key==='Enter')loadPage('${p.name}')">
+        <span class="li-icon" aria-hidden="true">${p.icon}</span>
+        <span class="li-label">${escH(p.label)}</span>
+      </div>`).join('');
 }
 
-/* ─────────────────────────────────────
-   MOBILE DRAWER
-───────────────────────────────────── */
-function renderDrawer() {
+/* ══════════════════════════════════════════════
+   BOTTOM NAV (mobile)
+══════════════════════════════════════════════ */
+function renderBottomNav() {
+  const productPages = PAGES.filter(p => p.section === 'products');
+  // 4 product pages + 1 "More" drawer opener
+  document.getElementById('bottom-nav').innerHTML =
+    productPages.map(p => `
+      <div class="bn-item ${activePageName===p.name?'active':''}"
+           onclick="loadPage('${p.name}')"
+           role="button" tabindex="0"
+           aria-label="${escH(p.label)}"
+           onkeydown="if(event.key==='Enter')loadPage('${p.name}')">
+        <span class="bn-icon" aria-hidden="true">${p.bnIcon||p.icon}</span>
+        <span class="bn-label">${escH(p.bnLabel||p.label)}</span>
+      </div>`).join('') +
+    `<div class="bn-item" onclick="openDrawer()"
+          role="button" tabindex="0" aria-label="Open menu">
+       <span class="bn-icon" aria-hidden="true">☰</span>
+       <span class="bn-label">More</span>
+     </div>`;
+}
+
+/* ══════════════════════════════════════════════
+   DRAWER
+══════════════════════════════════════════════ */
+function renderDrawerContent() {
+  const sections = [
+    { key:'products', label:'VIEWS' },
+    { key:'legal',    label:'LEGAL' },
+  ];
   let html = '';
 
-  html += `<div class="drawer-label">VIEWS</div><div class="drawer-section">`;
-  PAGES.filter(p => p.section === 'products').forEach(p => {
-    html += `<div class="drawer-item ${activePageName === p.name ? 'active' : ''}" onclick="loadPage('${p.name}');closeDrawer()">${p.icon} ${escH(p.label)}</div>`;
+  sections.forEach(sec => {
+    html += `<div class="drawer-section"><div class="drawer-sec-label">${sec.label}</div>`;
+    PAGES.filter(p => p.section === sec.key).forEach(p => {
+      html += `<div class="drawer-item ${activePageName===p.name?'active':''}"
+                    onclick="loadPage('${p.name}');closeDrawer()"
+                    role="button" tabindex="0"
+                    onkeydown="if(event.key==='Enter'){loadPage('${p.name}');closeDrawer()}">
+                 <span class="drawer-item-icon" aria-hidden="true">${p.icon}</span>
+                 <span class="drawer-item-label">${escH(p.label)}</span>
+               </div>`;
+    });
+    html += `</div>`;
   });
-  html += '</div>';
 
-  html += `<div class="drawer-label">LEGAL</div><div class="drawer-section">`;
-  PAGES.filter(p => p.section === 'legal').forEach(p => {
-    html += `<div class="drawer-item ${activePageName === p.name ? 'active' : ''}" onclick="loadPage('${p.name}');closeDrawer()">${p.icon} ${escH(p.label)}</div>`;
-  });
-  html += '</div>';
-
-  html += `<div class="drawer-label">MY PRODUCTS</div><div class="drawer-section">`;
+  html += `<div class="drawer-section"><div class="drawer-sec-label">MY PRODUCTS</div>`;
   PRODUCTS.forEach(cat => {
     cat.items.forEach(item => {
-      html += `<div class="drawer-item ${item.id === activeProductId ? 'active' : ''}" onclick="selectProduct('${cat.id}','${item.id}','${escH(item.label)}')">${cat.icon} ${escH(item.label)}</div>`;
+      html += `<div class="drawer-item ${item.id===activeProductId?'active':''}"
+                    onclick="selectProduct('${cat.id}','${item.id}','${escH(item.label)}','${cat.icon}');closeDrawer()"
+                    role="button" tabindex="0">
+                 <span class="drawer-item-icon" aria-hidden="true">${cat.icon}</span>
+                 <span class="drawer-item-label">${escH(item.label)}</span>
+               </div>`;
     });
   });
-  html += '</div>';
+  html += `</div>`;
 
-  html += `<div class="drawer-label">NAVIGATE</div><div class="drawer-section">
-    <div class="drawer-item" onclick="window.location.href='intro.html'">← Back to Intro</div>
-    <div class="drawer-item" onclick="renderHomePage();closeDrawer()">⌂ Home</div>
+  html += `<div class="drawer-section"><div class="drawer-sec-label">NAVIGATE</div>
+    <div class="drawer-item" onclick="renderHomePage();closeDrawer()" role="button" tabindex="0">
+      <span class="drawer-item-icon">⌂</span><span class="drawer-item-label">Home Dashboard</span>
+    </div>
+    <div class="drawer-item" onclick="window.location.href='intro.html'" role="button" tabindex="0">
+      <span class="drawer-item-icon">←</span><span class="drawer-item-label">Back to Intro</span>
+    </div>
+  </div>`;
+
+  html += `<div class="drawer-close-row">
+    <button class="btn-close-drawer" onclick="closeDrawer()">CLOSE MENU</button>
   </div>`;
 
   document.getElementById('drawer-inner').innerHTML = html;
 }
 
-function openDrawer()  { renderDrawer(); document.getElementById('drawer').classList.add('open'); document.getElementById('drawer-overlay').classList.add('open'); }
-function closeDrawer() { document.getElementById('drawer').classList.remove('open'); document.getElementById('drawer-overlay').classList.remove('open'); }
+function openDrawer() {
+  renderDrawerContent();
+  const overlay = document.getElementById('overlay');
+  const drawer  = document.getElementById('drawer');
+  overlay.style.display = 'block';
+  requestAnimationFrame(() => {
+    overlay.classList.add('open');
+    requestAnimationFrame(() => overlay.classList.add('visible'));
+  });
+  drawer.classList.add('open');
+  document.getElementById('hamBtn').setAttribute('aria-expanded','true');
+  document.body.style.overflow = 'hidden';
+}
 
-/* ─────────────────────────────────────
-   LOAD PAGE
-   Strategy: template-first (zero network dependency).
-   1. Check for embedded <template id="tpl-{name}">
-   2. Found → render instantly (works offline + file://)
-   3. Not found → try fetch() for server environments
-   4. Fetch fails → friendly error, no infinite loop
-───────────────────────────────────── */
+function closeDrawer() {
+  const overlay = document.getElementById('overlay');
+  const drawer  = document.getElementById('drawer');
+  overlay.classList.remove('visible');
+  drawer.classList.remove('open');
+  document.getElementById('hamBtn').setAttribute('aria-expanded','false');
+  document.body.style.overflow = '';
+  setTimeout(() => {
+    overlay.classList.remove('open');
+    overlay.style.display = '';
+  }, 260);
+}
+
+// Close drawer on Escape
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeDrawer();
+});
+
+/* ══════════════════════════════════════════════
+   LOAD PAGE  — template-first, zero 404s possible
+   1. Try embedded <template id="tpl-{name}"> (instant, offline-safe)
+   2. No template → try fetch() (server environments)
+   3. Fetch fails → friendly error, no infinite loop
+══════════════════════════════════════════════ */
 function loadPage(pageName, pushHistory = true) {
   if (isLoading) return;
   const page = PAGES.find(p => p.name === pageName);
   if (!page) { showError('Unknown page', pageName, null); return; }
-  if (pageName === activePageName) return; // already showing this page
+  if (pageName === activePageName) return; // already shown
 
-  isLoading = true;
+  isLoading       = true;
   activePageName  = pageName;
   activeProductId = null;
 
   if (pushHistory) history.replaceState(null, '', `#page=${page.file}`);
 
   setActive(pageName);
-  closeDrawer();
 
-  // ── 1. Try embedded template (always works, zero network) ──
+  // 1. Try embedded template
   const tpl = document.getElementById(`tpl-${pageName}`);
   if (tpl) {
     isLoading = false;
@@ -702,7 +1498,7 @@ function loadPage(pageName, pushHistory = true) {
     return;
   }
 
-  // ── 2. No template: try fetch (for server environments) ──
+  // 2. Fetch fallback
   showLoading();
   const ctrl  = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), 5000);
@@ -722,35 +1518,39 @@ function injectContent(html) {
   const el = document.getElementById('main-content');
   el.innerHTML = html;
   el.scrollTop = 0;
+  el.focus({ preventScroll: true });
 }
 
-/* ─────────────────────────────────────
-   ACTIVE STATE
-───────────────────────────────────── */
+/* ══════════════════════════════════════════════
+   ACTIVE STATE  — sync all nav surfaces
+══════════════════════════════════════════════ */
 function setActive(pageName) {
   activePageName = pageName;
-  renderSubpageNav();
+  renderTabNav();
   renderRightSidebar();
   renderSidebar();
+  renderBottomNav();
 }
 
-/* ─────────────────────────────────────
-   UI STATES
-───────────────────────────────────── */
+/* ══════════════════════════════════════════════
+   UI STATE RENDERERS
+══════════════════════════════════════════════ */
 function showLoading() {
-  document.getElementById('main-content').innerHTML =
-    `<div class="loading-box"><div class="spinner"></div><span style="font-family:var(--font-m);font-size:.72rem;letter-spacing:.1em;color:var(--muted)">LOADING…</span></div>`;
+  document.getElementById('main-content').innerHTML = `
+    <div class="loading-box">
+      <div class="spinner" role="status" aria-label="Loading"></div>
+      <span class="loading-text">LOADING…</span>
+    </div>`;
 }
 
 function showError(label, file, err) {
   document.getElementById('main-content').innerHTML = `
-    <div style="max-width:460px;margin:2rem auto;display:flex;flex-direction:column;gap:.85rem">
-      <span style="font-family:var(--font-m);font-size:.65rem;color:#f55;border:1px solid rgba(255,85,85,.3);padding:.22rem .6rem;border-radius:2px;width:fit-content">ERROR · LOAD FAILED</span>
-      <h2 style="font-size:1.3rem;font-weight:800">${escH(label)}</h2>
-      <p style="font-size:.84rem;color:var(--muted2);line-height:1.6">The page could not be loaded.</p>
-      ${err ? `<code style="font-family:var(--font-m);font-size:.72rem;color:var(--muted)">${escH(String(err))}</code>` : ''}
-      <a href="${escH(file)}" target="_blank" rel="noopener"
-         style="display:inline-flex;align-items:center;gap:.4rem;font-family:var(--font-m);font-size:.73rem;color:var(--orange);border:1px solid var(--orange-dim);padding:.42rem .9rem;border-radius:2px;text-decoration:none;width:fit-content">
+    <div class="error-box page-enter">
+      <span class="error-badge">ERROR · LOAD FAILED</span>
+      <h2 class="error-title">${escH(label)}</h2>
+      <p class="error-msg">The page could not be loaded.</p>
+      ${err ? `<code class="error-code">${escH(String(err))}</code>` : ''}
+      <a href="${escH(file)}" target="_blank" rel="noopener noreferrer" class="btn-rawfile">
         Open Raw File ↗
       </a>
     </div>`;
@@ -766,24 +1566,26 @@ function renderHomePage() {
   const legalPages   = PAGES.filter(p => p.section === 'legal');
 
   document.getElementById('main-content').innerHTML = `
-    <div class="home-wrap">
-      <h2>Welcome to <span>VIA Decide</span></h2>
-      <p class="home-sub">// SELECT A VIEW OR BROWSE PRODUCTS IN THE PANEL · TAP ☰ ON MOBILE</p>
-      <div class="card-grid">
+    <div class="home-wrap page-enter">
+      <div class="home-hero">
+        <h1>Welcome to <em>VIA&nbsp;Decide</em></h1>
+        <p>Research, compare, and decide on the tech that matters — structured data, zero noise.</p>
+      </div>
+      <div class="home-grid">
         ${productPages.map(p => `
-          <div class="card" onclick="loadPage('${p.name}')">
-            <div class="card-ic">${p.icon}</div>
-            <div class="card-t">${escH(p.label)}</div>
-            <div class="card-d">Open the ${escH(p.label.toLowerCase())} view</div>
+          <div class="home-card" onclick="loadPage('${p.name}')" role="button" tabindex="0"
+               onkeydown="if(event.key==='Enter')loadPage('${p.name}')">
+            <div class="home-card-icon">${p.icon}</div>
+            <div class="home-card-title">${escH(p.label)}</div>
+            <div class="home-card-desc">Open ${escH(p.label.toLowerCase())} view</div>
+            <div class="home-card-arrow">→</div>
           </div>`).join('')}
       </div>
-      <div style="border-top:1px solid var(--border);padding-top:.85rem">
-        <p style="font-family:var(--font-m);font-size:.63rem;color:var(--muted);letter-spacing:.1em;margin-bottom:.6rem">LEGAL</p>
-        <div style="display:flex;flex-wrap:wrap;gap:.4rem">
+      <div class="home-legal">
+        <p class="home-legal-label">LEGAL</p>
+        <div class="home-legal-btns">
           ${legalPages.map(p => `
-            <button onclick="loadPage('${p.name}')"
-                    style="font-family:var(--font-m);font-size:.7rem;padding:.28rem .65rem;border:1px solid var(--border);border-radius:2px;background:transparent;color:var(--muted2);cursor:pointer;transition:var(--ease)"
-                    onmouseover="this.style.color='var(--text)'" onmouseout="this.style.color='var(--muted2)'">
+            <button class="home-legal-btn" onclick="loadPage('${p.name}')">
               ${p.icon} ${escH(p.label)}
             </button>`).join('')}
         </div>
@@ -791,60 +1593,76 @@ function renderHomePage() {
     </div>`;
 }
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    SELLER PLACEHOLDER
-   TODO: Replace with renderSellerShell().
-   Add { id:"seller", label:"Seller Portal" } to MODES array.
-   Add seller pages with section:"seller" to PAGES array.
-───────────────────────────────────── */
+   TODO: Replace renderSellerPlaceholder() with renderSellerShell().
+   To activate seller mode:
+   1. Add { id:"seller", label:"Seller Portal" } to MODES
+   2. Add seller pages with section:"seller" to PAGES
+   3. Build renderSellerShell() to show seller dashboard
+══════════════════════════════════════════════ */
 function renderSellerPlaceholder() {
   activePageName = null; setActive(null);
   document.getElementById('main-content').innerHTML = `
-    <div class="seller-ph">
-      <div class="s-icon">🏪</div>
+    <div class="seller-ph page-enter">
+      <div class="seller-ph-icon">🏪</div>
       <h3>Seller Portal</h3>
       <p>Not yet available. This placeholder marks where the Seller Portal will be built.</p>
       <span class="todo">TODO · ADD renderSellerShell()</span>
     </div>`;
 }
 
-/* ─────────────────────────────────────
-   SEARCH — client-side filter
-───────────────────────────────────── */
+/* ══════════════════════════════════════════════
+   SEARCH
+══════════════════════════════════════════════ */
 document.getElementById('searchInput').addEventListener('input', function () {
   const q = this.value.toLowerCase().trim();
   if (!q) { renderSidebar(); return; }
+
   const results = [];
   PRODUCTS.forEach(cat => cat.items.forEach(item => {
     if (item.label.toLowerCase().includes(q)) results.push({ cat, item });
   }));
+
   const sb = document.getElementById('sidebar-left');
   if (!results.length) {
-    sb.innerHTML = `<div class="sb-label">SEARCH</div><p style="padding:.75rem;font-size:.76rem;color:var(--muted)">No results for "${escH(q)}"</p>`;
+    sb.innerHTML = `
+      <div class="sb-head"><span class="sb-head-label">SEARCH</span></div>
+      <div class="sb-body" style="padding:1rem;font-size:var(--text-sm);color:var(--muted)">
+        No results for "<em>${escH(q)}</em>"
+      </div>`;
     return;
   }
+
   sb.innerHTML = `
-    <div class="sb-label">RESULTS <span style="color:var(--orange)">${results.length}</span></div>
-    <div class="sb-section">
+    <div class="sb-head">
+      <span class="sb-head-label">RESULTS</span>
+      <span style="font-family:var(--font-m);font-size:var(--text-xs);color:var(--orange)">${results.length}</span>
+    </div>
+    <div class="sb-body">
       ${results.map(r => `
-        <div class="prod-item ${r.item.id === activeProductId ? 'active' : ''}"
-             onclick="selectProduct('${r.cat.id}','${r.item.id}','${escH(r.item.label)}')">
-          <span class="prod-dot"></span>${escH(r.item.label)}
-          <span style="margin-left:auto;font-size:.7rem">${r.cat.icon}</span>
+        <div class="prod-item ${r.item.id===activeProductId?'active':''}"
+             onclick="selectProduct('${r.cat.id}','${r.item.id}','${escH(r.item.label)}','${r.cat.icon}')"
+             role="button" tabindex="0">
+          <span class="prod-dot" aria-hidden="true"></span>
+          <span class="prod-name">${escH(r.item.label)}</span>
+          <span style="margin-left:auto;font-size:0.85rem">${r.cat.icon}</span>
         </div>`).join('')}
     </div>`;
 });
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    UTILS
-───────────────────────────────────── */
+══════════════════════════════════════════════ */
 function escH(s) {
-  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+  return String(s)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
 
-/* ─────────────────────────────────────
+/* ══════════════════════════════════════════════
    BOOT
-───────────────────────────────────── */
+══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', () => {
   renderShell();
   registerRoutes();
