@@ -1,85 +1,79 @@
-// ============================================================
-// sw.js — ViaDecide Engine Service Worker
-// BUMP the version below every time you deploy changes.
-// This forces all clients to get fresh content.
-// ============================================================
+/**
+ * sw.js — viadecide.com Service Worker
+ * Provides offline support and caching for the PWA.
+ */
 
-const CACHE_VERSION = 'v' + Date.now(); // auto-busts on every SW update
-const CACHE_NAME = `engine-cache-${CACHE_VERSION}`;
+var CACHE_NAME = "viadecide-v1";
 
-// Files to pre-cache on install (add/remove as needed)
-const PRE_CACHE = [
-  '/',
-  '/index.html',
-  '/favicon.svg',
-  '/manifest.json',
+// Core files to cache on install
+var PRECACHE_URLS = [
+  "/",
+  "/index.html",
+  "/router.js",
+  "/manifest.json"
 ];
 
-// ── Install ──────────────────────────────────────────────────
-self.addEventListener('install', event => {
-  // Skip waiting so the new SW activates immediately
-  self.skipWaiting();
-
+// ---- Install: precache core assets ----
+self.addEventListener("install", function (event) {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return cache.addAll(PRE_CACHE).catch(err => {
-        // Don't fail install if a pre-cache asset is missing
-        console.warn('[SW] Pre-cache failed for some assets:', err);
-      });
+    caches.open(CACHE_NAME).then(function (cache) {
+      return cache.addAll(PRECACHE_URLS);
+    }).then(function () {
+      return self.skipWaiting();
     })
   );
 });
 
-// ── Activate ─────────────────────────────────────────────────
-self.addEventListener('activate', event => {
-  // Take control of all open tabs immediately
+// ---- Activate: clean up old caches ----
+self.addEventListener("activate", function (event) {
   event.waitUntil(
-    Promise.all([
-      // Delete ALL old caches that don't match current version
-      caches.keys().then(keys =>
-        Promise.all(
-          keys
-            .filter(key => key !== CACHE_NAME)
-            .map(key => {
-              console.log('[SW] Deleting old cache:', key);
-              return caches.delete(key);
-            })
-        )
-      ),
-      // Claim all clients so they get the new SW right away
-      self.clients.claim(),
-    ])
+    caches.keys().then(function (keys) {
+      return Promise.all(
+        keys
+          .filter(function (key) { return key !== CACHE_NAME; })
+          .map(function (key) { return caches.delete(key); })
+      );
+    }).then(function () {
+      return self.clients.claim();
+    })
   );
 });
 
-// ── Fetch ─────────────────────────────────────────────────────
-self.addEventListener('fetch', event => {
-  const { request } = event;
+// ---- Fetch: network-first, fallback to cache ----
+self.addEventListener("fetch", function (event) {
+  var req = event.request;
 
   // Only handle GET requests
-  if (request.method !== 'GET') return;
+  if (req.method !== "GET") return;
 
-  // Don't cache API / external requests
-  const url = new URL(request.url);
-  if (!url.origin.includes(self.location.origin)) return;
+  // Skip cross-origin requests (CDN fonts, analytics, etc.)
+  var url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
+
+  // Skip Vercel analytics / speed insights
+  if (url.pathname.startsWith("/_vercel")) return;
 
   event.respondWith(
-    // Network-first strategy: always try network, fall back to cache
-    fetch(request)
-      .then(networkResponse => {
-        // Clone and store fresh response in cache
-        const responseToCache = networkResponse.clone();
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(request, responseToCache);
-        });
+    fetch(req)
+      .then(function (networkResponse) {
+        // Cache a clone of the successful response
+        if (networkResponse && networkResponse.status === 200) {
+          var responseClone = networkResponse.clone();
+          caches.open(CACHE_NAME).then(function (cache) {
+            cache.put(req, responseClone);
+          });
+        }
         return networkResponse;
       })
-      .catch(() => {
-        // Network failed — serve from cache
-        return caches.match(request).then(cached => {
+      .catch(function () {
+        // Network failed — try cache
+        return caches.match(req).then(function (cached) {
           if (cached) return cached;
-          // Last resort: return offline page if available
-          return caches.match('/index.html');
+          // For navigation requests, return index.html as fallback
+          if (req.mode === "navigate") {
+            return caches.match("/index.html");
+          }
+          return new Response("Offline", { status: 503 });
         });
       })
   );
