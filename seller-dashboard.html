@@ -1,0 +1,2289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Decide Seller Portal — ONDC Verified</title>
+<meta name="description" content="Decide India Seller Portal. Manage your ONDC onboarding, UTR submissions, settlements, and invoices."/>
+<meta name="theme-color" content="#FF671F"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=IBM+Plex+Mono:wght@400;500;600&family=DM+Serif+Display&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+/* ══════════════════════════════════════════
+   DESIGN TOKENS
+══════════════════════════════════════════ */
+:root{
+  --navy-950:#070D15;
+  --navy-900:#0D1B2A;
+  --navy-800:#142235;
+  --navy-700:#1C2F46;
+  --navy-600:#243857;
+  --navy-400:#3D5A7A;
+  --navy-200:#7A9BBF;
+  --navy-100:#B8CEDE;
+
+  --orange:#FF671F;
+  --orange-light:#FF8A4C;
+  --orange-dim:rgba(255,103,31,0.12);
+  --orange-border:rgba(255,103,31,0.3);
+
+  --green:#1DB374;
+  --green-dim:rgba(29,179,116,0.12);
+  --green-border:rgba(29,179,116,0.3);
+
+  --amber:#E8A020;
+  --amber-dim:rgba(232,160,32,0.12);
+  --amber-border:rgba(232,160,32,0.3);
+
+  --red:#E53E3E;
+  --red-dim:rgba(229,62,62,0.12);
+  --red-border:rgba(229,62,62,0.3);
+
+  --blue-dim:rgba(66,153,225,0.12);
+  --blue-border:rgba(66,153,225,0.3);
+  --blue:#4299E1;
+
+  --text-primary:#EEF4FB;
+  --text-secondary:#9BB5CE;
+  --text-muted:#5C7A96;
+  --text-dim:#3D5A7A;
+
+  --border:rgba(255,255,255,0.07);
+  --border-md:rgba(255,255,255,0.11);
+  --border-strong:rgba(255,255,255,0.18);
+
+  --surface:#0F1E2D;
+  --surface-raised:#142235;
+  --surface-card:#172840;
+  --surface-input:#0A1520;
+
+  --font-ui:"DM Sans",sans-serif;
+  --font-mono:"IBM Plex Mono",monospace;
+  --font-display:"DM Serif Display",serif;
+
+  --text-xs:11px;--lh-xs:1.4;
+  --text-sm:13px;--lh-sm:1.5;
+  --text-base:15px;--lh-base:1.6;
+  --text-lg:18px;--lh-lg:1.4;
+  --text-xl:22px;--lh-xl:1.3;
+  --text-2xl:28px;--lh-2xl:1.2;
+  --text-3xl:36px;
+
+  --space-1:4px;--space-2:8px;--space-3:12px;--space-4:16px;
+  --space-5:20px;--space-6:24px;--space-8:32px;--space-10:40px;--space-12:48px;
+
+  --radius-sm:6px;--radius-md:12px;--radius-lg:20px;--radius-xl:28px;
+
+  --shadow-sm:0 1px 3px rgba(0,0,0,0.4);
+  --shadow-md:0 4px 16px rgba(0,0,0,0.35);
+  --shadow-lg:0 8px 32px rgba(0,0,0,0.5);
+  --shadow-orange:0 4px 20px rgba(255,103,31,0.25);
+
+  --transition:.18s ease;
+  --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  min-height:100vh;
+  background:var(--navy-950);
+  color:var(--text-primary);
+  font-family:var(--font-ui);
+  font-size:var(--text-base);
+  line-height:var(--lh-base);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+button,input,select,textarea{font:inherit}
+button{background:none;border:none;color:inherit;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed;pointer-events:none}
+a{color:var(--orange);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar{width:6px;height:6px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--navy-600);border-radius:3px}
+
+/* ══════════════════════════════════════════
+   LAYOUT
+══════════════════════════════════════════ */
+#app{min-height:100vh;display:flex;flex-direction:column}
+
+.page{
+  min-height:100vh;
+  display:flex;flex-direction:column;
+  animation:fadeIn .22s ease;
+}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+.container{max-width:960px;margin:0 auto;width:100%;padding:0 var(--space-6)}
+.container-sm{max-width:600px;margin:0 auto;width:100%;padding:0 var(--space-6)}
+.container-xs{max-width:480px;margin:0 auto;width:100%;padding:0 var(--space-6)}
+
+/* ══════════════════════════════════════════
+   HEADER / NAV
+══════════════════════════════════════════ */
+.top-nav{
+  position:sticky;top:0;z-index:100;
+  background:rgba(7,13,21,0.92);
+  backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+}
+.nav-inner{
+  max-width:960px;margin:0 auto;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 var(--space-6);
+  height:60px;gap:var(--space-4);
+}
+.nav-brand{
+  display:flex;align-items:center;gap:var(--space-3);
+  font-family:var(--font-display);
+  font-size:22px;color:var(--text-primary);
+  letter-spacing:-.3px;
+}
+.nav-brand .ondc-tag{
+  font-family:var(--font-ui);
+  font-size:var(--text-xs);font-weight:600;
+  letter-spacing:.6px;text-transform:uppercase;
+  background:var(--blue-dim);border:1px solid var(--blue-border);
+  color:var(--blue);padding:3px 8px;border-radius:var(--radius-sm);
+}
+.nav-actions{display:flex;align-items:center;gap:var(--space-3)}
+.nav-seller-name{
+  font-size:var(--text-sm);color:var(--text-secondary);
+  background:var(--surface-raised);
+  border:1px solid var(--border);
+  padding:var(--space-2) var(--space-3);
+  border-radius:var(--radius-sm);
+}
+.nav-support-btn{
+  font-size:var(--text-sm);font-weight:500;
+  color:var(--text-secondary);
+  border:1px solid var(--border-md);
+  padding:var(--space-2) var(--space-3);
+  border-radius:var(--radius-sm);
+  transition:var(--transition);
+}
+.nav-support-btn:hover{
+  background:var(--surface-raised);
+  color:var(--text-primary);
+  border-color:var(--border-strong);
+}
+.nav-logout-btn{
+  font-size:var(--text-sm);font-weight:500;
+  color:var(--text-muted);
+  padding:var(--space-2) var(--space-3);
+  border-radius:var(--radius-sm);
+  transition:var(--transition);
+}
+.nav-logout-btn:hover{color:var(--text-secondary)}
+
+/* ══════════════════════════════════════════
+   FORMS & INPUTS
+══════════════════════════════════════════ */
+.field{margin-bottom:var(--space-5)}
+.field-label{
+  display:block;
+  font-size:var(--text-sm);font-weight:500;
+  color:var(--text-secondary);
+  margin-bottom:var(--space-2);
+  letter-spacing:.2px;
+}
+.field-label .req{color:var(--orange);margin-left:2px}
+.input{
+  width:100%;
+  background:var(--surface-input);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius-md);
+  color:var(--text-primary);
+  padding:13px var(--space-4);
+  font-size:var(--text-base);
+  transition:border-color var(--transition),box-shadow var(--transition);
+  outline:none;
+}
+.input:focus{
+  border-color:var(--orange);
+  box-shadow:0 0 0 3px var(--orange-dim);
+}
+.input.is-error{border-color:var(--red);box-shadow:0 0 0 3px var(--red-dim)}
+.input.is-valid{border-color:var(--green)}
+.input.is-locked{
+  background:rgba(255,255,255,0.03);
+  color:var(--text-muted);
+  cursor:not-allowed;
+  pointer-events:none;
+}
+.input-mono{font-family:var(--font-mono);font-size:var(--text-base);letter-spacing:.5px}
+
+.field-help{
+  font-size:var(--text-xs);color:var(--text-muted);
+  margin-top:var(--space-2);line-height:1.5;
+}
+.field-error{
+  font-size:var(--text-xs);color:var(--red);
+  margin-top:var(--space-2);line-height:1.5;
+  display:none;
+}
+.field-error.show{display:block}
+.field-success{
+  font-size:var(--text-xs);color:var(--green);
+  margin-top:var(--space-2);
+  display:none;
+}
+.field-success.show{display:block}
+
+/* ── Encrypted Badge ── */
+.encrypted-badge{
+  display:inline-flex;align-items:center;gap:var(--space-1);
+  padding:3px 9px;border-radius:var(--radius-sm);
+  background:rgba(29,179,116,0.08);
+  border:1px solid rgba(29,179,116,0.2);
+  margin-top:var(--space-2);
+}
+.encrypted-badge svg{width:11px;height:11px;flex-shrink:0}
+.encrypted-badge span{
+  font-size:var(--text-xs);font-weight:600;
+  color:#1DB374;letter-spacing:.3px;
+}
+
+/* ══════════════════════════════════════════
+   BUTTONS
+══════════════════════════════════════════ */
+.btn-primary{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);
+  background:var(--orange);color:#fff;
+  padding:13px var(--space-6);
+  border-radius:var(--radius-md);
+  font-size:var(--text-base);font-weight:600;
+  letter-spacing:.2px;
+  transition:background var(--transition),transform var(--transition),box-shadow var(--transition);
+  width:100%;
+  box-shadow:var(--shadow-orange);
+}
+.btn-primary:hover{background:var(--orange-light);transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+
+.btn-secondary{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);
+  background:transparent;
+  border:1px solid var(--border-strong);
+  color:var(--text-primary);
+  padding:12px var(--space-6);
+  border-radius:var(--radius-md);
+  font-size:var(--text-base);font-weight:500;
+  transition:all var(--transition);
+  width:100%;
+}
+.btn-secondary:hover{background:var(--surface-raised);border-color:var(--border-strong)}
+
+.btn-ghost{
+  display:inline-flex;align-items:center;gap:var(--space-2);
+  color:var(--text-secondary);
+  padding:var(--space-2) var(--space-3);
+  border-radius:var(--radius-sm);
+  font-size:var(--text-sm);font-weight:500;
+  transition:all var(--transition);
+}
+.btn-ghost:hover{color:var(--text-primary);background:var(--surface-raised)}
+
+.btn-danger{
+  display:inline-flex;align-items:center;justify-content:center;gap:var(--space-2);
+  background:var(--red-dim);
+  border:1px solid var(--red-border);
+  color:var(--red);
+  padding:12px var(--space-6);
+  border-radius:var(--radius-md);
+  font-size:var(--text-base);font-weight:500;
+  transition:all var(--transition);
+  width:100%;
+}
+.btn-danger:hover{background:rgba(229,62,62,0.2)}
+
+.btn-icon{
+  width:36px;height:36px;
+  display:inline-flex;align-items:center;justify-content:center;
+  border-radius:var(--radius-sm);
+  border:1px solid var(--border-md);
+  color:var(--text-secondary);
+  transition:all var(--transition);
+  flex-shrink:0;
+}
+.btn-icon:hover{background:var(--surface-raised);color:var(--text-primary)}
+
+/* ══════════════════════════════════════════
+   CARDS
+══════════════════════════════════════════ */
+.card{
+  background:var(--surface-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:var(--space-6);
+}
+.card-sm{padding:var(--space-4) var(--space-5)}
+.card-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:var(--space-5);
+  padding-bottom:var(--space-4);
+  border-bottom:1px solid var(--border);
+}
+.card-title{
+  font-size:var(--text-lg);font-weight:600;
+  letter-spacing:-.3px;
+}
+.card-subtitle{
+  font-size:var(--text-sm);color:var(--text-muted);
+  margin-top:3px;
+}
+
+/* ══════════════════════════════════════════
+   STATUS CHIPS
+══════════════════════════════════════════ */
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 10px;border-radius:var(--radius-sm);
+  font-size:var(--text-xs);font-weight:600;
+  letter-spacing:.4px;text-transform:uppercase;
+  white-space:nowrap;
+}
+.chip-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.chip.green{background:var(--green-dim);border:1px solid var(--green-border);color:var(--green)}
+.chip.green .chip-dot{background:var(--green)}
+.chip.amber{background:var(--amber-dim);border:1px solid var(--amber-border);color:var(--amber)}
+.chip.amber .chip-dot{background:var(--amber)}
+.chip.red{background:var(--red-dim);border:1px solid var(--red-border);color:var(--red)}
+.chip.red .chip-dot{background:var(--red)}
+.chip.blue{background:var(--blue-dim);border:1px solid var(--blue-border);color:var(--blue)}
+.chip.blue .chip-dot{background:var(--blue)}
+.chip.muted{background:rgba(255,255,255,0.05);border:1px solid var(--border-md);color:var(--text-muted)}
+.chip.muted .chip-dot{background:var(--text-dim)}
+.chip.orange{background:var(--orange-dim);border:1px solid var(--orange-border);color:var(--orange)}
+
+/* ══════════════════════════════════════════
+   TIMELINE
+══════════════════════════════════════════ */
+.timeline{padding:var(--space-4) 0}
+.timeline-step{
+  display:flex;gap:var(--space-4);
+  position:relative;
+  padding-bottom:var(--space-5);
+}
+.timeline-step:last-child{padding-bottom:0}
+.timeline-left{
+  display:flex;flex-direction:column;align-items:center;
+  flex-shrink:0;width:32px;
+}
+.timeline-node{
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;
+  border:2px solid var(--border-md);
+  background:var(--surface-card);
+  transition:all .3s ease;
+}
+.timeline-node.done{
+  background:var(--green-dim);border-color:var(--green);
+  color:var(--green);
+}
+.timeline-node.active{
+  background:var(--orange-dim);border-color:var(--orange);
+  color:var(--orange);
+  box-shadow:0 0 0 4px var(--orange-dim);
+  animation:pulse 2s infinite;
+}
+.timeline-node.error{background:var(--red-dim);border-color:var(--red);color:var(--red)}
+.timeline-node.pending{color:var(--text-dim)}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 4px var(--orange-dim)}50%{box-shadow:0 0 0 8px rgba(255,103,31,0.05)}}
+.timeline-connector{
+  width:2px;flex:1;margin-top:4px;min-height:20px;
+  background:var(--border-md);
+  transition:background .3s ease;
+}
+.timeline-connector.done{background:var(--green)}
+.timeline-content{flex:1;padding-top:6px;padding-bottom:var(--space-2)}
+.timeline-label{font-weight:600;font-size:var(--text-sm)}
+.timeline-label.done{color:var(--green)}
+.timeline-label.active{color:var(--orange)}
+.timeline-label.error{color:var(--red)}
+.timeline-label.pending{color:var(--text-muted)}
+.timeline-meta{
+  font-size:var(--text-xs);color:var(--text-muted);
+  margin-top:3px;
+  font-family:var(--font-mono);
+}
+.timeline-note{
+  font-size:var(--text-xs);color:var(--text-secondary);
+  margin-top:var(--space-2);
+  background:var(--surface-raised);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:var(--space-2) var(--space-3);
+}
+
+/* ══════════════════════════════════════════
+   TABLES
+══════════════════════════════════════════ */
+.table-wrap{overflow-x:auto;border-radius:var(--radius-md)}
+.data-table{
+  width:100%;border-collapse:collapse;
+  font-size:var(--text-sm);
+  min-width:700px;
+}
+.data-table th{
+  background:var(--surface-raised);
+  color:var(--text-muted);
+  font-size:var(--text-xs);font-weight:600;
+  letter-spacing:.6px;text-transform:uppercase;
+  padding:10px var(--space-4);
+  text-align:left;border-bottom:1px solid var(--border-md);
+  white-space:nowrap;
+}
+.data-table td{
+  padding:13px var(--space-4);
+  border-bottom:1px solid var(--border);
+  color:var(--text-primary);
+  vertical-align:middle;
+}
+.data-table tr:last-child td{border-bottom:none}
+.data-table tr:hover td{background:rgba(255,255,255,0.02)}
+.data-table .mono{font-family:var(--font-mono);font-size:var(--text-xs)}
+.data-table .muted{color:var(--text-muted)}
+
+/* ══════════════════════════════════════════
+   ONBOARDING CHECKLIST
+══════════════════════════════════════════ */
+.check-row{
+  display:flex;align-items:center;
+  padding:13px var(--space-4);
+  border-bottom:1px solid var(--border);
+  gap:var(--space-4);
+  transition:background var(--transition);
+}
+.check-row:last-child{border-bottom:none}
+.check-row:hover{background:rgba(255,255,255,0.02)}
+.check-icon{
+  width:36px;height:36px;
+  border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  font-size:16px;flex-shrink:0;
+}
+.check-info{flex:1}
+.check-name{font-weight:500;font-size:var(--text-sm)}
+.check-desc{font-size:var(--text-xs);color:var(--text-muted);margin-top:2px}
+.check-action{margin-left:auto;flex-shrink:0}
+
+/* ══════════════════════════════════════════
+   EMPTY STATES
+══════════════════════════════════════════ */
+.empty-state{
+  text-align:center;
+  padding:var(--space-12) var(--space-8);
+}
+.empty-icon{font-size:36px;margin-bottom:var(--space-4);opacity:.5}
+.empty-heading{
+  font-size:var(--text-lg);font-weight:600;
+  color:var(--text-secondary);margin-bottom:var(--space-3);
+}
+.empty-body{
+  font-size:var(--text-sm);color:var(--text-muted);
+  max-width:360px;margin:0 auto;line-height:1.6;
+}
+.empty-cta{
+  margin-top:var(--space-6);
+  display:inline-flex;
+}
+
+/* ══════════════════════════════════════════
+   NOTICE BANNERS
+══════════════════════════════════════════ */
+.notice{
+  display:flex;gap:var(--space-3);
+  padding:var(--space-4);
+  border-radius:var(--radius-md);
+  margin-bottom:var(--space-5);
+  font-size:var(--text-sm);
+  line-height:1.55;
+}
+.notice.info{background:var(--blue-dim);border:1px solid var(--blue-border)}
+.notice.warning{background:var(--amber-dim);border:1px solid var(--amber-border)}
+.notice.success{background:var(--green-dim);border:1px solid var(--green-border)}
+.notice.error{background:var(--red-dim);border:1px solid var(--red-border)}
+.notice-icon{font-size:16px;flex-shrink:0;margin-top:1px}
+.notice-text strong{font-weight:600}
+
+/* ══════════════════════════════════════════
+   MODALS
+══════════════════════════════════════════ */
+.modal-overlay{
+  position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,0.75);
+  backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;
+  padding:var(--space-5);
+  animation:fadeIn .18s ease;
+}
+.modal-box{
+  background:var(--navy-800);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius-xl);
+  padding:var(--space-8);
+  max-width:520px;width:100%;
+  max-height:85vh;overflow-y:auto;
+  box-shadow:var(--shadow-lg);
+  animation:slideUp .2s ease;
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.modal-header{
+  display:flex;align-items:flex-start;justify-content:space-between;
+  margin-bottom:var(--space-6);
+}
+.modal-title{font-size:var(--text-xl);font-weight:700;letter-spacing:-.4px}
+.modal-close{
+  width:30px;height:30px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface-raised);border:1px solid var(--border-md);
+  color:var(--text-muted);font-size:16px;flex-shrink:0;
+  transition:all var(--transition);
+}
+.modal-close:hover{background:var(--surface-card);color:var(--text-primary)}
+
+/* ══════════════════════════════════════════
+   TOAST
+══════════════════════════════════════════ */
+#toast-container{
+  position:fixed;bottom:calc(24px + var(--safe-bottom));right:24px;
+  z-index:9999;display:flex;flex-direction:column;gap:var(--space-2);
+  pointer-events:none;
+}
+.toast-item{
+  background:var(--navy-700);
+  border:1px solid var(--border-strong);
+  border-radius:var(--radius-md);
+  padding:11px var(--space-4);
+  font-size:var(--text-sm);
+  box-shadow:var(--shadow-md);
+  display:flex;align-items:center;gap:var(--space-2);
+  opacity:0;transform:translateX(16px);
+  transition:all .2s ease;
+  max-width:340px;
+}
+.toast-item.show{opacity:1;transform:translateX(0)}
+.toast-item.toast-success{border-color:var(--green-border);background:rgba(15,30,45,0.98)}
+.toast-item.toast-error{border-color:var(--red-border)}
+.toast-item.toast-info{border-color:var(--blue-border)}
+
+/* ══════════════════════════════════════════
+   FOOTER
+══════════════════════════════════════════ */
+.site-footer{
+  margin-top:auto;
+  background:var(--navy-900);
+  border-top:1px solid var(--border);
+  padding:var(--space-8) 0 calc(var(--space-6) + var(--safe-bottom));
+}
+.footer-inner{
+  max-width:960px;margin:0 auto;
+  padding:0 var(--space-6);
+}
+.footer-grid{
+  display:grid;
+  grid-template-columns:2fr 1fr 1fr;
+  gap:var(--space-8);
+  margin-bottom:var(--space-8);
+}
+.footer-brand-name{
+  font-family:var(--font-display);
+  font-size:20px;margin-bottom:var(--space-3);
+}
+.footer-company-detail{
+  font-size:var(--text-xs);color:var(--text-muted);
+  line-height:1.8;
+}
+.footer-company-detail a{color:var(--text-muted)}
+.footer-col-title{
+  font-size:var(--text-xs);font-weight:600;
+  letter-spacing:.8px;text-transform:uppercase;
+  color:var(--text-dim);margin-bottom:var(--space-4);
+}
+.footer-links{list-style:none;display:flex;flex-direction:column;gap:var(--space-3)}
+.footer-links a{
+  font-size:var(--text-sm);color:var(--text-muted);
+  transition:color var(--transition);
+}
+.footer-links a:hover{color:var(--text-primary);text-decoration:none}
+.footer-divider{height:1px;background:var(--border);margin-bottom:var(--space-6)}
+.footer-bottom{
+  display:flex;align-items:center;justify-content:space-between;
+  flex-wrap:wrap;gap:var(--space-4);
+}
+.footer-legal{font-size:var(--text-xs);color:var(--text-dim)}
+.footer-ondc{
+  display:flex;align-items:center;gap:var(--space-2);
+  font-size:var(--text-xs);color:var(--text-dim);
+}
+.ondc-badge{
+  background:var(--blue-dim);border:1px solid var(--blue-border);
+  color:var(--blue);padding:2px 7px;border-radius:4px;
+  font-size:10px;font-weight:600;letter-spacing:.5px;
+}
+
+/* ══════════════════════════════════════════
+   LOGIN PAGE
+══════════════════════════════════════════ */
+.login-page{
+  min-height:100vh;
+  display:flex;
+  background:var(--navy-950);
+}
+.login-left{
+  flex:1;
+  display:flex;align-items:center;justify-content:center;
+  padding:var(--space-10);
+  position:relative;
+  overflow:hidden;
+}
+.login-left-bg{
+  position:absolute;inset:0;
+  background:
+    radial-gradient(ellipse 600px 400px at 30% 50%, rgba(255,103,31,0.06) 0%, transparent 70%),
+    radial-gradient(ellipse 400px 400px at 70% 20%, rgba(66,153,225,0.05) 0%, transparent 60%);
+  pointer-events:none;
+}
+.login-left-grid{
+  position:absolute;inset:0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+}
+.login-left-content{position:relative;max-width:420px;width:100%}
+.login-hero-badge{
+  display:inline-flex;align-items:center;gap:var(--space-2);
+  background:var(--orange-dim);border:1px solid var(--orange-border);
+  padding:5px 12px;border-radius:var(--radius-sm);
+  font-size:var(--text-xs);font-weight:600;letter-spacing:.6px;
+  color:var(--orange);text-transform:uppercase;margin-bottom:var(--space-5);
+}
+.login-hero-title{
+  font-family:var(--font-display);
+  font-size:40px;line-height:1.15;
+  color:var(--text-primary);margin-bottom:var(--space-4);letter-spacing:-.5px;
+}
+.login-hero-title em{color:var(--orange);font-style:normal}
+.login-hero-body{
+  font-size:var(--text-base);color:var(--text-secondary);
+  line-height:1.65;margin-bottom:var(--space-8);
+}
+.login-features{display:flex;flex-direction:column;gap:var(--space-3)}
+.login-feature{
+  display:flex;align-items:center;gap:var(--space-3);
+  font-size:var(--text-sm);color:var(--text-secondary);
+}
+.login-feature-icon{
+  width:28px;height:28px;border-radius:8px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--surface-raised);border:1px solid var(--border-md);
+  font-size:14px;flex-shrink:0;
+}
+.login-right{
+  width:480px;
+  display:flex;align-items:center;justify-content:center;
+  padding:var(--space-10);
+  border-left:1px solid var(--border);
+  background:var(--surface);
+}
+.login-form-wrap{width:100%;max-width:380px}
+.login-form-title{
+  font-size:var(--text-2xl);font-weight:700;letter-spacing:-.5px;
+  margin-bottom:var(--space-2);
+}
+.login-form-sub{
+  font-size:var(--text-sm);color:var(--text-muted);
+  margin-bottom:var(--space-8);
+}
+.login-divider{
+  display:flex;align-items:center;gap:var(--space-3);
+  margin:var(--space-5) 0;
+  color:var(--text-dim);font-size:var(--text-xs);
+}
+.login-divider::before,.login-divider::after{
+  content:"";flex:1;height:1px;background:var(--border-md);
+}
+.login-footer-note{
+  margin-top:var(--space-6);
+  font-size:var(--text-xs);color:var(--text-dim);
+  text-align:center;line-height:1.6;
+}
+.login-footer-note a{color:var(--text-muted)}
+
+/* ══════════════════════════════════════════
+   DASHBOARD
+══════════════════════════════════════════ */
+.dash-header{
+  padding:var(--space-8) 0 var(--space-6);
+}
+.dash-welcome{
+  font-size:var(--text-2xl);font-weight:700;letter-spacing:-.5px;
+  margin-bottom:var(--space-2);
+}
+.dash-welcome span{color:var(--orange)}
+.dash-subtitle{font-size:var(--text-sm);color:var(--text-muted)}
+
+.dash-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-5);
+  margin-bottom:var(--space-5);
+}
+.stat-card{
+  background:var(--surface-card);
+  border:1px solid var(--border);
+  border-radius:var(--radius-lg);
+  padding:var(--space-5) var(--space-6);
+}
+.stat-label{
+  font-size:var(--text-xs);font-weight:600;
+  letter-spacing:.6px;text-transform:uppercase;
+  color:var(--text-dim);margin-bottom:var(--space-3);
+}
+.stat-value{
+  font-size:var(--text-2xl);font-weight:700;
+  letter-spacing:-.5px;
+  font-family:var(--font-mono);
+}
+.stat-note{font-size:var(--text-xs);color:var(--text-muted);margin-top:var(--space-2)}
+
+/* ══════════════════════════════════════════
+   UTR PAGE
+══════════════════════════════════════════ */
+.utr-page{padding:var(--space-8) 0 var(--space-12)}
+.utr-header{margin-bottom:var(--space-8)}
+.utr-breadcrumb{
+  display:flex;align-items:center;gap:var(--space-2);
+  font-size:var(--text-sm);color:var(--text-muted);
+  margin-bottom:var(--space-4);
+}
+.utr-breadcrumb a{color:var(--text-muted);cursor:pointer}
+.utr-breadcrumb a:hover{color:var(--text-secondary);text-decoration:none}
+.utr-breadcrumb span{color:var(--text-dim)}
+.utr-title{font-size:var(--text-2xl);font-weight:700;letter-spacing:-.5px;margin-bottom:var(--space-2)}
+.utr-subtitle{font-size:var(--text-sm);color:var(--text-muted)}
+
+.utr-layout{display:grid;grid-template-columns:1fr 360px;gap:var(--space-6);align-items:start}
+.utr-amount-display{
+  background:var(--surface-raised);
+  border:1px solid var(--border-md);
+  border-radius:var(--radius-md);
+  padding:var(--space-4) var(--space-5);
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:var(--space-5);
+}
+.utr-amount-label{font-size:var(--text-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.utr-amount-value{font-size:var(--text-xl);font-weight:700;color:var(--orange);font-family:var(--font-mono)}
+
+.utr-audit-link{
+  font-size:var(--text-xs);
+  color:var(--text-dim);
+  font-family:var(--font-mono);
+  background:var(--surface-raised);
+  border:1px solid var(--border);
+  border-radius:var(--radius-sm);
+  padding:var(--space-2) var(--space-3);
+  display:inline-flex;align-items:center;gap:var(--space-2);
+}
+.utr-audit-link svg{flex-shrink:0;opacity:.5}
+
+/* ══════════════════════════════════════════
+   INVOICE SECTION
+══════════════════════════════════════════ */
+.invoice-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:11px 0;border-bottom:1px solid var(--border);
+  font-size:var(--text-sm);
+}
+.invoice-row:last-child{border-bottom:none}
+.invoice-label{color:var(--text-muted)}
+.invoice-value{font-weight:500;font-family:var(--font-mono)}
+.invoice-total-row{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:var(--space-4) 0 0;
+  margin-top:var(--space-2);
+  border-top:1px solid var(--border-md);
+}
+.invoice-total-label{font-weight:600;font-size:var(--text-base)}
+.invoice-total-value{
+  font-weight:700;font-size:var(--text-xl);
+  color:var(--green);font-family:var(--font-mono);
+}
+
+/* ══════════════════════════════════════════
+   SUPPORT MODAL DETAILS
+══════════════════════════════════════════ */
+.support-channel{
+  display:flex;align-items:flex-start;gap:var(--space-4);
+  padding:var(--space-4);
+  border-radius:var(--radius-md);
+  border:1px solid var(--border);
+  margin-bottom:var(--space-3);
+  background:var(--surface-raised);
+}
+.support-channel-icon{
+  width:38px;height:38px;border-radius:var(--radius-sm);
+  display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.support-channel-info{flex:1}
+.support-channel-name{font-weight:600;font-size:var(--text-sm)}
+.support-channel-detail{font-size:var(--text-xs);color:var(--text-muted);margin-top:3px}
+
+/* ══════════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════════ */
+@media(max-width:800px){
+  .login-left{display:none}
+  .login-right{width:100%;border-left:none}
+  .utr-layout{grid-template-columns:1fr}
+  .dash-grid{grid-template-columns:1fr}
+  .footer-grid{grid-template-columns:1fr}
+  .footer-grid .footer-col:nth-child(2),.footer-grid .footer-col:nth-child(3){display:flex;gap:var(--space-8)}
+  .footer-grid .footer-col:nth-child(2) .footer-links,.footer-grid .footer-col:nth-child(3) .footer-links{flex-direction:row;flex-wrap:wrap}
+}
+
+/* ══════════════════════════════════════════
+   UTILITY
+══════════════════════════════════════════ */
+.hidden{display:none!important}
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+.text-muted{color:var(--text-muted)}
+.text-mono{font-family:var(--font-mono)}
+.text-orange{color:var(--orange)}
+.text-green{color:var(--green)}
+.text-red{color:var(--red)}
+.mb-2{margin-bottom:var(--space-2)}
+.mb-3{margin-bottom:var(--space-3)}
+.mb-4{margin-bottom:var(--space-4)}
+.mb-5{margin-bottom:var(--space-5)}
+.mb-6{margin-bottom:var(--space-6)}
+.mt-4{margin-top:var(--space-4)}
+.mt-5{margin-top:var(--space-5)}
+.mt-6{margin-top:var(--space-6)}
+.flex{display:flex}
+.flex-center{display:flex;align-items:center;justify-content:center}
+.flex-between{display:flex;align-items:center;justify-content:space-between}
+.gap-2{gap:var(--space-2)}
+.gap-3{gap:var(--space-3)}
+.fw-600{font-weight:600}
+.fw-500{font-weight:500}
+
+/* Loading spinner */
+.spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(255,255,255,0.2);
+  border-top-color:#fff;
+  border-radius:50%;
+  animation:spin .6s linear infinite;
+  display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- ════════════════════════════════════════════════════════════
+     MODALS (always in DOM, hidden by default)
+════════════════════════════════════════════════════════════ -->
+
+<!-- Support Modal -->
+<div id="modal-support" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-support-title">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div id="modal-support-title" class="modal-title">Contact Support</div>
+        <div class="text-muted" style="font-size:var(--text-sm);margin-top:4px">We typically respond within 4 business hours</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-support')" aria-label="Close">✕</button>
+    </div>
+    <div class="support-channel">
+      <div class="support-channel-icon" style="background:var(--orange-dim);border:1px solid var(--orange-border)">📧</div>
+      <div class="support-channel-info">
+        <div class="support-channel-name">Email Support</div>
+        <div class="support-channel-detail">For UTR disputes, settlement issues, invoice queries</div>
+        <div style="margin-top:var(--space-3)">
+          <a href="mailto:support@decideindia.com?subject=Seller Support" style="color:var(--orange);font-weight:600;font-size:var(--text-sm)">support@decideindia.com</a>
+        </div>
+      </div>
+    </div>
+    <div class="support-channel">
+      <div class="support-channel-icon" style="background:var(--green-dim);border:1px solid var(--green-border)">💬</div>
+      <div class="support-channel-info">
+        <div class="support-channel-name">WhatsApp Business</div>
+        <div class="support-channel-detail">Quick queries — Mon to Sat, 9 AM to 7 PM IST</div>
+        <div style="margin-top:var(--space-3)">
+          <a href="https://wa.me/919876543210" target="_blank" rel="noopener" style="color:var(--green);font-weight:600;font-size:var(--text-sm)">+91 98765 43210</a>
+        </div>
+      </div>
+    </div>
+    <div class="support-channel">
+      <div class="support-channel-icon" style="background:var(--blue-dim);border:1px solid var(--blue-border)">📞</div>
+      <div class="support-channel-info">
+        <div class="support-channel-name">Helpline</div>
+        <div class="support-channel-detail">Toll-free — Mon to Fri, 10 AM to 6 PM IST</div>
+        <div style="margin-top:var(--space-3)">
+          <a href="tel:18001234567" style="color:var(--blue);font-weight:600;font-size:var(--text-sm)">1800-123-4567</a>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:var(--space-5);padding:var(--space-4);background:var(--surface-raised);border-radius:var(--radius-md);border:1px solid var(--border)">
+      <div style="font-size:var(--text-xs);color:var(--text-muted);line-height:1.7">
+        When contacting support, please have your <strong style="color:var(--text-secondary)">Seller ID</strong> and <strong style="color:var(--text-secondary)">Order ID</strong> ready. For UTR disputes, screenshot of your bank transaction confirmation is required.
+      </div>
+    </div>
+    <div style="margin-top:var(--space-5)">
+      <button class="btn-secondary" onclick="closeModal('modal-support')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Privacy Modal -->
+<div id="modal-privacy" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-privacy-title">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div id="modal-privacy-title" class="modal-title">Privacy Policy</div>
+      <button class="modal-close" onclick="closeModal('modal-privacy')" aria-label="Close">✕</button>
+    </div>
+    <div style="font-size:var(--text-sm);color:var(--text-secondary);line-height:1.8">
+      <p style="margin-bottom:var(--space-4)"><strong>Decide Technologies Private Limited</strong> ("we", "us", "our") is committed to protecting your personal data in accordance with the Digital Personal Data Protection Act, 2023 (DPDP Act) and applicable ONDC guidelines.</p>
+      <h4 style="color:var(--text-primary);margin-bottom:var(--space-2)">Data We Collect</h4>
+      <p style="margin-bottom:var(--space-4)">We collect your business registration details (GSTIN, PAN), bank account information for settlement purposes, and transaction data (order values, UTR numbers). Payment details are stored encrypted using AES-256.</p>
+      <h4 style="color:var(--text-primary);margin-bottom:var(--space-2)">How We Use Your Data</h4>
+      <p style="margin-bottom:var(--space-4)">Your data is used solely for: (a) ONDC seller verification and compliance, (b) settlement processing and reconciliation, (c) GST-compliant invoice generation, (d) fraud detection and dispute resolution.</p>
+      <h4 style="color:var(--text-primary);margin-bottom:var(--space-2)">Data Retention</h4>
+      <p style="margin-bottom:var(--space-4)">Financial records including invoices and settlement UTRs are retained for 7 years as required under the GST Act. KYC documents are retained for the duration of your seller account plus 5 years.</p>
+      <h4 style="color:var(--text-primary);margin-bottom:var(--space-2)">Your Rights</h4>
+      <p>You may request access to, correction, or deletion of your personal data by writing to <a href="mailto:privacy@decideindia.com">privacy@decideindia.com</a>. Note that financial records required for regulatory compliance cannot be deleted before the mandatory retention period.</p>
+    </div>
+    <div style="margin-top:var(--space-6)">
+      <button class="btn-secondary" onclick="closeModal('modal-privacy')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Terms Modal -->
+<div id="modal-terms" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-terms-title">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div id="modal-terms-title" class="modal-title">Terms of Service</div>
+      <button class="modal-close" onclick="closeModal('modal-terms')" aria-label="Close">✕</button>
+    </div>
+    <div style="font-size:var(--text-sm);color:var(--text-secondary);line-height:1.8">
+      <p style="margin-bottom:var(--space-4)">These Terms govern your use of the Decide Seller Portal operated by <strong>Decide Technologies Private Limited</strong>, CIN: U74999GJ2024PTC000000, registered at 501 Business Hub, Gandhidham, Kutch, Gujarat – 370201.</p>
+      <h4 style="color:var(--text-primary);margin-bottom:var(--space-2)">UTR Submission</h4>
+      <p style="margin-bottom:var(--space-4)">By submitting a UTR, you confirm the payment was made from your registered bank account. Submission of a false or misappropriated UTR constitutes fraud and may result in account suspension and legal action.</p>
+      <h4 style="color:var(--text-primary);margin-bottom:var(--space-2)">Settlement</h4>
+      <p style="margin-bottom:var(--space-4)">Settlements are processed within 1–3 business days of UTR verification. Platform fees are deducted per the rate card agreed at onboarding. All amounts are inclusive of applicable GST.</p>
+      <h4 style="color:var(--text-primary);margin-bottom:var(--space-2)">ONDC Compliance</h4>
+      <p style="margin-bottom:var(--space-4)">You agree to comply with all ONDC Seller Policy guidelines, including catalog accuracy, order fulfilment SLAs, and return/refund obligations. Non-compliance may result in ONDC network suspension.</p>
+      <h4 style="color:var(--text-primary);margin-bottom:var(--space-2)">Governing Law</h4>
+      <p>These Terms are governed by the laws of India. Disputes shall be subject to the jurisdiction of courts in Gandhidham, Gujarat.</p>
+    </div>
+    <div style="margin-top:var(--space-6)">
+      <button class="btn-secondary" onclick="closeModal('modal-terms')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Admin Review Modal (simulates admin action for demo) -->
+<div id="modal-admin-review" class="modal-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modal-admin-title">
+  <div class="modal-box" style="max-width:440px">
+    <div class="modal-header">
+      <div>
+        <div id="modal-admin-title" class="modal-title" style="font-size:var(--text-lg)">Admin Review Panel</div>
+        <div style="font-size:var(--text-xs);color:var(--text-muted);margin-top:3px">Simulates backend admin action</div>
+      </div>
+      <button class="modal-close" onclick="closeModal('modal-admin-review')" aria-label="Close">✕</button>
+    </div>
+    <div class="notice info">
+      <div class="notice-icon">ℹ️</div>
+      <div class="notice-text">In production, this panel is only accessible to admin users. Here it simulates the server-side verification process.</div>
+    </div>
+    <div style="margin-bottom:var(--space-5)">
+      <div class="field-label">Rejection Reason (required if rejecting)</div>
+      <textarea id="admin-rejection-reason" class="input" rows="3" placeholder="e.g. UTR not found in payment gateway records for this amount and date..."></textarea>
+    </div>
+    <div style="display:flex;gap:var(--space-3)">
+      <button class="btn-primary" onclick="adminVerify(true)" style="background:var(--green);box-shadow:none">
+        ✓ Verify UTR
+      </button>
+      <button class="btn-danger" onclick="adminVerify(false)">
+        ✕ Reject
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// SIMULATED BACKEND DATABASE
+// ════════════════════════════════════════════════════════════
+const DB = {
+  sellers: {
+    "SELL-001": {
+      id: "SELL-001",
+      name: "Rajkot Thali House",
+      email: "owner@rajkotthali.com",
+      gstin: "24AABCT1234M1Z5",
+      pan: "AABCT1234M",
+      phone: "+91 98765 43210",
+      business_type: "Food & Beverage",
+      city: "Rajkot, Gujarat",
+      bank_last4: "4821",
+      onboarding: {
+        kyc: "verified",
+        gst: "verified",
+        bank: "verified",
+        catalog: "in_progress",
+        ondc: "submitted"
+      }
+    }
+  },
+  orders: {
+    "ORD-20240101-0047": { id: "ORD-20240101-0047", seller_id: "SELL-001", buyer_name: "Priya Shah", amount: 850, items: ["Unlimited Gujarati Thali x2", "Chaas x2"], created_at: "2024-01-28T11:30:00Z" },
+    "ORD-20240101-0052": { id: "ORD-20240101-0052", seller_id: "SELL-001", buyer_name: "Arjun Mehta", amount: 1200, items: ["Thali x4", "Pav Bhaji x2"], created_at: "2024-01-29T13:15:00Z" },
+    "ORD-20240101-0061": { id: "ORD-20240101-0061", seller_id: "SELL-001", buyer_name: "Nisha Patel", amount: 450, items: ["Pav Bhaji x3", "Chaas x3"], created_at: "2024-01-30T18:45:00Z" }
+  },
+  utr_submissions: {},   // keyed by submission_id
+  utr_index: {},         // keyed by utr_number → submission_id (only active submissions)
+  utr_audit_log: [],     // immutable append-only
+  settlements: [
+    { id: "SET-001", order_id: "ORD-20231215-0031", gross_amount: 1500, platform_fee: 75, tax_on_fee: 13.5, net_amount: 1411.5, status: "paid", payment_method: "NEFT", settlement_utr: "509821341209", settlement_date: "2023-12-17T14:22:00Z", invoice_available: true, invoice_number: "DEC/2023-24/001" },
+    { id: "SET-002", order_id: "ORD-20231220-0038", gross_amount: 980, platform_fee: 49, tax_on_fee: 8.82, net_amount: 922.18, status: "paid", payment_method: "IMPS", settlement_utr: "509821399001", settlement_date: "2023-12-22T10:05:00Z", invoice_available: true, invoice_number: "DEC/2023-24/002" },
+    { id: "SET-003", order_id: "ORD-20240105-0041", gross_amount: 2200, platform_fee: 110, tax_on_fee: 19.8, net_amount: 2070.2, status: "processing", payment_method: "NEFT", settlement_utr: null, settlement_date: null, invoice_available: false, invoice_number: null }
+  ]
+};
+
+// ════════════════════════════════════════════════════════════
+// APP STATE
+// ════════════════════════════════════════════════════════════
+const STATE = {
+  currentPage: "login",
+  currentSeller: null,
+  activeOrderId: null,
+  activeSubmissionId: null,
+  utrValue: "",
+};
+
+// ════════════════════════════════════════════════════════════
+// SIMULATED API LAYER
+// ════════════════════════════════════════════════════════════
+const API = {
+  // POST /api/v1/utr/validate
+  validateUTR(utrNumber, orderId) {
+    const trimmed = String(utrNumber || "").trim();
+    if (!/^\d{12}$/.test(trimmed)) {
+      return { valid: false, format_error: "UTR must be exactly 12 digits (numbers only). Example: 123456789012" };
+    }
+    const existingId = DB.utr_index[trimmed];
+    if (existingId) {
+      const existing = DB.utr_submissions[existingId];
+      if (existing && existing.order_id === orderId && existing.seller_id === STATE.currentSeller) {
+        return { valid: true, duplicate: true, duplicate_scope: "same_order_same_seller", suggested_action: "already_submitted" };
+      }
+      return { valid: true, duplicate: true, duplicate_scope: "different_order", suggested_action: "claimed_by_other_order" };
+    }
+    return { valid: true, duplicate: false, suggested_action: "proceed" };
+  },
+
+  // POST /api/v1/utr/submit
+  submitUTR(orderId, utrNumber, amountDeclared) {
+    const validation = this.validateUTR(utrNumber, orderId);
+    if (!validation.valid) {
+      return { error: "INVALID_UTR_FORMAT", ...validation };
+    }
+    if (validation.duplicate) {
+      if (validation.duplicate_scope === "same_order_same_seller") {
+        return { error: "ALREADY_SUBMITTED", submission_id: DB.utr_index[utrNumber] };
+      }
+      return { error: "DUPLICATE_UTR", duplicate_scope: validation.duplicate_scope };
+    }
+    const order = DB.orders[orderId];
+    if (!order || order.seller_id !== STATE.currentSeller) {
+      return { error: "ORDER_NOT_FOUND" };
+    }
+    const subId = "UTR-" + Date.now().toString(36).toUpperCase() + "-" + Math.random().toString(36).slice(2,5).toUpperCase();
+    const auditId = "AUD-" + Date.now().toString(36).toUpperCase();
+    const now = new Date().toISOString();
+
+    const submission = {
+      id: subId, utr_number: utrNumber, order_id: orderId,
+      seller_id: STATE.currentSeller, amount_declared: amountDeclared,
+      status: "submitted", submitted_at: now, verified_at: null,
+      verified_by: null, rejection_reason: null, audit_log_id: auditId,
+      created_at: now, updated_at: now
+    };
+    DB.utr_submissions[subId] = submission;
+    DB.utr_index[utrNumber] = subId;
+    // Immutable audit log append
+    DB.utr_audit_log.push({ id: auditId, utr_submission_id: subId, from_status: null, to_status: "submitted", actor_id: STATE.currentSeller, actor_type: "seller", note: "Initial UTR submission", ip_address: "10.0.0.1", created_at: now });
+
+    // Auto-advance to under_review after 2s (simulates server processing)
+    setTimeout(() => {
+      const sub = DB.utr_submissions[subId];
+      if (sub && sub.status === "submitted") {
+        const now2 = new Date().toISOString();
+        const auditId2 = "AUD-" + Date.now().toString(36).toUpperCase();
+        DB.utr_audit_log.push({ id: auditId2, utr_submission_id: subId, from_status: "submitted", to_status: "under_review", actor_id: "SYSTEM", actor_type: "system", note: "Forwarded for bank reconciliation check", ip_address: null, created_at: now2 });
+        sub.status = "under_review";
+        sub.updated_at = now2;
+        if (STATE.activeSubmissionId === subId) {
+          renderUTRStatus(subId);
+        }
+      }
+    }, 2000);
+
+    return { submission_id: subId, status: "submitted", audit_log_id: auditId, message: "UTR submitted successfully. Verification typically completes within 2–4 business hours.", estimated_verification_hours: 4 };
+  },
+
+  // GET /api/v1/utr/:id/timeline
+  getUTRTimeline(submissionId) {
+    const sub = DB.utr_submissions[submissionId];
+    if (!sub) return null;
+    const events = DB.utr_audit_log.filter(e => e.utr_submission_id === submissionId);
+    return {
+      submission_id: submissionId,
+      current_status: sub.status,
+      utr_number: sub.utr_number.slice(0, -4).replace(/\d/g, "•") + sub.utr_number.slice(-4),
+      amount_declared: sub.amount_declared,
+      order_id: sub.order_id,
+      rejection_reason: sub.rejection_reason,
+      audit_log_id: sub.audit_log_id,
+      events: events.map(e => ({
+        event_id: e.id,
+        from_status: e.from_status,
+        to_status: e.to_status,
+        actor_type: e.actor_type,
+        note: e.note,
+        timestamp: e.created_at
+      }))
+    };
+  },
+
+  // GET /api/v1/dashboard/status
+  getDashboardStatus() {
+    const seller = DB.sellers[STATE.currentSeller];
+    return { onboarding: seller.onboarding, settlements: DB.settlements };
+  },
+
+  // Admin: verify or reject
+  adminResolveUTR(submissionId, approved, reason) {
+    const sub = DB.utr_submissions[submissionId];
+    if (!sub) return false;
+    const now = new Date().toISOString();
+    const auditId = "AUD-" + Date.now().toString(36).toUpperCase();
+    const newStatus = approved ? "verified" : "rejected";
+    DB.utr_audit_log.push({ id: auditId, utr_submission_id: submissionId, from_status: sub.status, to_status: newStatus, actor_id: "ADMIN-001", actor_type: "admin", note: approved ? "UTR matched in payment gateway records" : (reason || "Unable to verify UTR"), ip_address: null, created_at: now });
+    sub.status = newStatus;
+    sub.verified_at = now;
+    sub.verified_by = "ADMIN-001";
+    if (!approved) {
+      sub.rejection_reason = reason || "Unable to verify UTR against bank records.";
+      delete DB.utr_index[sub.utr_number]; // Release UTR for resubmission
+    }
+    sub.updated_at = now;
+    return true;
+  }
+};
+
+// ════════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════════
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;");
+}
+function money(n) { return "₹" + Number(n || 0).toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+function fmtDate(iso) { if (!iso) return "—"; try { return new Date(iso).toLocaleString("en-IN", { dateStyle: "medium", timeStyle: "short" }); } catch(e) { return iso; } }
+function fmtDateOnly(iso) { if (!iso) return "—"; try { return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }); } catch(e) { return iso; } }
+
+let toastCount = 0;
+function toast(message, type = "info") {
+  const container = $("toast-container");
+  const id = "toast-" + (++toastCount);
+  const icons = { success: "✓", error: "✕", info: "ℹ" };
+  const colors = { success: "var(--green)", error: "var(--red)", info: "var(--blue)" };
+  const item = document.createElement("div");
+  item.id = id;
+  item.className = "toast-item toast-" + type;
+  item.innerHTML = `<span style="color:${colors[type]};font-weight:700">${icons[type]}</span> ${esc(message)}`;
+  container.appendChild(item);
+  requestAnimationFrame(() => { requestAnimationFrame(() => { item.classList.add("show"); }); });
+  setTimeout(() => { item.classList.remove("show"); setTimeout(() => item.remove(), 220); }, 3200);
+}
+
+function openModal(id) { $(id).classList.remove("hidden"); document.body.style.overflow = "hidden"; }
+function closeModal(id) { $(id).classList.add("hidden"); document.body.style.overflow = ""; }
+document.querySelectorAll(".modal-overlay").forEach(el => el.addEventListener("click", e => { if (e.target === el) { el.classList.add("hidden"); document.body.style.overflow = ""; } }));
+
+function encryptedBadge() {
+  return `<div class="encrypted-badge">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#1DB374" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+    <span>Encrypted &amp; Secure</span>
+  </div>`;
+}
+
+function chipHTML(status) {
+  const map = {
+    not_started: ["muted", "Not Started"],
+    pending:     ["amber", "Pending"],
+    submitted:   ["amber", "Submitted"],
+    under_review:["amber", "Under Review"],
+    in_progress: ["amber", "In Progress"],
+    processing:  ["amber", "Processing"],
+    verified:    ["green", "Verified"],
+    active:      ["green", "Active"],
+    live:        ["green", "Live"],
+    paid:        ["green", "Paid"],
+    rejected:    ["red", "Rejected"],
+    failed:      ["red", "Failed"],
+    suspended:   ["red", "Suspended"],
+    draft:       ["muted", "Draft"],
+  };
+  const [cls, label] = map[status] || ["muted", status];
+  return `<span class="chip ${cls}"><span class="chip-dot"></span>${label}</span>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// FOOTER COMPONENT
+// ════════════════════════════════════════════════════════════
+function renderFooter() {
+  return `<footer class="site-footer">
+    <div class="footer-inner">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <div class="footer-brand-name">Decide</div>
+          <div class="footer-company-detail">
+            <strong style="color:var(--text-secondary)">Decide Technologies Private Limited</strong><br>
+            CIN: U74999GJ2024PTC000000<br>
+            GSTIN: 24AABCT1234M1Z5<br>
+            501, Business Hub, Gandhidham,<br>
+            Kutch, Gujarat – 370201<br><br>
+            <a href="mailto:support@decideindia.com" style="color:var(--orange)">support@decideindia.com</a><br>
+            Toll-free: <a href="tel:18001234567">1800-123-4567</a>
+          </div>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Legal</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="openModal('modal-privacy');return false">Privacy Policy</a></li>
+            <li><a href="#" onclick="openModal('modal-terms');return false">Terms of Service</a></li>
+            <li><a href="#" onclick="openModal('modal-privacy');return false">Data Protection</a></li>
+            <li><a href="mailto:grievance@decideindia.com">Grievance Officer</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <div class="footer-col-title">Support</div>
+          <ul class="footer-links">
+            <li><a href="#" onclick="openModal('modal-support');return false">Contact Support</a></li>
+            <li><a href="mailto:support@decideindia.com">Email Us</a></li>
+            <li><a href="https://wa.me/919876543210" target="_blank" rel="noopener">WhatsApp</a></li>
+            <li><a href="tel:18001234567">Call Helpline</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-bottom">
+        <div class="footer-legal">© 2024 Decide Technologies Private Limited. All rights reserved. Seller Portal v1.0</div>
+        <div class="footer-ondc">
+          <span class="ondc-badge">ONDC</span>
+          Verified Network Participant
+        </div>
+      </div>
+    </div>
+  </footer>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// NAV COMPONENT
+// ════════════════════════════════════════════════════════════
+function renderNav(showSellerInfo = true) {
+  const seller = DB.sellers[STATE.currentSeller];
+  return `<nav class="top-nav" role="navigation" aria-label="Main navigation">
+    <div class="nav-inner">
+      <div class="nav-brand" style="cursor:pointer" onclick="navigateTo('dashboard')">
+        Decide
+        <span class="ondc-tag">ONDC</span>
+      </div>
+      <div class="nav-actions">
+        ${showSellerInfo && seller ? `<div class="nav-seller-name">${esc(seller.name)}</div>` : ""}
+        <button class="nav-support-btn" onclick="openModal('modal-support')" aria-label="Contact support">Support</button>
+        <button class="nav-logout-btn" onclick="logout()">Sign out</button>
+      </div>
+    </div>
+  </nav>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// ROUTING
+// ════════════════════════════════════════════════════════════
+function navigateTo(page, params = {}) {
+  STATE.currentPage = page;
+  Object.assign(STATE, params);
+  const app = $("app");
+  app.innerHTML = "";
+
+  if (page === "login") { renderLogin(); return; }
+  if (page === "dashboard") { renderDashboard(); return; }
+  if (page === "utr-submit") { renderUTRSubmit(); return; }
+  if (page === "utr-status") { renderUTRStatus(STATE.activeSubmissionId); return; }
+  if (page === "settlements") { renderSettlements(); return; }
+}
+
+function logout() {
+  STATE.currentSeller = null;
+  STATE.currentPage = "login";
+  navigateTo("login");
+}
+
+// ════════════════════════════════════════════════════════════
+// LOGIN PAGE
+// ════════════════════════════════════════════════════════════
+function renderLogin() {
+  const app = $("app");
+  app.innerHTML = `
+  <div class="login-page">
+    <div class="login-left">
+      <div class="login-left-bg"></div>
+      <div class="login-left-grid"></div>
+      <div class="login-left-content">
+        <div class="login-hero-badge">
+          <span class="ondc-badge" style="margin-right:4px">ONDC</span>
+          Verified Seller Network
+        </div>
+        <h1 class="login-hero-title">Your orders.<br>Your <em>settlements</em>.<br>Your data.</h1>
+        <p class="login-hero-body">Manage your ONDC seller profile, submit payment UTRs, track verification status, and download GST-compliant invoices — all in one place.</p>
+        <div class="login-features">
+          <div class="login-feature">
+            <div class="login-feature-icon">🔒</div>
+            <span>Bank-grade encryption on all financial data</span>
+          </div>
+          <div class="login-feature">
+            <div class="login-feature-icon">📄</div>
+            <span>GST-compliant invoices, auto-generated</span>
+          </div>
+          <div class="login-feature">
+            <div class="login-feature-icon">⚡</div>
+            <span>UTR verification within 2–4 business hours</span>
+          </div>
+          <div class="login-feature">
+            <div class="login-feature-icon">🇮🇳</div>
+            <span>Compliant with DPDP Act 2023 &amp; ONDC guidelines</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="login-right">
+      <div class="login-form-wrap">
+        <h2 class="login-form-title">Seller Sign In</h2>
+        <p class="login-form-sub">Enter your registered seller credentials to access your portal.</p>
+        <div class="field">
+          <label class="field-label" for="login-email">Email Address <span class="req">*</span></label>
+          <input id="login-email" type="email" class="input" placeholder="you@business.com" value="owner@rajkotthali.com" autocomplete="email"/>
+          ${encryptedBadge()}
+        </div>
+        <div class="field">
+          <label class="field-label" for="login-password">Password <span class="req">*</span></label>
+          <input id="login-password" type="password" class="input" placeholder="••••••••••" value="password123" autocomplete="current-password"/>
+          ${encryptedBadge()}
+        </div>
+        <button class="btn-primary" onclick="handleLogin()">Sign In to Seller Portal</button>
+        <div class="login-divider">or</div>
+        <button class="btn-secondary" onclick="handleLogin()" style="font-size:var(--text-sm)">
+          Continue with Registered Mobile OTP
+        </button>
+        <div class="login-footer-note">
+          By signing in, you agree to our <a href="#" onclick="openModal('modal-terms');return false">Terms of Service</a> and <a href="#" onclick="openModal('modal-privacy');return false">Privacy Policy</a>.<br/>
+          Need help? <a href="#" onclick="openModal('modal-support');return false">Contact Support</a>
+        </div>
+      </div>
+    </div>
+  </div>
+  ${renderFooter()}`;
+}
+
+function handleLogin() {
+  const email = ($("login-email").value || "").trim();
+  if (!email || email.indexOf("@") < 1) { toast("Enter a valid email address", "error"); return; }
+  const btn = document.querySelector(".login-right .btn-primary");
+  if (btn) { btn.disabled = true; btn.innerHTML = `<span class="spinner"></span> Signing in…`; }
+  setTimeout(() => {
+    STATE.currentSeller = "SELL-001";
+    navigateTo("dashboard");
+    toast("Welcome back, Rajkot Thali House", "success");
+  }, 900);
+}
+
+// ════════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════════
+function renderDashboard() {
+  const seller = DB.sellers[STATE.currentSeller];
+  const { onboarding, settlements } = API.getDashboardStatus();
+  const paidSettlements = settlements.filter(s => s.status === "paid");
+  const totalPaid = paidSettlements.reduce((sum, s) => sum + s.net_amount, 0);
+  const pendingSettlements = settlements.filter(s => s.status === "processing" || s.status === "pending");
+  const pendingAmount = pendingSettlements.reduce((sum, s) => sum + s.gross_amount, 0);
+
+  const onboardingSteps = [
+    { key: "kyc",     label: "KYC Verification",     icon: "👤", desc: "PAN & Aadhaar verification" },
+    { key: "gst",     label: "GST Registration",      icon: "📋", desc: "GSTIN validation via GST portal" },
+    { key: "bank",    label: "Bank Account",           icon: "🏦", desc: "Settlement account linked & verified" },
+    { key: "catalog", label: "Product Catalog",        icon: "🛍️", desc: "Active listings on ONDC network" },
+    { key: "ondc",    label: "ONDC Integration",       icon: "🇮🇳", desc: "Network participant approval" }
+  ];
+
+  const statusColors = { verified: "#1DB374", active: "#1DB374", live: "#1DB374", in_progress: "var(--amber)", submitted: "var(--amber)", not_started: "var(--text-dim)" };
+
+  const ordersWithoutUTR = Object.values(DB.orders).filter(o => {
+    return !Object.values(DB.utr_submissions).find(u => u.order_id === o.id && u.status !== "rejected");
+  });
+
+  const recentSubmissions = Object.values(DB.utr_submissions).slice(-3).reverse();
+
+  const app = $("app");
+  app.innerHTML = `
+  ${renderNav()}
+  <div class="page">
+    <div class="container">
+      <div class="dash-header">
+        <div class="dash-welcome">Good day, <span>${esc(seller.name)}</span></div>
+        <div class="dash-subtitle">Seller ID: <span class="text-mono" style="color:var(--text-secondary)">${esc(seller.id)}</span> &nbsp;·&nbsp; ${esc(seller.city)} &nbsp;·&nbsp; ${esc(seller.business_type)}</div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="dash-grid mb-6">
+        <div class="stat-card">
+          <div class="stat-label">Total Settled (Net)</div>
+          <div class="stat-value text-green">${money(totalPaid)}</div>
+          <div class="stat-note">${paidSettlements.length} settlement${paidSettlements.length !== 1 ? "s" : ""} paid</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Pending Settlement</div>
+          <div class="stat-value" style="color:var(--amber)">${money(pendingAmount)}</div>
+          <div class="stat-note">${pendingSettlements.length} settlement${pendingSettlements.length !== 1 ? "s" : ""} in processing</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Orders Awaiting UTR</div>
+          <div class="stat-value" style="color:${ordersWithoutUTR.length > 0 ? "var(--orange)" : "var(--green)"}">${ordersWithoutUTR.length}</div>
+          <div class="stat-note">${ordersWithoutUTR.length > 0 ? "Action required" : "All orders submitted"}</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">ONDC Status</div>
+          <div style="margin-top:8px">${chipHTML(onboarding.ondc)}</div>
+          <div class="stat-note">Network participant review in progress</div>
+        </div>
+      </div>
+
+      <!-- Onboarding Checklist -->
+      <div class="card mb-5">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Onboarding Progress</div>
+            <div class="card-subtitle">Complete all steps to go live on the ONDC network</div>
+          </div>
+          <div style="font-size:var(--text-sm);color:var(--text-muted)">
+            ${onboardingSteps.filter(s => onboarding[s.key] === "verified" || onboarding[s.key] === "active").length}/${onboardingSteps.length} completed
+          </div>
+        </div>
+        ${onboardingSteps.map(step => {
+          const status = onboarding[step.key];
+          const bgColors = { verified: "var(--green-dim)", active: "var(--green-dim)", in_progress: "var(--amber-dim)", submitted: "var(--amber-dim)", not_started: "rgba(255,255,255,0.03)" };
+          const statusCopy = { verified: "Verified", active: "Active", in_progress: "In Progress", submitted: "Submitted — Under Review", not_started: "Not started yet" };
+          const actionMap = {
+            in_progress: `<button class="btn-ghost" style="font-size:var(--text-xs)" onclick="navigateTo('dashboard')">Continue →</button>`,
+            not_started: `<button class="btn-ghost" style="font-size:var(--text-xs);color:var(--orange)" onclick="navigateTo('dashboard')">Start →</button>`,
+            submitted: `<span style="font-size:var(--text-xs);color:var(--text-muted)">Awaiting review</span>`,
+          };
+          return `<div class="check-row">
+            <div class="check-icon" style="background:${bgColors[status] || "rgba(255,255,255,0.03)"}">${step.icon}</div>
+            <div class="check-info">
+              <div class="check-name">${esc(step.label)}</div>
+              <div class="check-desc">${esc(step.desc)}</div>
+            </div>
+            <div class="check-action" style="display:flex;align-items:center;gap:12px">
+              ${chipHTML(status)}
+              ${actionMap[status] || ""}
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+
+      <!-- Orders Awaiting UTR -->
+      <div class="card mb-5">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Submit UTR for Orders</div>
+            <div class="card-subtitle">Orders waiting for payment UTR submission</div>
+          </div>
+        </div>
+        ${ordersWithoutUTR.length === 0 ? `
+        <div class="empty-state" style="padding:var(--space-8)">
+          <div class="empty-icon">✅</div>
+          <div class="empty-heading">All UTRs Submitted</div>
+          <div class="empty-body">All your recent orders have UTRs submitted. New orders requiring UTR submission will appear here.</div>
+        </div>` : `
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Order ID</th>
+                <th>Buyer</th>
+                <th>Amount</th>
+                <th>Order Date</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${ordersWithoutUTR.map(o => `
+              <tr>
+                <td class="mono">${esc(o.id)}</td>
+                <td>${esc(o.buyer_name)}</td>
+                <td class="mono">${money(o.amount)}</td>
+                <td class="muted">${fmtDateOnly(o.created_at)}</td>
+                <td>
+                  <button class="btn-ghost" style="color:var(--orange);font-weight:600" onclick="navigateTo('utr-submit',{activeOrderId:'${esc(o.id)}'})">
+                    Submit UTR →
+                  </button>
+                </td>
+              </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`}
+      </div>
+
+      <!-- Recent UTR Submissions -->
+      <div class="card mb-5">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Recent UTR Submissions</div>
+            <div class="card-subtitle">Track verification status of your submitted UTRs</div>
+          </div>
+        </div>
+        ${recentSubmissions.length === 0 ? `
+        <div class="empty-state" style="padding:var(--space-8)">
+          <div class="empty-icon">📋</div>
+          <div class="empty-heading">No UTR submissions yet</div>
+          <div class="empty-body">UTR submissions appear here once you submit your first payment verification. Verification typically completes within 2–4 business hours.</div>
+        </div>` : `
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr><th>Submission ID</th><th>Order ID</th><th>UTR (masked)</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+            </thead>
+            <tbody>
+              ${recentSubmissions.map(sub => {
+                const masked = sub.utr_number.slice(0,-4).replace(/\d/g,"•") + sub.utr_number.slice(-4);
+                return `<tr>
+                  <td class="mono" style="font-size:11px">${esc(sub.id)}</td>
+                  <td class="mono" style="font-size:11px">${esc(sub.order_id)}</td>
+                  <td class="mono">${esc(masked)}</td>
+                  <td class="mono">${money(sub.amount_declared)}</td>
+                  <td>${chipHTML(sub.status)}</td>
+                  <td><button class="btn-ghost" style="font-size:var(--text-xs)" onclick="navigateTo('utr-status',{activeSubmissionId:'${esc(sub.id)}'})">View →</button></td>
+                </tr>`;
+              }).join("")}
+            </tbody>
+          </table>
+        </div>`}
+      </div>
+
+      <!-- Settlements -->
+      <div class="card mb-5">
+        <div class="card-header">
+          <div>
+            <div class="card-title">Settlement History</div>
+            <div class="card-subtitle">Breakdown of all settlements. Download GST invoices from here.</div>
+          </div>
+          <button class="btn-ghost" style="color:var(--orange);font-weight:500;font-size:var(--text-sm)" onclick="exportSettlementsCSV()">
+            ↓ Export CSV
+          </button>
+        </div>
+        ${settlements.length === 0 ? `
+        <div class="empty-state" style="padding:var(--space-8)">
+          <div class="empty-icon">💳</div>
+          <div class="empty-heading">No settlements yet</div>
+          <div class="empty-body">Settlements appear here once your first verified order is processed. Typically within 1–3 business days of UTR verification confirmation.</div>
+        </div>` : `
+        <div class="table-wrap">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Gross</th>
+                <th>Fees</th>
+                <th>Tax</th>
+                <th>Net Paid</th>
+                <th>Method</th>
+                <th>UTR</th>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Invoice</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${settlements.map(s => `
+              <tr>
+                <td class="mono" style="font-size:11px">${esc(s.order_id)}</td>
+                <td class="mono">${money(s.gross_amount)}</td>
+                <td class="mono muted">${money(s.platform_fee)}</td>
+                <td class="mono muted">${money(s.tax_on_fee)}</td>
+                <td class="mono" style="color:var(--green);font-weight:600">${money(s.net_amount)}</td>
+                <td>${esc(s.payment_method)}</td>
+                <td class="mono" style="font-size:11px">${s.settlement_utr ? esc(s.settlement_utr.slice(0,-4).replace(/\d/g,"•")+s.settlement_utr.slice(-4)) : "<span class='muted'>Pending</span>"}</td>
+                <td class="muted">${fmtDateOnly(s.settlement_date)}</td>
+                <td>${chipHTML(s.status)}</td>
+                <td>
+                  ${s.invoice_available
+                    ? `<button class="btn-ghost" style="color:var(--blue);font-size:var(--text-xs)" onclick="downloadInvoice('${esc(s.id)}')">↓ PDF</button>`
+                    : `<span style="font-size:var(--text-xs);color:var(--text-dim)">Not available yet</span>`
+                  }
+                </td>
+              </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`}
+        ${settlements.some(s => !s.invoice_available) ? `
+        <div style="padding:var(--space-4) var(--space-5);font-size:var(--text-xs);color:var(--text-dim);border-top:1px solid var(--border)">
+          Invoices are generated automatically once a settlement is marked Paid. Your invoice will appear within 24 hours of settlement confirmation.
+        </div>` : ""}
+      </div>
+
+    </div>
+    ${renderFooter()}
+  </div>`;
+}
+
+// ════════════════════════════════════════════════════════════
+// UTR SUBMIT
+// ════════════════════════════════════════════════════════════
+function renderUTRSubmit() {
+  const order = DB.orders[STATE.activeOrderId];
+  if (!order) { navigateTo("dashboard"); return; }
+
+  const app = $("app");
+  app.innerHTML = `
+  ${renderNav()}
+  <div class="page">
+    <div class="container-sm">
+      <div class="utr-page">
+        <div class="utr-header">
+          <div class="utr-breadcrumb">
+            <a onclick="navigateTo('dashboard')">Dashboard</a>
+            <span>›</span>
+            <span>Submit UTR</span>
+          </div>
+          <div class="utr-title">Submit Payment UTR</div>
+          <div class="utr-subtitle">Enter the 12-digit UTR from your bank transaction to verify payment for this order.</div>
+        </div>
+
+        <!-- Order Summary -->
+        <div class="card mb-5" style="background:var(--surface-raised)">
+          <div style="font-size:var(--text-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:var(--space-4)">Order Details</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+            <div>
+              <div class="field-label">Order ID</div>
+              <div class="text-mono" style="font-size:var(--text-sm);color:var(--text-primary)">${esc(order.id)}</div>
+            </div>
+            <div>
+              <div class="field-label">Buyer</div>
+              <div style="font-size:var(--text-sm);color:var(--text-primary)">${esc(order.buyer_name)}</div>
+            </div>
+            <div>
+              <div class="field-label">Amount to Verify</div>
+              <div style="font-size:var(--text-xl);font-weight:700;color:var(--orange);font-family:var(--font-mono)">${money(order.amount)}</div>
+            </div>
+            <div>
+              <div class="field-label">Items</div>
+              <div style="font-size:var(--text-xs);color:var(--text-secondary)">${order.items.map(esc).join(", ")}</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- UTR Form -->
+        <div class="card mb-5">
+          <div class="notice info mb-4">
+            <div class="notice-icon">ℹ️</div>
+            <div class="notice-text"><strong>How to find your UTR:</strong> Open your UPI app → Transaction History → Tap the payment to Decide → Copy the 12-digit UTR/Reference number.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="utr-input">UTR Number <span class="req">*</span></label>
+            <input
+              id="utr-input"
+              type="text"
+              inputmode="numeric"
+              class="input input-mono"
+              placeholder="e.g. 423156789012"
+              maxlength="12"
+              autocomplete="off"
+              spellcheck="false"
+              oninput="onUTRInput(this)"
+              onblur="onUTRBlur(this)"
+            />
+            ${encryptedBadge()}
+            <div id="utr-error" class="field-error"></div>
+            <div id="utr-success" class="field-success"></div>
+            <div class="field-help">12 digits, numbers only. Copy directly from your UPI app — do not type manually.</div>
+          </div>
+
+          <div class="field">
+            <label class="field-label" for="utr-amount">Declared Payment Amount <span class="req">*</span></label>
+            <input
+              id="utr-amount"
+              type="number"
+              class="input input-mono"
+              placeholder="${order.amount}.00"
+              value="${order.amount}"
+              step="0.01"
+              min="1"
+            />
+            ${encryptedBadge()}
+            <div class="field-help">Must match the exact amount you paid. Accepted within ±5% tolerance.</div>
+          </div>
+
+          <!-- Verification Timeline Preview -->
+          <div style="margin-top:var(--space-5)">
+            <div style="font-size:var(--text-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:var(--space-4)">What Happens After Submission</div>
+            <div class="timeline">
+              <div class="timeline-step">
+                <div class="timeline-left">
+                  <div class="timeline-node done">✓</div>
+                  <div class="timeline-connector done"></div>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-label done">Draft</div>
+                  <div class="timeline-meta">You're here — fill in your UTR below</div>
+                </div>
+              </div>
+              <div class="timeline-step">
+                <div class="timeline-left">
+                  <div class="timeline-node active">→</div>
+                  <div class="timeline-connector"></div>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-label active">Submitted</div>
+                  <div class="timeline-meta">Sent to our verification system</div>
+                </div>
+              </div>
+              <div class="timeline-step">
+                <div class="timeline-left">
+                  <div class="timeline-node pending">⏳</div>
+                  <div class="timeline-connector"></div>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-label pending">Under Review</div>
+                  <div class="timeline-meta">Bank reconciliation — typically 2–4 hours</div>
+                </div>
+              </div>
+              <div class="timeline-step">
+                <div class="timeline-left">
+                  <div class="timeline-node pending">★</div>
+                </div>
+                <div class="timeline-content">
+                  <div class="timeline-label pending">Verified</div>
+                  <div class="timeline-meta">Order confirmed · Settlement triggered</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button class="btn-primary mb-3" onclick="handleUTRSubmit()" id="utr-submit-btn">
+          Submit UTR for Verification
+        </button>
+        <button class="btn-secondary mb-3" onclick="navigateTo('dashboard')">Cancel</button>
+
+        <div style="text-align:center;margin-top:var(--space-4)">
+          <span style="font-size:var(--text-xs);color:var(--text-dim)">Having trouble? </span>
+          <a href="#" onclick="openModal('modal-support');return false" style="font-size:var(--text-xs);color:var(--text-muted)">Contact support →</a>
+        </div>
+      </div>
+    </div>
+    ${renderFooter()}
+  </div>`;
+}
+
+let utrValidateTimer = null;
+function onUTRInput(el) {
+  el.value = el.value.replace(/\D/g, "").slice(0, 12);
+  const errEl = $("utr-error");
+  const okEl = $("utr-success");
+  errEl.classList.remove("show");
+  okEl.classList.remove("show");
+  clearTimeout(utrValidateTimer);
+  el.classList.remove("is-error", "is-valid");
+  if (el.value.length === 12) {
+    utrValidateTimer = setTimeout(() => onUTRBlur(el), 400);
+  }
+}
+function onUTRBlur(el) {
+  const val = el.value.trim();
+  const errEl = $("utr-error");
+  const okEl = $("utr-success");
+  errEl.classList.remove("show");
+  okEl.classList.remove("show");
+  if (!val) return;
+  const result = API.validateUTR(val, STATE.activeOrderId);
+  if (!result.valid) {
+    errEl.textContent = result.format_error;
+    errEl.classList.add("show");
+    el.classList.add("is-error");
+    return;
+  }
+  if (result.duplicate) {
+    if (result.duplicate_scope === "same_order_same_seller") {
+      errEl.textContent = "You've already submitted this UTR for this order. Check your UTR submissions above.";
+    } else {
+      errEl.textContent = "This UTR is already linked to another order on our platform. Please check your bank app and enter the correct UTR for this transaction.";
+    }
+    errEl.classList.add("show");
+    el.classList.add("is-error");
+    return;
+  }
+  okEl.textContent = "UTR format valid — proceed to submit.";
+  okEl.classList.add("show");
+  el.classList.add("is-valid");
+}
+
+function handleUTRSubmit() {
+  const utrEl = $("utr-input");
+  const amtEl = $("utr-amount");
+  const btn = $("utr-submit-btn");
+  const utr = (utrEl.value || "").trim();
+  const amt = parseFloat(amtEl.value || "0");
+  const errEl = $("utr-error");
+
+  errEl.classList.remove("show");
+
+  if (!/^\d{12}$/.test(utr)) {
+    errEl.textContent = "UTR must be exactly 12 digits (numbers only). Example: 423156789012";
+    errEl.classList.add("show");
+    utrEl.classList.add("is-error");
+    utrEl.focus();
+    return;
+  }
+  if (!amt || amt <= 0) { toast("Enter a valid amount", "error"); return; }
+
+  btn.disabled = true;
+  btn.innerHTML = `<span class="spinner"></span> Submitting…`;
+
+  setTimeout(() => {
+    const result = API.submitUTR(STATE.activeOrderId, utr, amt);
+
+    if (result.error === "DUPLICATE_UTR") {
+      btn.disabled = false;
+      btn.innerHTML = "Submit UTR for Verification";
+      const scope = result.duplicate_scope;
+      if (scope === "same_order_same_seller") {
+        errEl.textContent = "You've already submitted this UTR for this order.";
+      } else {
+        errEl.textContent = "This UTR is already linked to another order on our platform. Each payment has a unique UTR — please check your bank app and enter the correct one.";
+      }
+      errEl.classList.add("show");
+      utrEl.classList.add("is-error");
+      return;
+    }
+
+    if (result.error === "INVALID_UTR_FORMAT") {
+      btn.disabled = false;
+      btn.innerHTML = "Submit UTR for Verification";
+      errEl.textContent = result.format_error;
+      errEl.classList.add("show");
+      return;
+    }
+
+    if (result.error) {
+      btn.disabled = false;
+      btn.innerHTML = "Submit UTR for Verification";
+      toast("Submission failed: " + result.error, "error");
+      return;
+    }
+
+    STATE.activeSubmissionId = result.submission_id;
+    toast("UTR submitted successfully. Verification in progress.", "success");
+    navigateTo("utr-status", { activeSubmissionId: result.submission_id });
+  }, 800);
+}
+
+// ════════════════════════════════════════════════════════════
+// UTR STATUS / TIMELINE
+// ════════════════════════════════════════════════════════════
+function renderUTRStatus(submissionId) {
+  const data = API.getUTRTimeline(submissionId);
+  if (!data) { navigateTo("dashboard"); return; }
+  const order = DB.orders[data.order_id];
+
+  const allSteps = [
+    { status: "draft",        label: "Draft",         icon: "✎",  desc: "UTR entered but not submitted" },
+    { status: "submitted",    label: "Submitted",      icon: "→",  desc: "Received by verification system" },
+    { status: "under_review", label: "Under Review",   icon: "⏳", desc: "Bank reconciliation in progress" },
+    { status: "verified",     label: "Verified",       icon: "✓",  desc: "Payment confirmed — settlement triggered" },
+    { status: "rejected",     label: "Rejected",       icon: "✕",  desc: "Verification failed — action required" }
+  ];
+
+  const statusOrder = ["draft", "submitted", "under_review", "verified"];
+  const currentStatusIndex = statusOrder.indexOf(data.current_status);
+  const isRejected = data.current_status === "rejected";
+  const isVerified = data.current_status === "verified";
+
+  const displaySteps = isRejected
+    ? allSteps.filter(s => s.status !== "verified")
+    : allSteps.filter(s => s.status !== "rejected");
+
+  const getNodeState = (stepStatus) => {
+    if (stepStatus === data.current_status && isRejected) return "error";
+    if (stepStatus === data.current_status && isVerified) return "done";
+    if (stepStatus === data.current_status) return "active";
+    if (statusOrder.indexOf(stepStatus) < currentStatusIndex) return "done";
+    return "pending";
+  };
+
+  const getEvent = (status) => data.events.find(e => e.to_status === status);
+
+  const timelineHTML = displaySteps.map((step, i) => {
+    const nodeState = getNodeState(step.status);
+    const event = getEvent(step.status);
+    const isLast = i === displaySteps.length - 1;
+    const connDone = nodeState === "done" && !isLast;
+    const icons = { done: "✓", active: "→", error: "✕", pending: String(i+1) };
+    const nodeIcons = { verified: "✓", rejected: "✕" };
+
+    return `<div class="timeline-step">
+      <div class="timeline-left">
+        <div class="timeline-node ${nodeState}">${nodeIcons[step.status] || icons[nodeState]}</div>
+        ${!isLast ? `<div class="timeline-connector ${connDone ? "done" : ""}"></div>` : ""}
+      </div>
+      <div class="timeline-content">
+        <div class="timeline-label ${nodeState}">${esc(step.label)}</div>
+        <div class="timeline-meta">${event ? fmtDate(event.timestamp) + " · " + esc(event.actor_type) : step.desc}</div>
+        ${event && event.note ? `<div class="timeline-note">${esc(event.note)}</div>` : ""}
+        ${event ? `<div style="margin-top:5px;font-size:10px;color:var(--text-dim);font-family:var(--font-mono)">Audit ID: ${esc(event.event_id)}</div>` : ""}
+        ${step.status === "rejected" && nodeState === "error" && data.rejection_reason ? `
+        <div class="notice error" style="margin-top:var(--space-3)">
+          <div class="notice-icon">⚠️</div>
+          <div class="notice-text"><strong>Reason:</strong> ${esc(data.rejection_reason)}</div>
+        </div>` : ""}
+      </div>
+    </div>`;
+  }).join("");
+
+  const statusMessages = {
+    submitted: { heading: "UTR Submitted — Awaiting Review", body: "We've received your UTR and it's been forwarded to our verification system. Our team is matching it against payment gateway records.", eta: "Estimated verification: 2–4 business hours", color: "var(--amber)" },
+    under_review: { heading: "Verification In Progress", body: "Your UTR is being matched with the bank reconciliation records. No action is needed from you. You'll be notified by email and SMS once complete.", eta: "Typically completes within 2–4 business hours from submission", color: "var(--amber)" },
+    verified: { heading: "Payment Verified ✓", body: "Your payment has been confirmed. Your order is now active and your settlement has been queued for processing.", eta: "Settlement will be transferred within 1–3 business days", color: "var(--green)" },
+    rejected: { heading: "Verification Failed — Action Required", body: "We could not verify your UTR against the bank records. Please review the reason below, check your bank statement, and resubmit the correct UTR.", eta: "Please resubmit within 48 hours to avoid order cancellation", color: "var(--red)" }
+  };
+  const msg = statusMessages[data.current_status] || statusMessages.submitted;
+
+  const app = $("app");
+  app.innerHTML = `
+  ${renderNav()}
+  <div class="page">
+    <div class="container-sm">
+      <div class="utr-page">
+        <div class="utr-header">
+          <div class="utr-breadcrumb">
+            <a onclick="navigateTo('dashboard')">Dashboard</a>
+            <span>›</span>
+            <span>UTR Status</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:var(--space-3);margin-bottom:var(--space-2)">
+            <div class="utr-title" style="margin-bottom:0">${esc(msg.heading)}</div>
+          </div>
+          <div class="utr-subtitle">${esc(msg.body)}</div>
+        </div>
+
+        <!-- Status Banner -->
+        <div class="notice ${isVerified ? "success" : isRejected ? "error" : "warning"} mb-5">
+          <div class="notice-icon">${isVerified ? "✅" : isRejected ? "⛔" : "⏱️"}</div>
+          <div class="notice-text">
+            <strong style="color:${msg.color}">${esc(msg.heading)}</strong><br/>
+            ${esc(msg.eta)}
+          </div>
+        </div>
+
+        <!-- Submission Summary -->
+        <div class="card mb-5" style="background:var(--surface-raised)">
+          <div style="font-size:var(--text-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:var(--space-4)">Submission Details</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:var(--space-4)">
+            <div>
+              <div class="field-label">Submission ID</div>
+              <div class="text-mono" style="font-size:12px;color:var(--text-secondary)">${esc(submissionId)}</div>
+            </div>
+            <div>
+              <div class="field-label">Order ID</div>
+              <div class="text-mono" style="font-size:12px;color:var(--text-secondary)">${esc(data.order_id)}</div>
+            </div>
+            <div>
+              <div class="field-label">UTR (masked)</div>
+              <div class="text-mono" style="font-size:var(--text-base)">${esc(data.utr_number)}</div>
+            </div>
+            <div>
+              <div class="field-label">Amount Declared</div>
+              <div class="text-mono" style="font-size:var(--text-lg);font-weight:700;color:var(--text-primary)">${money(data.amount_declared)}</div>
+            </div>
+            <div style="grid-column:1/-1">
+              <div class="field-label">Current Status</div>
+              ${chipHTML(data.current_status)}
+            </div>
+          </div>
+          <div style="margin-top:var(--space-4);padding-top:var(--space-4);border-top:1px solid var(--border)">
+            <span class="utr-audit-link">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+              First Audit Log: ${esc(data.audit_log_id)}
+            </span>
+          </div>
+        </div>
+
+        <!-- Timeline -->
+        <div class="card mb-5">
+          <div style="font-size:var(--text-xs);color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:var(--space-5)">Verification Timeline</div>
+          <div class="timeline">${timelineHTML}</div>
+        </div>
+
+        <!-- Actions -->
+        ${isRejected ? `
+        <div class="notice error mb-5">
+          <div class="notice-icon">⚠️</div>
+          <div class="notice-text">
+            <strong>Resubmission required.</strong> Your previous UTR has been released. Enter the correct UTR to proceed. If you believe this is an error, contact <a href="mailto:support@decideindia.com" style="color:var(--red)">support@decideindia.com</a> with your Submission ID.
+          </div>
+        </div>
+        <button class="btn-primary mb-3" onclick="navigateTo('utr-submit',{activeOrderId:'${esc(data.order_id)}'})">Resubmit UTR</button>` : ""}
+
+        ${isVerified ? `
+        <button class="btn-primary mb-3" style="background:var(--green);box-shadow:none" onclick="navigateTo('settlements')">View Settlement →</button>` : ""}
+
+        ${!isVerified && !isRejected ? `
+        <div style="margin-bottom:var(--space-4);padding:var(--space-4);background:var(--surface-raised);border-radius:var(--radius-md);border:1px solid var(--border)">
+          <div style="font-size:var(--text-xs);color:var(--text-muted);margin-bottom:var(--space-3);font-weight:600;text-transform:uppercase;letter-spacing:.5px">Simulate Admin Review</div>
+          <div style="font-size:var(--text-xs);color:var(--text-dim);margin-bottom:var(--space-3)">This panel simulates backend admin action for testing the full flow. In production, this is only accessible to admin users.</div>
+          <button class="btn-ghost" style="color:var(--amber);font-size:var(--text-xs);font-weight:600;border:1px solid var(--amber-border);padding:6px 14px;border-radius:var(--radius-sm)" onclick="openModal('modal-admin-review')">Open Admin Review Panel</button>
+        </div>` : ""}
+
+        <button class="btn-secondary mb-3" onclick="navigateTo('dashboard')">← Back to Dashboard</button>
+
+        <div style="text-align:center;margin-top:var(--space-4)">
+          <a href="#" onclick="openModal('modal-support');return false" style="font-size:var(--text-xs);color:var(--text-muted)">Need help with this UTR? Contact support →</a>
+        </div>
+      </div>
+    </div>
+    ${renderFooter()}
+  </div>`;
+}
+
+function renderSettlements() {
+  navigateTo("dashboard");
+  setTimeout(() => {
+    const el = document.querySelector(".site-footer");
+    if (el) el.scrollIntoView({ behavior: "smooth" });
+  }, 300);
+}
+
+// ════════════════════════════════════════════════════════════
+// ADMIN PANEL (simulated)
+// ════════════════════════════════════════════════════════════
+function adminVerify(approved) {
+  const reason = ($("admin-rejection-reason").value || "").trim();
+  if (!approved && !reason) { toast("Enter a rejection reason", "error"); return; }
+  closeModal("modal-admin-review");
+  API.adminResolveUTR(STATE.activeSubmissionId, approved, reason);
+  setTimeout(() => {
+    navigateTo("utr-status", { activeSubmissionId: STATE.activeSubmissionId });
+    toast(approved ? "UTR verified successfully" : "UTR rejected with reason recorded", approved ? "success" : "info");
+  }, 300);
+}
+
+// ════════════════════════════════════════════════════════════
+// INVOICE PDF (GST-compliant structure)
+// ════════════════════════════════════════════════════════════
+function downloadInvoice(settlementId) {
+  const settlement = DB.settlements.find(s => s.id === settlementId);
+  const seller = DB.sellers[STATE.currentSeller];
+  if (!settlement || !settlement.invoice_available) { toast("Invoice not available yet", "error"); return; }
+
+  const jspdfLib = (typeof window.jspdf !== "undefined") ? window.jspdf.jsPDF : jsPDF;
+  const doc = new jspdfLib({ orientation: "portrait", unit: "mm", format: "a4" });
+  const W = doc.internal.pageSize.getWidth();
+  const M = 18; // margin
+
+  // ── Background
+  doc.setFillColor(8, 15, 25);
+  doc.rect(0, 0, W, 297, "F");
+
+  // ── Header stripe
+  doc.setFillColor(255, 103, 31);
+  doc.rect(0, 0, W, 42, "F");
+
+  // ── Brand
+  doc.setFontSize(24); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+  doc.text("Decide", M, 16);
+  doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(255, 200, 160);
+  doc.text("Decide Technologies Private Limited", M, 22);
+  doc.setFontSize(8); doc.setTextColor(255, 180, 130);
+  doc.text("GSTIN: 24AABCT1234M1Z5  ·  ONDC Verified Participant", M, 28);
+  doc.setFontSize(8); doc.setTextColor(255, 170, 110);
+  doc.text("501 Business Hub, Gandhidham, Kutch, Gujarat – 370201", M, 34);
+
+  // ── Invoice title
+  doc.setFontSize(18); doc.setFont("helvetica", "bold"); doc.setTextColor(255, 255, 255);
+  doc.text("TAX INVOICE", W - M, 16, { align: "right" });
+  doc.setFontSize(9); doc.setFont("helvetica", "normal"); doc.setTextColor(255, 200, 160);
+  doc.text(settlement.invoice_number || "—", W - M, 23, { align: "right" });
+  doc.setFontSize(8); doc.setTextColor(255, 180, 130);
+  doc.text("Date: " + fmtDateOnly(settlement.settlement_date), W - M, 29, { align: "right" });
+  doc.text("Original for Recipient", W - M, 35, { align: "right" });
+
+  let y = 52;
+
+  // ── Billed To
+  doc.setFillColor(20, 34, 54);
+  doc.setDrawColor(30, 56, 87);
+  doc.roundedRect(M, y, (W - M * 2) / 2 - 4, 38, 3, 3, "FD");
+
+  doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(100, 130, 160);
+  doc.text("BILLED TO", M + 6, y + 8);
+  doc.setFont("helvetica", "bold"); doc.setTextColor(220, 230, 240); doc.setFontSize(10);
+  doc.text(seller.name, M + 6, y + 16);
+  doc.setFont("helvetica", "normal"); doc.setTextColor(150, 170, 190); doc.setFontSize(8);
+  doc.text("GSTIN: " + seller.gstin, M + 6, y + 23);
+  doc.text(seller.city, M + 6, y + 29);
+  doc.text("Seller ID: " + seller.id, M + 6, y + 35);
+
+  // ── Payment Details box
+  const col2 = M + (W - M * 2) / 2 + 4;
+  doc.setFillColor(20, 34, 54);
+  doc.setDrawColor(30, 56, 87);
+  doc.roundedRect(col2, y, (W - M * 2) / 2 - 4, 38, 3, 3, "FD");
+
+  doc.setFontSize(7.5); doc.setFont("helvetica", "bold"); doc.setTextColor(100, 130, 160);
+  doc.text("PAYMENT DETAILS", col2 + 6, y + 8);
+  doc.setFont("helvetica", "normal"); doc.setTextColor(150, 170, 190); doc.setFontSize(8);
+  doc.text("Order ID: " + settlement.order_id, col2 + 6, y + 16);
+  doc.text("Method: " + settlement.payment_method, col2 + 6, y + 23);
+  if (settlement.settlement_utr) doc.text("UTR: " + settlement.settlement_utr, col2 + 6, y + 29);
+  doc.text("Settlement: " + fmtDateOnly(settlement.settlement_date), col2 + 6, y + 35);
+  y += 48;
+
+  // ── Settlement breakdown table
+  doc.setFontSize(8); doc.setFont("helvetica", "bold");
+  doc.setFillColor(28, 50, 80);
+  doc.setDrawColor(40, 70, 110);
+  doc.rect(M, y, W - M * 2, 9, "FD");
+  doc.setTextColor(150, 175, 205);
+  doc.text("Description", M + 5, y + 6.2);
+  doc.text("HSN", W * 0.62, y + 6.2);
+  doc.text("GST Rate", W * 0.74, y + 6.2);
+  doc.text("Amount", W - M - 5, y + 6.2, { align: "right" });
+  y += 9;
+
+  const tableRows = [
+    ["Platform Services — Food Delivery Commission", "998314", "18%", money(settlement.platform_fee)],
+    ["GST on Platform Services (18%)", "—", "—", money(settlement.tax_on_fee)],
+  ];
+  tableRows.forEach((row, i) => {
+    doc.setFillColor(i % 2 === 0 ? 18 : 22, i % 2 === 0 ? 30 : 36, i % 2 === 0 ? 46 : 54);
+    doc.setDrawColor(28, 45, 70);
+    doc.rect(M, y, W - M * 2, 10, "FD");
+    doc.setFont("helvetica", "normal"); doc.setTextColor(200, 215, 230); doc.setFontSize(8.5);
+    doc.text(row[0], M + 5, y + 7);
+    doc.setTextColor(130, 155, 180); doc.setFontSize(8);
+    doc.text(row[1], W * 0.62, y + 7);
+    doc.text(row[2], W * 0.74, y + 7);
+    doc.setFont("helvetica", "bold"); doc.setTextColor(200, 220, 240);
+    doc.text(row[3], W - M - 5, y + 7, { align: "right" });
+    y += 10;
+  });
+
+  y += 4;
+  // ── Totals
+  const totals = [
+    ["Gross Order Value", money(settlement.gross_amount), [170, 185, 200]],
+    ["Less: Platform Fee", "(" + money(settlement.platform_fee) + ")", [170, 185, 200]],
+    ["Less: GST on Fee", "(" + money(settlement.tax_on_fee) + ")", [170, 185, 200]],
+  ];
+  doc.setDrawColor(40, 65, 100);
+  doc.line(M + (W - M * 2) * 0.5, y, W - M, y);
+  y += 5;
+  totals.forEach(([lbl, val, col]) => {
+    doc.setFont("helvetica", "normal"); doc.setFontSize(8.5); doc.setTextColor(...col);
+    doc.text(lbl, W * 0.55, y);
+    doc.text(val, W - M - 5, y, { align: "right" });
+    y += 7;
+  });
+  doc.setFillColor(20, 100, 60);
+  doc.setDrawColor(30, 140, 80);
+  doc.roundedRect(W * 0.5, y - 2, W * 0.5 - M, 13, 2, 2, "FD");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(10.5); doc.setTextColor(40, 220, 130);
+  doc.text("Net Settlement Amount", W * 0.55, y + 7);
+  doc.text(money(settlement.net_amount), W - M - 5, y + 7, { align: "right" });
+  y += 20;
+
+  // ── Notes
+  doc.setFillColor(14, 28, 46);
+  doc.setDrawColor(25, 45, 75);
+  doc.roundedRect(M, y, W - M * 2, 28, 3, 3, "FD");
+  doc.setFont("helvetica", "bold"); doc.setFontSize(7.5); doc.setTextColor(80, 110, 150);
+  doc.text("NOTES", M + 6, y + 8);
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7.5); doc.setTextColor(120, 145, 170);
+  doc.text("1. This is a computer-generated tax invoice. No physical signature required.", M + 6, y + 14);
+  doc.text("2. Payment has been credited to your registered bank account ending in " + seller.bank_last4 + ".", M + 6, y + 20);
+  doc.text("3. Subject to ONDC Seller Agreement. Dispute window: 7 days from invoice date.", M + 6, y + 26);
+  y += 36;
+
+  // ── Footer
+  doc.setFillColor(255, 103, 31);
+  doc.rect(0, 282, W, 3, "F");
+  doc.setFont("helvetica", "normal"); doc.setFontSize(7); doc.setTextColor(80, 100, 125);
+  doc.text("Decide Technologies Private Limited  ·  CIN: U74999GJ2024PTC000000  ·  support@decideindia.com  ·  1800-123-4567", W / 2, 290, { align: "center" });
+  doc.text("This invoice is issued under Section 31 of the CGST Act, 2017", W / 2, 295, { align: "center" });
+
+  doc.save("Decide-Invoice-" + (settlement.invoice_number || settlementId).replace(/\//g, "-") + ".pdf");
+  toast("Invoice downloaded successfully", "success");
+}
+
+// ════════════════════════════════════════════════════════════
+// CSV EXPORT
+// ════════════════════════════════════════════════════════════
+function exportSettlementsCSV() {
+  const settlements = DB.settlements;
+  if (!settlements.length) { toast("No settlements to export", "info"); return; }
+  const headers = ["Settlement ID", "Order ID", "Gross Amount", "Platform Fee", "Tax on Fee", "Net Amount", "Payment Method", "Settlement UTR", "Settlement Date", "Status", "Invoice Number"];
+  const rows = settlements.map(s => [
+    s.id, s.order_id, s.gross_amount, s.platform_fee, s.tax_on_fee, s.net_amount,
+    s.payment_method, s.settlement_utr || "", fmtDateOnly(s.settlement_date), s.status, s.invoice_number || ""
+  ]);
+  const csv = [headers, ...rows].map(r => r.map(v => '"' + String(v).replace(/"/g, '""') + '"').join(",")).join("\n");
+  const blob = new Blob([csv], { type: "text/csv" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = "Decide-Settlements-" + new Date().toISOString().slice(0,10) + ".csv";
+  a.click();
+  URL.revokeObjectURL(url);
+  toast("CSV exported", "success");
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+window.addEventListener("DOMContentLoaded", () => { navigateTo("login"); });
+</script>
+</body>
+</html>
