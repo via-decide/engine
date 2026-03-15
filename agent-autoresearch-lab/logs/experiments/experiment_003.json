@@ -1,0 +1,12 @@
+{
+  "experiment_id": "experiment_003",
+  "timestamp": "2026-03-15T03:19:51.719422Z",
+  "metric": 1.116148,
+  "improved": false,
+  "changes": "learning rate 0.0600 -> 0.0720",
+  "from_lr": 0.06,
+  "to_lr": 0.072,
+  "stdout": "validation_loss=1.116148\n",
+  "stderr": "",
+  "duration_s": 0.076
+}
